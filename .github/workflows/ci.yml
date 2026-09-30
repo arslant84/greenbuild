@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# Read-only token: this workflow only checks code.
+permissions:
+  contents: read
+
+# A new push to the same branch or PR makes the older run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: apps/sandbox-agent/go.mod
+          # No go.sum yet: the Go apps have no external dependencies to cache.
+          cache: false
+
+      - uses: golangci/golangci-lint-action@v9
+        with:
+          version: v2.14.0
+          install-only: true
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm lint
+
+      - run: pnpm typecheck
+
+      - run: pnpm test
+
+      - run: pnpm build
