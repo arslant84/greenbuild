@@ -1,0 +1,16 @@
+{
+  "extends": "@greenbuild/config/tsconfig/base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "preserve",
+    "noEmit": true,
+    "allowJs": false,
+    "declaration": false,
+    "sourceMap": false,
+    "plugins": [{ "name": "next" }]
+  },
+  "include": ["next-env.d.ts", "src", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
