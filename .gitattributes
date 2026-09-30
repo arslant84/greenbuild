@@ -1,0 +1,2 @@
+# Keep LF everywhere: challenge shell scripts run in Linux containers and break with CRLF.
+* text=auto eol=lf
