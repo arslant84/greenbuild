@@ -1,3 +1,7 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Install scripts stay off unless a package needs one; @swc/core ships its binary as an optional dependency.
+ignoredBuiltDependencies:
+  - "@swc/core"
