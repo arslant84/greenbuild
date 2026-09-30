@@ -6,6 +6,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "dev": "turbo run build && turbo run dev dev:compile",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",

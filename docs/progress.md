@@ -41,6 +41,7 @@ Last updated: 2026-09-30
 | — | PR size check in CI, Husky pre-commit | `chore/enforcement` (pushed, merge status unknown) |
 | — | `apps/sandbox-engine` skeleton | `feat/sandbox-engine-skeleton` (local, not pushed: network) |
 | S7 | `apps/worker` skeleton | `feat/worker-skeleton` (local, stacked on the engine branch) |
+| — | `pnpm dev` runs all services (TS reload via `tsc --watch` + `node --watch`) | `feat/dev-command` (local, stacked on the worker branch) |
 
 Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package is created by the task that first needs it.
 

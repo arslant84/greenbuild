@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "build": "go build -o bin/sandbox-engine ./cmd/sandbox-engine",
+    "dev": "go run ./cmd/sandbox-engine",
     "lint": "golangci-lint run ./...",
     "typecheck": "go vet ./...",
     "test": "go test ./..."
