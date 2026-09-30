@@ -13,7 +13,7 @@ Last updated: 2026-09-30
 | Skeletons with health check: `web` | Done | Next.js 16, `GET /health`, port 3001 |
 | Skeletons with health check: `api` | Done | NestJS 12 (ESM), `GET /health`, port 3000, shared error format |
 | Skeletons with health check: `sandbox-agent` | Done | Go, `GET /health` on 127.0.0.1:8081 |
-| Skeletons with health check: `sandbox-engine` | Not started | Stage 1 task 7 |
+| Skeletons with health check: `sandbox-engine` | Done | Go, `GET /health` on 127.0.0.1:8080; gRPC client to the agent comes with task 7 |
 | Skeletons with health check: `worker` | Not started | Deferred until queue events exist |
 | DB schema incl. consent and company tables | Not started | Stage 1 task 13 covers the first tables |
 | Mockups, design-partner calls, lawyer, ADR-001…007 | Not started | Non-code items for the founder; ADRs can be drafted on request |
@@ -39,6 +39,7 @@ Last updated: 2026-09-30
 | S10 | CI: lint, typecheck, test, build | #7 |
 | — | `.gitattributes` forcing LF | #3 |
 | — | PR size check in CI, Husky pre-commit | `chore/enforcement` (pushed, merge status unknown) |
+| — | `apps/sandbox-engine` skeleton | `feat/sandbox-engine-skeleton` (local, not pushed: network) |
 
 Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package is created by the task that first needs it.
 
@@ -63,4 +64,5 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 - Start Docker Desktop and install gVisor (`runsc`) in the WSL2 VM for task 2.
 - Add `eslint-config-next` once the web app has real UI.
 - Strip tokens and passwords from logs before request or DB logging is added.
+- Agent and engine duplicate ~60 lines (config loading, health, graceful shutdown); apps cannot import each other. Revisit if a shared Go package under `packages/` becomes worthwhile.
 - Local branch `feat/api-skeleton` can be deleted with `git branch -D` (content is on `main`).
