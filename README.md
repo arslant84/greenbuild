@@ -28,7 +28,7 @@ A daily game for DevOps and cloud engineers where proven skill becomes a public 
 ## Requirements
 
 - Node.js 22 and pnpm 10
-- Go 1.23+ (sandbox engine and agent)
+- Go 1.27+ and golangci-lint 2 (sandbox engine and agent)
 - Docker
 
 ## Commands
