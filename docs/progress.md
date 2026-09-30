@@ -14,7 +14,7 @@ Last updated: 2026-09-30
 | Skeletons with health check: `api` | Done | NestJS 12 (ESM), `GET /health`, port 3000, shared error format |
 | Skeletons with health check: `sandbox-agent` | Done | Go, `GET /health` on 127.0.0.1:8081 |
 | Skeletons with health check: `sandbox-engine` | Done | Go, `GET /health` on 127.0.0.1:8080; gRPC client to the agent comes with task 7 |
-| Skeletons with health check: `worker` | Not started | Deferred until queue events exist |
+| Skeletons with health check: `worker` | Done | TypeScript, plain `node:http` `GET /health`, port 3002; jobs come with the queue (task 10) |
 | DB schema incl. consent and company tables | Not started | Stage 1 task 13 covers the first tables |
 | Mockups, design-partner calls, lawyer, ADR-001…007 | Not started | Non-code items for the founder; ADRs can be drafted on request |
 
@@ -40,6 +40,7 @@ Last updated: 2026-09-30
 | — | `.gitattributes` forcing LF | #3 |
 | — | PR size check in CI, Husky pre-commit | `chore/enforcement` (pushed, merge status unknown) |
 | — | `apps/sandbox-engine` skeleton | `feat/sandbox-engine-skeleton` (local, not pushed: network) |
+| S7 | `apps/worker` skeleton | `feat/worker-skeleton` (local, stacked on the engine branch) |
 
 Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package is created by the task that first needs it.
 

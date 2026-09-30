@@ -3,3 +3,4 @@ export const MAX_PAGE_LIMIT = 100;
 
 // Used when PORT is not set, e.g. local development.
 export const API_DEFAULT_PORT = 3000;
+export const WORKER_DEFAULT_PORT = 3002;
