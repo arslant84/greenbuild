@@ -3,7 +3,6 @@
 A daily game for DevOps and cloud engineers where proven skill becomes a public certificate.
 
 - Architecture and MVP plan: [docs/architecture.md](docs/architecture.md)
-- Engineering rules: [CLAUDE.md](CLAUDE.md)
 - Progress against the plan: [docs/progress.md](docs/progress.md)
 
 ## Layout

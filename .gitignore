@@ -42,7 +42,8 @@ __queuestorage__/
 *.p12
 *.pfx
 
-# Personal Claude Code files
+# Claude Code files: engineering rules are kept locally, not in the repo
+CLAUDE.md
 CLAUDE.local.md
 .claude/settings.local.json
 
