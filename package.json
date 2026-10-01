@@ -6,6 +6,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "prepare": "husky",
     "dev": "turbo run build && turbo run dev dev:compile",
     "build": "turbo run build",
     "lint": "turbo run lint",
@@ -13,6 +14,7 @@
     "test": "turbo run test"
   },
   "devDependencies": {
+    "husky": "^9.1.7",
     "turbo": "^2.11.5"
   }
 }

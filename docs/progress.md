@@ -38,7 +38,7 @@ Last updated: 2026-10-01
 | S8 | `apps/sandbox-agent` skeleton (= Stage 1 task 1) | #6 |
 | S10 | CI: lint, typecheck, test, build | #7 |
 | — | `.gitattributes` forcing LF | #3 |
-| — | PR size check in CI, Husky pre-commit | `chore/enforcement` (pushed, not merged) |
+| — | PR size check in CI, Husky pre-commit | #11 |
 | — | `docs/progress.md` | #8 (merged as part of the worker stack) |
 | — | `apps/sandbox-engine` skeleton | #8 (merged as part of the worker stack) |
 | S7 | `apps/worker` skeleton | #8 |
