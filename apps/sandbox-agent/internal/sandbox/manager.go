@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/moby/moby/client"
@@ -14,7 +15,16 @@ type DockerAPI interface {
 	ContainerCreate(ctx context.Context, options client.ContainerCreateOptions) (client.ContainerCreateResult, error)
 	ContainerStart(ctx context.Context, id string, options client.ContainerStartOptions) (client.ContainerStartResult, error)
 	ContainerRemove(ctx context.Context, id string, options client.ContainerRemoveOptions) (client.ContainerRemoveResult, error)
+	ExecCreate(ctx context.Context, id string, options client.ExecCreateOptions) (client.ExecCreateResult, error)
+	ExecAttach(ctx context.Context, execID string, options client.ExecAttachOptions) (client.ExecAttachResult, error)
+	ExecInspect(ctx context.Context, execID string, options client.ExecInspectOptions) (client.ExecInspectResult, error)
 }
+
+// SetupScriptPath is where every challenge image keeps the script that breaks its environment.
+const SetupScriptPath = "/opt/greenbuild/setup.sh"
+
+// ErrSetupFailed is wrapped when a challenge's setup script exits non-zero or cannot be removed.
+var ErrSetupFailed = errors.New("sandbox setup failed")
 
 // Manager creates and destroys sandbox containers.
 type Manager struct {
@@ -44,6 +54,28 @@ func (m *Manager) CreateSandbox(ctx context.Context, spec Spec) (string, error) 
 		return "", m.discardUnstarted(ctx, created.ID, err)
 	}
 	return created.ID, nil
+}
+
+// RunSetup breaks a fresh sandbox for one attempt by running the challenge's setup script with
+// the attempt seed, then deletes the script so the player never sees how the environment was broken.
+func (m *Manager) RunSetup(ctx context.Context, id string, seed uint64) error {
+	setup, err := m.exec(ctx, id, []string{SetupScriptPath, strconv.FormatUint(seed, 10)})
+	if err != nil {
+		return fmt.Errorf("run setup in sandbox %s: %w", id, err)
+	}
+	if setup.exitCode != 0 {
+		return fmt.Errorf("%w: sandbox %s: setup exited %d: %s", ErrSetupFailed, id, setup.exitCode, setup.output)
+	}
+
+	removal, err := m.exec(ctx, id, []string{"rm", "-f", SetupScriptPath})
+	if err != nil {
+		return fmt.Errorf("remove setup script in sandbox %s: %w", id, err)
+	}
+	if removal.exitCode != 0 {
+		return fmt.Errorf("%w: sandbox %s: removing the setup script exited %d: %s",
+			ErrSetupFailed, id, removal.exitCode, removal.output)
+	}
+	return nil
 }
 
 // Destroy force-removes the sandbox. A sandbox that is already gone counts as destroyed,

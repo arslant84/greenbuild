@@ -25,7 +25,7 @@ Last updated: 2026-10-01
 | 1 | Agent skeleton | Done | Passed in CI on #7 |
 | 2 | Container with limits | In progress | 2a: `Spec` → Docker config (runtime, no network, all caps dropped, no-new-privileges, CPU/memory/PID limits), `SANDBOX_AGENT_RUNTIME`. 2b: `Manager.CreateSandbox`/`Destroy` via the Docker client; start failures remove the container; integration test passes on Docker with runc. 2c: CI job "Sandbox integration (gVisor)" installs pinned gVisor (checksum-verified) and runs the same test under runsc |
 | 3 | First challenge | Done | `challenges/nginx-502-upstream` (nginx proxies to the wrong port; seed picks ports and app user), 3 hints and a write-up. `challenges/verify-challenge.sh`: broken after setup, setup.sh removed, solved by solution.sh, for 3 seeds, under sandbox isolation |
-| 4 | Setup and TTL | In progress | 4a: `Spec.Capabilities` → `CapAdd`, limited to an allowlist (CHOWN, DAC_OVERRIDE, FOWNER, KILL, NET_BIND_SERVICE, SETGID, SETUID). Next: 4b run setup.sh with the seed, 4c TTL |
+| 4 | Setup and TTL | In progress | 4a: `Spec.Capabilities` → `CapAdd`, limited to an allowlist (CHOWN, DAC_OVERRIDE, FOWNER, KILL, NET_BIND_SERVICE, SETGID, SETUID). 4b: `Manager.RunSetup` runs `/opt/greenbuild/setup.sh <seed>` via exec, then the agent deletes it; failures return `ErrSetupFailed` with the output tail (max 4 KB). Next: 4c TTL |
 | 5–16 | Remaining slice | Not started | |
 
 ## Setup steps done
