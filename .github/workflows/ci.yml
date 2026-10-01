@@ -46,8 +46,7 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: apps/sandbox-agent/go.mod
-          # No go.sum yet: the Go apps have no external dependencies to cache.
-          cache: false
+          cache-dependency-path: apps/*/go.sum
 
       - uses: golangci/golangci-lint-action@v9
         with:
@@ -63,3 +62,26 @@ jobs:
       - run: pnpm test
 
       - run: pnpm build
+
+  sandbox-integration:
+    name: Sandbox integration (gVisor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      # Pinned so a gVisor release cannot change CI behaviour without a PR.
+      GVISOR_RELEASE: "20260928"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: apps/sandbox-agent/go.mod
+          cache-dependency-path: apps/sandbox-agent/go.sum
+
+      - run: bash .github/scripts/install-gvisor.sh "$GVISOR_RELEASE"
+
+      # Same test as `pnpm --filter @greenbuild/sandbox-agent test:integration`, under runsc.
+      - run: go test -tags integration -count=1 -v -run OnRealDocker ./internal/sandbox/...
+        working-directory: apps/sandbox-agent
+        env:
+          SANDBOX_TEST_RUNTIME: runsc
