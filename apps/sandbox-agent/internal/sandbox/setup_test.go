@@ -20,6 +20,7 @@ type fakeExec struct {
 
 func (f *fakeDocker) ExecCreate(_ context.Context, _ string, options client.ExecCreateOptions) (client.ExecCreateResult, error) {
 	f.calls = append(f.calls, "exec "+strings.Join(options.Cmd, " "))
+	f.lastExec = options
 	id := fmt.Sprintf("exec-%d", len(f.calls))
 	if f.execIDs == nil {
 		f.execIDs = map[string]string{}
