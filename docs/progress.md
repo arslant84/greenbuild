@@ -23,7 +23,7 @@ Last updated: 2026-10-01
 | # | Task | Status | Notes |
 |---|---|---|---|
 | 1 | Agent skeleton | Done | Passed in CI on #7 |
-| 2 | Container with limits | In progress | 2a: `Spec` → Docker config (runtime, no network, all caps dropped, no-new-privileges, CPU/memory/PID limits), `SANDBOX_AGENT_RUNTIME`. 2b: `Manager.CreateSandbox`/`Destroy` via the Docker client; start failures remove the container; integration test passes on Docker with runc. Next: 2c same test under gVisor in CI |
+| 2 | Container with limits | In progress | 2a: `Spec` → Docker config (runtime, no network, all caps dropped, no-new-privileges, CPU/memory/PID limits), `SANDBOX_AGENT_RUNTIME`. 2b: `Manager.CreateSandbox`/`Destroy` via the Docker client; start failures remove the container; integration test passes on Docker with runc. 2c: CI job "Sandbox integration (gVisor)" installs pinned gVisor (checksum-verified) and runs the same test under runsc |
 | 3–16 | Remaining slice | Not started | |
 
 ## Setup steps done
@@ -66,8 +66,7 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 ## Open items
 
 - Sandbox limits still to add from architecture.md: open-file limit, disk limit, read-only root where the challenge allows, seccomp profile, user namespaces.
-- CI's Go cache is off ("no go.sum yet"); the agent now has a go.sum, so caching can be enabled.
-- The PR size check counts `go.sum`; it is generated like `pnpm-lock.yaml` and should be excluded.
+- gVisor is pinned in CI (`GVISOR_RELEASE` in `ci.yml`); bump it deliberately in its own PR.
 - Run the agent integration test locally with `pnpm --filter @greenbuild/sandbox-agent test:integration` (needs Docker running).
 - Network: GitHub, npm and the Go proxy are blocked on some networks (filtered upstream, not by Windows); check connectivity before tasks that download dependencies.
 - Add `eslint-config-next` once the web app has real UI.
