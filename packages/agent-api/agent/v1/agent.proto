@@ -1,0 +1,86 @@
+// Contract between the sandbox control plane and the agent on each sandbox node.
+// The agent accepts these calls only over mTLS from the control plane (architecture.md).
+syntax = "proto3";
+
+package greenbuild.agent.v1;
+
+option go_package = "github.com/arslant84/greenbuild/packages/agent-api/agent/v1;agentv1";
+
+service SandboxAgent {
+  // Starts an isolated container and, when setup_seed is set, breaks it for the attempt.
+  rpc CreateSandbox(CreateSandboxRequest) returns (CreateSandboxResponse);
+  // Force-removes a sandbox; succeeds if it is already gone.
+  rpc Destroy(DestroyRequest) returns (DestroyResponse);
+  // Interactive terminal: the first request is ExecStart, then stdin and resize messages.
+  rpc Exec(stream ExecRequest) returns (stream ExecResponse);
+  // Writes a file into a sandbox, e.g. the checker right before a check.
+  rpc CopyIn(CopyInRequest) returns (CopyInResponse);
+  rpc Health(HealthRequest) returns (HealthResponse);
+}
+
+message CreateSandboxRequest {
+  // Image reference; by digest in production.
+  string image = 1;
+  repeated string command = 2;
+  int64 cpu_millis = 3;
+  int64 memory_bytes = 4;
+  // Added back after all capabilities are dropped; the agent enforces an allowlist.
+  repeated string capabilities = 5;
+  // Challenge time limit; the agent destroys the sandbox after it plus a grace period.
+  int64 ttl_seconds = 6;
+  // When set, the challenge's setup script runs with this seed and is then deleted.
+  optional uint64 setup_seed = 7;
+}
+
+message CreateSandboxResponse {
+  string sandbox_id = 1;
+}
+
+message DestroyRequest {
+  string sandbox_id = 1;
+}
+
+message DestroyResponse {}
+
+message TerminalSize {
+  uint32 rows = 1;
+  uint32 cols = 2;
+}
+
+message ExecStart {
+  string sandbox_id = 1;
+  TerminalSize size = 2;
+}
+
+message ExecRequest {
+  oneof payload {
+    ExecStart start = 1;
+    bytes stdin = 2;
+    TerminalSize resize = 3;
+  }
+}
+
+message ExecResponse {
+  oneof payload {
+    bytes output = 1;
+    // Sent once, as the last message, when the shell exits.
+    int32 exit_code = 2;
+  }
+}
+
+message CopyInRequest {
+  string sandbox_id = 1;
+  // Absolute path inside the sandbox.
+  string path = 2;
+  bytes content = 3;
+  // File mode, e.g. 0755 for a script.
+  uint32 mode = 4;
+}
+
+message CopyInResponse {}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+}

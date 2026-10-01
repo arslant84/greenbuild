@@ -11,6 +11,7 @@ changed_lines=$(
   git diff --numstat "${base_sha}...${head_ref}" -- . \
     ':(exclude)pnpm-lock.yaml' \
     ':(exclude)**/go.sum' \
+    ':(exclude)**/*.pb.go' \
     ':(exclude)packages/db/migrations/**' |
     awk '{ added += $1; removed += $2 } END { print added + removed + 0 }'
 )
