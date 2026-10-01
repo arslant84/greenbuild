@@ -1,0 +1,10 @@
+{
+  "name": "@greenbuild/agent-api",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "go build ./...",
+    "typecheck": "go vet ./...",
+    "test": "go test ./..."
+  }
+}

@@ -27,7 +27,8 @@ Last updated: 2026-10-01
 | 3 | First challenge | Done | `challenges/nginx-502-upstream` (nginx proxies to the wrong port; seed picks ports and app user), 3 hints and a write-up. `challenges/verify-challenge.sh`: broken after setup, setup.sh removed, solved by solution.sh, for 3 seeds, under sandbox isolation |
 | 4 | Setup and TTL | Done | 4a: `Spec.Capabilities` → `CapAdd`, limited to an allowlist (CHOWN, DAC_OVERRIDE, FOWNER, KILL, NET_BIND_SERVICE, SETGID, SETUID). 4b: `Manager.RunSetup` runs `/opt/greenbuild/setup.sh <seed>` via exec, then the agent deletes it; failures return `ErrSetupFailed` with the output tail (max 4 KB). 4c: `Spec.TTL` required; deadline (TTL + 2 min) stored as the `greenbuild.deadline` container label; the agent's reaper destroys expired or deadline-less sandboxes every 10 s, so it survives agent restarts and needs no control plane |
 | 5 | Terminal (PTY) | Done | 5a: `Manager.OpenTerminal` starts `/bin/sh` with a PTY (TERM=xterm-256color); `Terminal` gives input, output, `Resize` and the exit code. Integration test drives a real shell: tty size before/after resize, `exit 3`. Under gVisor the size given at exec creation is ignored and termios fails until a resize, so `OpenTerminal` resizes right after start (as the Docker CLI does). 5b: `internal/console` (raw mode, size, resize watching) and `cmd/sandbox-shell` (see README): creates a sandbox, optionally runs setup with a seed, attaches the local terminal, destroys the sandbox on exit. Verified with piped input; interactive use needs a human check |
-| 6–16 | Remaining slice | Not started | |
+| 6 | gRPC and mTLS | In progress | 6a: `packages/agent-api` — `agent.proto` (CreateSandbox, Destroy, Exec bidi stream, CopyIn, Health), generated Go (`generate.sh`; protoc 36.0, protoc-gen-go v1.36.12, protoc-gen-go-grpc 1.6.2), contract tests. Next: 6b dev certs + mTLS, 6c server, 6d client test |
+| 7–16 | Remaining slice | Not started | |
 
 ## Setup steps done
 
@@ -74,6 +75,7 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 - On Windows, stopping `pnpm dev` can leave the `go run` child binaries running (seen: an old `sandbox-agent.exe` holding port 8081). Prefer building Go apps once and running the binary in `dev`.
 - The agent's reaper is the only TTL enforcement; architecture.md also wants the agent to kill sandboxes at 100% CPU for over 60 s (not started).
 - `internal/console` implements raw mode with `golang.org/x/sys` (already a dependency) because `golang.org/x/term` could not be downloaded (golang.org blocked on this network); switch to `x/term` when it is reachable. Raw mode exists for Linux and Windows only.
+- CI does not yet check that generated `*.pb.go` match `agent.proto`; add a step that runs `generate.sh` and fails on a diff.
 - gVisor is pinned in CI (`GVISOR_RELEASE` in `ci.yml`); bump it deliberately in its own PR.
 - Run the agent integration test locally with `pnpm --filter @greenbuild/sandbox-agent test:integration` (needs Docker running).
 - Network: GitHub, npm and the Go proxy are blocked on some networks (filtered upstream, not by Windows); check connectivity before tasks that download dependencies.
