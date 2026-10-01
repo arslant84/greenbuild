@@ -5,7 +5,7 @@
   "scripts": {
     "build": "go build -o bin/sandbox-agent ./cmd/sandbox-agent",
     "dev": "go run ./cmd/sandbox-agent",
-    "lint": "golangci-lint run ./...",
+    "lint": "golangci-lint run --allow-parallel-runners ./...",
     "typecheck": "go vet ./...",
     "test": "go test ./..."
   }

@@ -2,13 +2,13 @@
 
 Where the build stands against [architecture.md](architecture.md). Update this file in the same PR as the work it describes.
 
-Last updated: 2026-09-30
+Last updated: 2026-10-01
 
 ## Stage 0 — foundation and demand
 
 | Item from architecture.md | Status | Notes |
 |---|---|---|
-| Monorepo, `CLAUDE.md`, linters with size limits, CI | Done | CI run result on GitHub not yet confirmed (see Open items) |
+| Monorepo, `CLAUDE.md`, linters with size limits, CI | Done | CI green on #7; broken on `main` since #8 by parallel golangci-lint runs, fixed in `fix/golangci-parallel` |
 | Terraform: core and sandbox networks, Container Apps, PostgreSQL, Redis, ACR, Key Vault, Blob | Not started | Approved; Terraform 1.16 installed |
 | Skeletons with health check: `web` | Done | Next.js 16, `GET /health`, port 3001 |
 | Skeletons with health check: `api` | Done | NestJS 12 (ESM), `GET /health`, port 3000, shared error format |
@@ -22,8 +22,8 @@ Last updated: 2026-09-30
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 1 | Agent skeleton | Done | Waiting for a green CI run to meet "passes in CI" |
-| 2 | Container with limits | Blocked | Network filtering blocks Go modules; Docker Desktop stopped; gVisor not installed |
+| 1 | Agent skeleton | Done | Passed in CI on #7 |
+| 2 | Container with limits | Blocked | Docker Desktop stopped; gVisor not installed |
 | 3–16 | Remaining slice | Not started | |
 
 ## Setup steps done
@@ -38,10 +38,12 @@ Last updated: 2026-09-30
 | S8 | `apps/sandbox-agent` skeleton (= Stage 1 task 1) | #6 |
 | S10 | CI: lint, typecheck, test, build | #7 |
 | — | `.gitattributes` forcing LF | #3 |
-| — | PR size check in CI, Husky pre-commit | `chore/enforcement` (pushed, merge status unknown) |
-| — | `apps/sandbox-engine` skeleton | `feat/sandbox-engine-skeleton` (local, not pushed: network) |
-| S7 | `apps/worker` skeleton | `feat/worker-skeleton` (local, stacked on the engine branch) |
-| — | `pnpm dev` runs all services (TS reload via `tsc --watch` + `node --watch`) | `feat/dev-command` (local, stacked on the worker branch) |
+| — | PR size check in CI, Husky pre-commit | `chore/enforcement` (pushed, not merged) |
+| — | `docs/progress.md` | #8 (merged as part of the worker stack) |
+| — | `apps/sandbox-engine` skeleton | #8 (merged as part of the worker stack) |
+| S7 | `apps/worker` skeleton | #8 |
+| — | `pnpm dev` runs all services (TS reload via `tsc --watch` + `node --watch`) | #9 |
+| — | Let both Go linters run in parallel (`--allow-parallel-runners`) | `fix/golangci-parallel` |
 
 Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package is created by the task that first needs it.
 
@@ -60,9 +62,9 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 
 ## Open items
 
-- Confirm the CI runs on `main` (after #7) and on the `chore/enforcement` PR are green.
+- Merge `fix/golangci-parallel` so `main` is green again; only merge PRs whose checks pass.
 - Merge `chore/enforcement`, then require "PR size" and "Lint, typecheck, test, build" in a `main` ruleset.
-- Network: GitHub, npm and the Go proxy are unreachable from the current network (filtered upstream, not by Windows). Needed for task 2 onward.
+- Network: GitHub, npm and the Go proxy are blocked on some networks (filtered upstream, not by Windows); check connectivity before tasks that download dependencies.
 - Start Docker Desktop and install gVisor (`runsc`) in the WSL2 VM for task 2.
 - Add `eslint-config-next` once the web app has real UI.
 - Strip tokens and passwords from logs before request or DB logging is added.
