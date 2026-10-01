@@ -25,7 +25,7 @@ Last updated: 2026-10-01
 | 1 | Agent skeleton | Done | Passed in CI on #7 |
 | 2 | Container with limits | In progress | 2a: `Spec` → Docker config (runtime, no network, all caps dropped, no-new-privileges, CPU/memory/PID limits), `SANDBOX_AGENT_RUNTIME`. 2b: `Manager.CreateSandbox`/`Destroy` via the Docker client; start failures remove the container; integration test passes on Docker with runc. 2c: CI job "Sandbox integration (gVisor)" installs pinned gVisor (checksum-verified) and runs the same test under runsc |
 | 3 | First challenge | Done | `challenges/nginx-502-upstream` (nginx proxies to the wrong port; seed picks ports and app user), 3 hints and a write-up. `challenges/verify-challenge.sh`: broken after setup, setup.sh removed, solved by solution.sh, for 3 seeds, under sandbox isolation |
-| 4 | Setup and TTL | In progress | 4a: `Spec.Capabilities` → `CapAdd`, limited to an allowlist (CHOWN, DAC_OVERRIDE, FOWNER, KILL, NET_BIND_SERVICE, SETGID, SETUID). 4b: `Manager.RunSetup` runs `/opt/greenbuild/setup.sh <seed>` via exec, then the agent deletes it; failures return `ErrSetupFailed` with the output tail (max 4 KB). Next: 4c TTL |
+| 4 | Setup and TTL | Done | 4a: `Spec.Capabilities` → `CapAdd`, limited to an allowlist (CHOWN, DAC_OVERRIDE, FOWNER, KILL, NET_BIND_SERVICE, SETGID, SETUID). 4b: `Manager.RunSetup` runs `/opt/greenbuild/setup.sh <seed>` via exec, then the agent deletes it; failures return `ErrSetupFailed` with the output tail (max 4 KB). 4c: `Spec.TTL` required; deadline (TTL + 2 min) stored as the `greenbuild.deadline` container label; the agent's reaper destroys expired or deadline-less sandboxes every 10 s, so it survives agent restarts and needs no control plane |
 | 5–16 | Remaining slice | Not started | |
 
 ## Setup steps done
@@ -70,6 +70,8 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 
 - Sandbox limits still to add from architecture.md: open-file limit, disk limit, read-only root where the challenge allows, seccomp profile, user namespaces.
 - `verify-challenge.sh` reads only flat manifest lines; proper parsing and a JSON schema belong to `packages/challenge-spec` with the challenge CI pipeline.
+- On Windows, stopping `pnpm dev` can leave the `go run` child binaries running (seen: an old `sandbox-agent.exe` holding port 8081). Prefer building Go apps once and running the binary in `dev`.
+- The agent's reaper is the only TTL enforcement; architecture.md also wants the agent to kill sandboxes at 100% CPU for over 60 s (not started).
 - gVisor is pinned in CI (`GVISOR_RELEASE` in `ci.yml`); bump it deliberately in its own PR.
 - Run the agent integration test locally with `pnpm --filter @greenbuild/sandbox-agent test:integration` (needs Docker running).
 - Network: GitHub, npm and the Go proxy are blocked on some networks (filtered upstream, not by Windows); check connectivity before tasks that download dependencies.

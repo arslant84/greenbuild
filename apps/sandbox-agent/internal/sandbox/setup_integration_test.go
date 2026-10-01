@@ -7,6 +7,7 @@ import (
 	"errors"
 	"strings"
 	"testing"
+	"time"
 )
 
 // fakeSetupScript records its seed and nothing else; real challenges break their environment here.
@@ -15,7 +16,13 @@ const fakeSetupScript = `mkdir -p /opt/greenbuild && printf '#!/bin/sh\necho "$1
 
 func TestSetupRunsWithSeedAndIsRemovedOnRealDocker(t *testing.T) {
 	manager := NewManager(newDockerClient(t), runtimeUnderTest())
-	spec := Spec{Image: integrationImage, Command: []string{"sleep", "300"}, CPUMillis: 500, MemoryBytes: 64 << 20}
+	spec := Spec{
+		Image:       integrationImage,
+		Command:     []string{"sleep", "300"},
+		CPUMillis:   500,
+		MemoryBytes: 64 << 20,
+		TTL:         5 * time.Minute,
+	}
 	id, err := manager.CreateSandbox(t.Context(), spec)
 	if err != nil {
 		t.Fatalf("CreateSandbox() error = %v", err)

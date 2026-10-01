@@ -4,6 +4,7 @@ import (
 	"errors"
 	"slices"
 	"testing"
+	"time"
 )
 
 const mebibyte = 1 << 20
@@ -14,6 +15,7 @@ func validSpec() Spec {
 		Command:     []string{"sleep", "infinity"},
 		CPUMillis:   500,
 		MemoryBytes: 512 * mebibyte,
+		TTL:         15 * time.Minute,
 	}
 }
 
@@ -120,6 +122,7 @@ func TestValidateRejectsMissingImageOrLimits(t *testing.T) {
 		"no image":        func(s *Spec) { s.Image = "" },
 		"zero cpu":        func(s *Spec) { s.CPUMillis = 0 },
 		"negative memory": func(s *Spec) { s.MemoryBytes = -1 },
+		"no ttl":          func(s *Spec) { s.TTL = 0 },
 	}
 	for name, breakSpec := range cases {
 		t.Run(name, func(t *testing.T) {
