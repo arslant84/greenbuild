@@ -45,7 +45,14 @@ func run() error {
 		return fmt.Errorf("create docker client: %w", err)
 	}
 	defer closeDocker(docker)
-	go sandbox.NewManager(docker, cfg.Runtime).RunReaper(ctx, reapInterval)
+	manager := sandbox.NewManager(docker, cfg.Runtime)
+	go manager.RunReaper(ctx, reapInterval)
+
+	stopGRPC, err := startGRPC(cfg, manager)
+	if err != nil {
+		return err
+	}
+	defer stopGRPC()
 
 	return serve(ctx, health.NewServer(cfg.HealthAddr), cfg.ShutdownTimeout)
 }
