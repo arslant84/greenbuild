@@ -1,0 +1,11 @@
+#!/bin/sh
+# Starts the upstream app as the owner of /srv/app, on the port from /srv/app/app.env.
+set -eu
+
+. /srv/app/app.env
+owner=$(stat -c %U /srv/app)
+
+su -s /bin/sh "$owner" -c "
+  echo \"\$(date -Iseconds) app listening on 127.0.0.1:${PORT}\" >> /var/log/app/app.log
+  httpd -f -v -p 127.0.0.1:${PORT} -h /srv/app/www >> /var/log/app/app.log 2>&1 &
+"

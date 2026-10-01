@@ -1,0 +1,23 @@
+id: nginx-502-upstream
+version: 1
+title: "The site returns 502"
+statement: "Users see 502 Bad Gateway. Bring the site back."
+difficulty: 4            # 1–10
+skills: { linux: 0.4, nginx: 0.6 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# Added back on top of the all-dropped default: nginx workers and the app switch users, setup chowns the app.
+capabilities: [CHOWN, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app_port: { range: [3000, 3999] }
+  app_user: { pick: [svc, webapp, runner] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: human            # human | ai | community
