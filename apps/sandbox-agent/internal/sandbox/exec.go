@@ -24,8 +24,14 @@ type execResult struct {
 // exec runs cmd in the container as its default user, waits for it to finish,
 // and returns its exit code and the tail of its combined output.
 func (m *Manager) exec(ctx context.Context, id string, cmd []string) (execResult, error) {
+	return m.execWithInput(ctx, id, cmd, nil)
+}
+
+// execWithInput is exec with input sent to the command's stdin, which is then closed.
+func (m *Manager) execWithInput(ctx context.Context, id string, cmd []string, input io.Reader) (execResult, error) {
 	created, err := m.docker.ExecCreate(ctx, id, client.ExecCreateOptions{
 		Cmd:          cmd,
+		AttachStdin:  input != nil,
 		AttachStdout: true,
 		AttachStderr: true,
 	})
@@ -38,6 +44,11 @@ func (m *Manager) exec(ctx context.Context, id string, cmd []string) (execResult
 		return execResult{}, fmt.Errorf("start exec %v in sandbox %s: %w", cmd, id, err)
 	}
 	defer attached.Close()
+	if input != nil {
+		if err := sendInput(&attached.HijackedResponse, input); err != nil {
+			return execResult{}, fmt.Errorf("send input to %v in sandbox %s: %w", cmd, id, err)
+		}
+	}
 
 	output := &tailBuffer{limit: maxExecOutputBytes}
 	if err := copyExecOutput(output, attached.HijackedResponse); err != nil {
@@ -49,6 +60,17 @@ func (m *Manager) exec(ctx context.Context, id string, cmd []string) (execResult
 		return execResult{}, fmt.Errorf("inspect exec %v in sandbox %s: %w", cmd, id, err)
 	}
 	return execResult{exitCode: inspected.ExitCode, output: output.String()}, nil
+}
+
+// sendInput writes all of input, then closes the write side so the command sees end of file.
+func sendInput(stream *client.HijackedResponse, input io.Reader) error {
+	if _, err := io.Copy(stream.Conn, input); err != nil {
+		return fmt.Errorf("write stdin: %w", err)
+	}
+	if err := stream.CloseWrite(); err != nil {
+		return fmt.Errorf("close stdin: %w", err)
+	}
+	return nil
 }
 
 // copyExecOutput reads the attached stream until the command exits. Without a TTY Docker

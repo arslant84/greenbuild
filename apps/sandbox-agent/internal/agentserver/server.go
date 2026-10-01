@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/sandbox"
@@ -18,10 +19,11 @@ type Sandboxes interface {
 	CreateSandbox(ctx context.Context, spec sandbox.Spec) (string, error)
 	RunSetup(ctx context.Context, id string, seed uint64) error
 	Destroy(ctx context.Context, id string) error
+	CopyIn(ctx context.Context, id string, file sandbox.File) error
 }
 
-// Server implements agentv1.SandboxAgentServer. Exec and CopyIn come in a later change and
-// answer Unimplemented until then.
+// Server implements agentv1.SandboxAgentServer. Exec comes in a later change and answers
+// Unimplemented until then.
 type Server struct {
 	agentv1.UnimplementedSandboxAgentServer
 	sandboxes Sandboxes
@@ -71,6 +73,18 @@ func (s *Server) Destroy(ctx context.Context, req *agentv1.DestroyRequest) (*age
 	return &agentv1.DestroyResponse{}, nil
 }
 
+// CopyIn writes a file into a sandbox, e.g. the checker right before a check.
+func (s *Server) CopyIn(ctx context.Context, req *agentv1.CopyInRequest) (*agentv1.CopyInResponse, error) {
+	if req.GetSandboxId() == "" {
+		return nil, grpcError(codes.InvalidArgument, "sandbox_id is required")
+	}
+	file := sandbox.File{Path: req.GetPath(), Content: req.GetContent(), Mode: os.FileMode(req.GetMode())}
+	if err := s.sandboxes.CopyIn(ctx, req.GetSandboxId(), file); err != nil {
+		return nil, toStatus("copy file into sandbox", err)
+	}
+	return &agentv1.CopyInResponse{}, nil
+}
+
 // Health answers as long as the agent process serves gRPC.
 func (s *Server) Health(_ context.Context, _ *agentv1.HealthRequest) (*agentv1.HealthResponse, error) {
 	return &agentv1.HealthResponse{Status: "ok"}, nil
@@ -80,7 +94,7 @@ func (s *Server) Health(_ context.Context, _ *agentv1.HealthRequest) (*agentv1.H
 // caller only as a generic Internal error, so Docker details never leave the node.
 func toStatus(action string, err error) error {
 	switch {
-	case errors.Is(err, sandbox.ErrInvalidSpec):
+	case errors.Is(err, sandbox.ErrInvalidSpec), errors.Is(err, sandbox.ErrInvalidFile):
 		return grpcError(codes.InvalidArgument, err.Error())
 	case errors.Is(err, sandbox.ErrSetupFailed):
 		// The script's output stays in the agent log; it may reveal how the challenge is broken.
