@@ -5,11 +5,14 @@ package sandbox
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"io"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/moby/moby/client"
 )
 
 const terminalWait = 15 * time.Second
@@ -93,5 +96,14 @@ func typeAndExpect(t *testing.T, terminal *Terminal, output *lockedBuffer, text,
 		}
 		time.Sleep(pollInterval)
 	}
-	t.Fatalf("after typing %q, output never contained %q:\n%s", text, want, output)
+	t.Fatalf("after typing %q, output never contained %q (shell: %s):\n%q", text, want, describeShell(terminal), output)
+}
+
+// describeShell says whether the shell is still running, to tell "never started" from "no I/O".
+func describeShell(terminal *Terminal) string {
+	inspected, err := terminal.docker.ExecInspect(context.Background(), terminal.execID, client.ExecInspectOptions{})
+	if err != nil {
+		return "inspect failed: " + err.Error()
+	}
+	return fmt.Sprintf("running=%v exit=%d pid=%d", inspected.Running, inspected.ExitCode, inspected.PID)
 }
