@@ -1,0 +1,12 @@
+{
+  "name": "@greenbuild/sandbox-engine",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "go build -o bin/sandbox-engine ./cmd/sandbox-engine",
+    "dev": "go run ./cmd/sandbox-engine",
+    "lint": "golangci-lint run --allow-parallel-runners ./...",
+    "typecheck": "go vet ./...",
+    "test": "go test ./..."
+  }
+}

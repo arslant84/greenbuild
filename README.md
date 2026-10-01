@@ -4,6 +4,7 @@ A daily game for DevOps and cloud engineers where proven skill becomes a public 
 
 - Architecture and MVP plan: [docs/architecture.md](docs/architecture.md)
 - Engineering rules: [CLAUDE.md](CLAUDE.md)
+- Progress against the plan: [docs/progress.md](docs/progress.md)
 
 ## Layout
 
@@ -35,7 +36,18 @@ A daily game for DevOps and cloud engineers where proven skill becomes a public 
 
 ```sh
 pnpm install
+pnpm dev        # build once, then run every service with reload (Go services restart only with pnpm dev)
 pnpm lint
 pnpm typecheck
 pnpm test
 ```
+
+Local addresses under `pnpm dev`:
+
+| Service | Address |
+|---|---|
+| Web | http://localhost:3001 |
+| API | http://localhost:3000/health |
+| Worker | http://localhost:3002/health |
+| Sandbox engine | http://127.0.0.1:8080/health |
+| Sandbox agent | http://127.0.0.1:8081/health |
