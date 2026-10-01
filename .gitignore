@@ -38,6 +38,7 @@ __queuestorage__/
 !.env.example
 *.pem
 *.key
+.certs/
 *.crt
 *.p12
 *.pfx
