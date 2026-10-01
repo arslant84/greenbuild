@@ -4,6 +4,7 @@ package agentserver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"os"
 	"time"
@@ -20,10 +21,27 @@ type Sandboxes interface {
 	RunSetup(ctx context.Context, id string, seed uint64) error
 	Destroy(ctx context.Context, id string) error
 	CopyIn(ctx context.Context, id string, file sandbox.File) error
+	OpenTerminal(ctx context.Context, id string, size sandbox.TerminalSize) (Terminal, error)
 }
 
-// Server implements agentv1.SandboxAgentServer. Exec comes in a later change and answers
-// Unimplemented until then.
+// FromManager adapts the sandbox manager, whose OpenTerminal returns a concrete type, to Sandboxes.
+func FromManager(manager *sandbox.Manager) Sandboxes {
+	return managerSandboxes{manager}
+}
+
+type managerSandboxes struct {
+	*sandbox.Manager
+}
+
+func (m managerSandboxes) OpenTerminal(ctx context.Context, id string, size sandbox.TerminalSize) (Terminal, error) {
+	terminal, err := m.Manager.OpenTerminal(ctx, id, size)
+	if err != nil {
+		return nil, fmt.Errorf("open terminal: %w", err)
+	}
+	return terminal, nil
+}
+
+// Server implements agentv1.SandboxAgentServer.
 type Server struct {
 	agentv1.UnimplementedSandboxAgentServer
 	sandboxes Sandboxes
