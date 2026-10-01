@@ -2,7 +2,7 @@
 
 Where the build stands against [architecture.md](architecture.md). Update this file in the same PR as the work it describes.
 
-Last updated: 2026-10-01
+Last updated: 2026-10-02
 
 ## Stage 0 — foundation and demand
 
@@ -23,7 +23,7 @@ Last updated: 2026-10-01
 | # | Task | Status | Notes |
 |---|---|---|---|
 | 1 | Agent skeleton | Done | Passed in CI on #7 |
-| 2 | Container with limits | In progress | 2a: `Spec` → Docker config (runtime, no network, all caps dropped, no-new-privileges, CPU/memory/PID limits), `SANDBOX_AGENT_RUNTIME`. 2b: `Manager.CreateSandbox`/`Destroy` via the Docker client; start failures remove the container; integration test passes on Docker with runc. 2c: CI job "Sandbox integration (gVisor)" installs pinned gVisor (checksum-verified) and runs the same test under runsc |
+| 2 | Container with limits | Done | 2a: `Spec` → Docker config (runtime, no network, all caps dropped, no-new-privileges, CPU/memory/PID limits), `SANDBOX_AGENT_RUNTIME`. 2b: `Manager.CreateSandbox`/`Destroy` via the Docker client; start failures remove the container; integration test passes on Docker with runc. 2c: CI job "Sandbox integration (gVisor)" installs pinned gVisor (checksum-verified) and runs the same test under runsc |
 | 3 | First challenge | Done | `challenges/nginx-502-upstream` (nginx proxies to the wrong port; seed picks ports and app user), 3 hints and a write-up. `challenges/verify-challenge.sh`: broken after setup, setup.sh removed, solved by solution.sh, for 3 seeds, under sandbox isolation |
 | 4 | Setup and TTL | Done | 4a: `Spec.Capabilities` → `CapAdd`, limited to an allowlist (CHOWN, DAC_OVERRIDE, FOWNER, KILL, NET_BIND_SERVICE, SETGID, SETUID). 4b: `Manager.RunSetup` runs `/opt/greenbuild/setup.sh <seed>` via exec, then the agent deletes it; failures return `ErrSetupFailed` with the output tail (max 4 KB). 4c: `Spec.TTL` required; deadline (TTL + 2 min) stored as the `greenbuild.deadline` container label; the agent's reaper destroys expired or deadline-less sandboxes every 10 s, so it survives agent restarts and needs no control plane |
 | 5 | Terminal (PTY) | Done | 5a: `Manager.OpenTerminal` starts `/bin/sh` with a PTY (TERM=xterm-256color); `Terminal` gives input, output, `Resize` and the exit code. Integration test drives a real shell: tty size before/after resize, `exit 3`. Under gVisor the size given at exec creation is ignored and termios fails until a resize, so `OpenTerminal` resizes right after start (as the Docker CLI does). 5b: `internal/console` (raw mode, size, resize watching) and `cmd/sandbox-shell` (see README): creates a sandbox, optionally runs setup with a seed, attaches the local terminal, destroys the sandbox on exit. Verified with piped input; interactive use needs a human check |
