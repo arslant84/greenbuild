@@ -18,6 +18,9 @@ type fakeDocker struct {
 	createErr error
 	startErr  error
 	removeErr error
+	// execs maps a command's first argument to how the fake runs it; exec IDs map back to it.
+	execs   map[string]fakeExec
+	execIDs map[string]string
 }
 
 func (f *fakeDocker) ContainerCreate(_ context.Context, options client.ContainerCreateOptions) (client.ContainerCreateResult, error) {
