@@ -25,6 +25,9 @@ type fakeDocker struct {
 	// sandboxes is what ContainerList returns; listed records the options it was called with.
 	sandboxes []container.Summary
 	listed    client.ContainerListOptions
+	// lastExec and resizes record what terminal tests sent.
+	lastExec client.ExecCreateOptions
+	resizes  []string
 }
 
 func (f *fakeDocker) ContainerCreate(_ context.Context, options client.ContainerCreateOptions) (client.ContainerCreateResult, error) {

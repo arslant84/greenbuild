@@ -20,6 +20,7 @@ type DockerAPI interface {
 	ExecAttach(ctx context.Context, execID string, options client.ExecAttachOptions) (client.ExecAttachResult, error)
 	ExecInspect(ctx context.Context, execID string, options client.ExecInspectOptions) (client.ExecInspectResult, error)
 	ContainerList(ctx context.Context, options client.ContainerListOptions) (client.ContainerListResult, error)
+	ExecResize(ctx context.Context, execID string, options client.ExecResizeOptions) (client.ExecResizeResult, error)
 }
 
 // SetupScriptPath is where every challenge image keeps the script that breaks its environment.
