@@ -8,6 +8,6 @@
     "lint": "golangci-lint run --allow-parallel-runners --build-tags integration ./...",
     "typecheck": "go vet -tags integration ./...",
     "test": "go test ./...",
-    "test:integration": "go test -tags integration -count=1 -run OnRealDocker ./internal/sandbox/..."
+    "test:integration": "go test -tags integration -count=1 -run OnRealDocker ./..."
   }
 }

@@ -13,20 +13,21 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-// startGRPC serves the agent API over mTLS and returns a function that stops it. Without TLS
-// files the server stays off: the agent API never runs unencrypted or unauthenticated.
-func startGRPC(cfg config.Config, sandboxes agentserver.Sandboxes) (func(), error) {
+// startGRPC serves the agent API over mTLS and returns a function that stops it and the bound
+// address (useful with port 0). Without TLS files the server stays off: the agent API never
+// runs unencrypted or unauthenticated.
+func startGRPC(cfg config.Config, sandboxes agentserver.Sandboxes) (func(), string, error) {
 	if !cfg.TLS.Enabled() {
 		slog.Warn("gRPC API disabled; set SANDBOX_AGENT_TLS_CA, SANDBOX_AGENT_TLS_CERT and SANDBOX_AGENT_TLS_KEY to enable it")
-		return func() {}, nil
+		return func() {}, "", nil
 	}
 	tlsConfig, err := mtls.ServerConfig(mtls.Files{CA: cfg.TLS.CA, Cert: cfg.TLS.Cert, Key: cfg.TLS.Key})
 	if err != nil {
-		return nil, fmt.Errorf("load mTLS config: %w", err)
+		return nil, "", fmt.Errorf("load mTLS config: %w", err)
 	}
 	listener, err := net.Listen("tcp", cfg.GRPCAddr)
 	if err != nil {
-		return nil, fmt.Errorf("listen on %s: %w", cfg.GRPCAddr, err)
+		return nil, "", fmt.Errorf("listen on %s: %w", cfg.GRPCAddr, err)
 	}
 
 	server := grpc.NewServer(grpc.Creds(credentials.NewTLS(tlsConfig)))
@@ -37,5 +38,5 @@ func startGRPC(cfg config.Config, sandboxes agentserver.Sandboxes) (func(), erro
 		}
 	}()
 	slog.Info("sandbox-agent gRPC listening", "addr", listener.Addr().String())
-	return server.GracefulStop, nil
+	return server.GracefulStop, listener.Addr().String(), nil
 }

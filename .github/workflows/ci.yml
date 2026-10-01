@@ -81,7 +81,7 @@ jobs:
       - run: bash .github/scripts/install-gvisor.sh "$GVISOR_RELEASE"
 
       # Same test as `pnpm --filter @greenbuild/sandbox-agent test:integration`, under runsc.
-      - run: go test -tags integration -count=1 -v -run OnRealDocker ./internal/sandbox/...
+      - run: go test -tags integration -count=1 -v -run OnRealDocker ./...
         working-directory: apps/sandbox-agent
         env:
           SANDBOX_TEST_RUNTIME: runsc
