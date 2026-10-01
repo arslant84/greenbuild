@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"slices"
+	"strings"
 	"testing"
 
 	cerrdefs "github.com/containerd/errdefs"
@@ -55,7 +56,13 @@ func newDockerClient(t *testing.T) *client.Client {
 func TestSandboxLifecycleOnRealDocker(t *testing.T) {
 	docker := newDockerClient(t)
 	manager := NewManager(docker, runtimeUnderTest())
-	spec := Spec{Image: integrationImage, Command: []string{"sleep", "300"}, CPUMillis: 500, MemoryBytes: 64 << 20}
+	spec := Spec{
+		Image:        integrationImage,
+		Command:      []string{"sleep", "300"},
+		CPUMillis:    500,
+		MemoryBytes:  64 << 20,
+		Capabilities: []string{"CHOWN"},
+	}
 
 	id, err := manager.CreateSandbox(t.Context(), spec)
 	if err != nil {
@@ -96,6 +103,14 @@ func assertRunningWithLimits(t *testing.T, got container.InspectResponse, spec S
 	}
 	assertIsolation(t, got.HostConfig)
 	assertLimits(t, got.HostConfig, spec)
+	// The daemon reports capabilities in canonical form, e.g. CHOWN as CAP_CHOWN.
+	applied := make([]string, 0, len(got.HostConfig.CapAdd))
+	for _, capability := range got.HostConfig.CapAdd {
+		applied = append(applied, strings.TrimPrefix(capability, "CAP_"))
+	}
+	if !slices.Equal(applied, spec.Capabilities) {
+		t.Errorf("CapAdd = %v, want %v", got.HostConfig.CapAdd, spec.Capabilities)
+	}
 }
 
 func assertIsolation(t *testing.T, host *container.HostConfig) {
