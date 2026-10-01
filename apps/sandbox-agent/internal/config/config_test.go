@@ -59,6 +59,7 @@ func TestLoadRejectsInvalidValues(t *testing.T) {
 		"zero timeout":         {envShutdownTimeout: "0s"},
 		"negative timeout":     {envShutdownTimeout: "-1s"},
 		"unknown runtime":      {envRuntime: "kata"},
+		"grpc without port":    {envGRPCAddr: "localhost"},
 	}
 	for name, env := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -67,5 +68,41 @@ func TestLoadRejectsInvalidValues(t *testing.T) {
 				t.Errorf("Load() error = %v, want ErrInvalid", err)
 			}
 		})
+	}
+}
+
+func TestLoadGRPCDefaultsToLoopbackWithoutTLS(t *testing.T) {
+	cfg, err := Load(envFrom(nil))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.GRPCAddr != defaultGRPCAddr {
+		t.Errorf("GRPCAddr = %q, want %q", cfg.GRPCAddr, defaultGRPCAddr)
+	}
+	if cfg.TLS.Enabled() {
+		t.Error("TLS enabled without any certificate paths")
+	}
+}
+
+func TestLoadTLSNeedsAllThreePaths(t *testing.T) {
+	all := map[string]string{envTLSCA: "ca.pem", envTLSCert: "agent.pem", envTLSKey: "agent-key.pem"}
+	cfg, err := Load(envFrom(all))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if !cfg.TLS.Enabled() || cfg.TLS.Key != "agent-key.pem" {
+		t.Errorf("TLS = %+v, want all three paths and enabled", cfg.TLS)
+	}
+
+	for _, missing := range []string{envTLSCA, envTLSCert, envTLSKey} {
+		partial := map[string]string{}
+		for key, value := range all {
+			if key != missing {
+				partial[key] = value
+			}
+		}
+		if _, err := Load(envFrom(partial)); !errors.Is(err, ErrInvalid) {
+			t.Errorf("Load() without %s error = %v, want ErrInvalid", missing, err)
+		}
 	}
 }

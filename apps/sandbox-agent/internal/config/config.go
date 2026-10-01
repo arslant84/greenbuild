@@ -10,8 +10,12 @@ import (
 
 const (
 	envHealthAddr      = "SANDBOX_AGENT_HEALTH_ADDR"
+	envGRPCAddr        = "SANDBOX_AGENT_GRPC_ADDR"
 	envShutdownTimeout = "SANDBOX_AGENT_SHUTDOWN_TIMEOUT"
 	envRuntime         = "SANDBOX_AGENT_RUNTIME"
+	envTLSCA           = "SANDBOX_AGENT_TLS_CA"
+	envTLSCert         = "SANDBOX_AGENT_TLS_CERT"
+	envTLSKey          = "SANDBOX_AGENT_TLS_KEY"
 
 	// RuntimeGVisor is the production runtime; RuntimeRunc is only for local development without gVisor.
 	RuntimeGVisor = "runsc"
@@ -19,6 +23,7 @@ const (
 
 	// Loopback by default: the agent must not be reachable by anything but the control plane.
 	defaultHealthAddr      = "127.0.0.1:8081"
+	defaultGRPCAddr        = "127.0.0.1:9443"
 	defaultShutdownTimeout = 10 * time.Second
 )
 
@@ -28,41 +33,94 @@ var ErrInvalid = errors.New("invalid config")
 // Config holds the agent settings.
 type Config struct {
 	HealthAddr      string
+	GRPCAddr        string
 	ShutdownTimeout time.Duration
 	Runtime         string
+	TLS             TLSFiles
+}
+
+// TLSFiles are the PEM paths for the gRPC server. All empty means the gRPC server stays off;
+// it never runs without mTLS.
+type TLSFiles struct {
+	CA   string
+	Cert string
+	Key  string
+}
+
+// Enabled reports whether the gRPC server can start.
+func (f TLSFiles) Enabled() bool {
+	return f.CA != ""
 }
 
 // Load reads the config through getenv so tests can supply their own values.
 func Load(getenv func(string) string) (Config, error) {
-	cfg := Config{
-		HealthAddr:      defaultHealthAddr,
-		ShutdownTimeout: defaultShutdownTimeout,
-		Runtime:         RuntimeGVisor,
+	var cfg Config
+	var err error
+	if cfg.HealthAddr, err = loadAddr(getenv, envHealthAddr, defaultHealthAddr); err != nil {
+		return Config{}, err
 	}
-
-	if addr := getenv(envHealthAddr); addr != "" {
-		if _, _, err := net.SplitHostPort(addr); err != nil {
-			return Config{}, fmt.Errorf("%w: %s %q: %w", ErrInvalid, envHealthAddr, addr, err)
-		}
-		cfg.HealthAddr = addr
+	if cfg.GRPCAddr, err = loadAddr(getenv, envGRPCAddr, defaultGRPCAddr); err != nil {
+		return Config{}, err
 	}
-
-	if raw := getenv(envShutdownTimeout); raw != "" {
-		timeout, err := parsePositiveDuration(raw)
-		if err != nil {
-			return Config{}, fmt.Errorf("%w: %s %q: %w", ErrInvalid, envShutdownTimeout, raw, err)
-		}
-		cfg.ShutdownTimeout = timeout
+	if cfg.ShutdownTimeout, err = loadShutdownTimeout(getenv); err != nil {
+		return Config{}, err
 	}
-
-	if runtime := getenv(envRuntime); runtime != "" {
-		if runtime != RuntimeGVisor && runtime != RuntimeRunc {
-			return Config{}, fmt.Errorf("%w: %s %q: want %s or %s", ErrInvalid, envRuntime, runtime, RuntimeGVisor, RuntimeRunc)
-		}
-		cfg.Runtime = runtime
+	if cfg.Runtime, err = loadRuntime(getenv); err != nil {
+		return Config{}, err
 	}
-
+	if cfg.TLS, err = loadTLS(getenv); err != nil {
+		return Config{}, err
+	}
 	return cfg, nil
+}
+
+func loadAddr(getenv func(string) string, key, fallback string) (string, error) {
+	addr := getenv(key)
+	if addr == "" {
+		return fallback, nil
+	}
+	if _, _, err := net.SplitHostPort(addr); err != nil {
+		return "", fmt.Errorf("%w: %s %q: %w", ErrInvalid, key, addr, err)
+	}
+	return addr, nil
+}
+
+func loadShutdownTimeout(getenv func(string) string) (time.Duration, error) {
+	raw := getenv(envShutdownTimeout)
+	if raw == "" {
+		return defaultShutdownTimeout, nil
+	}
+	timeout, err := parsePositiveDuration(raw)
+	if err != nil {
+		return 0, fmt.Errorf("%w: %s %q: %w", ErrInvalid, envShutdownTimeout, raw, err)
+	}
+	return timeout, nil
+}
+
+func loadRuntime(getenv func(string) string) (string, error) {
+	runtime := getenv(envRuntime)
+	if runtime == "" {
+		return RuntimeGVisor, nil
+	}
+	if runtime != RuntimeGVisor && runtime != RuntimeRunc {
+		return "", fmt.Errorf("%w: %s %q: want %s or %s", ErrInvalid, envRuntime, runtime, RuntimeGVisor, RuntimeRunc)
+	}
+	return runtime, nil
+}
+
+// loadTLS accepts all three paths or none; a partial set is a deployment mistake, not a reason to run without TLS.
+func loadTLS(getenv func(string) string) (TLSFiles, error) {
+	files := TLSFiles{CA: getenv(envTLSCA), Cert: getenv(envTLSCert), Key: getenv(envTLSKey)}
+	set := 0
+	for _, path := range []string{files.CA, files.Cert, files.Key} {
+		if path != "" {
+			set++
+		}
+	}
+	if set != 0 && set != 3 {
+		return TLSFiles{}, fmt.Errorf("%w: set all of %s, %s, %s or none", ErrInvalid, envTLSCA, envTLSCert, envTLSKey)
+	}
+	return files, nil
 }
 
 func parsePositiveDuration(raw string) (time.Duration, error) {
