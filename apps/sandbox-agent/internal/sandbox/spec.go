@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"slices"
+	"time"
 
 	"github.com/moby/moby/api/types/container"
 )
@@ -47,6 +48,8 @@ type Spec struct {
 	MemoryBytes int64
 	// Capabilities come from the challenge manifest, e.g. ["SETUID", "SETGID"]; see IsAllowedCapability.
 	Capabilities []string
+	// TTL is the challenge time limit; the sandbox is destroyed after TTL plus a grace period.
+	TTL time.Duration
 }
 
 // Validate rejects specs that would start a container without an image or without limits.
@@ -59,6 +62,9 @@ func (s Spec) Validate() error {
 	}
 	if s.MemoryBytes <= 0 {
 		return fmt.Errorf("%w: memory limit must be positive, got %d", ErrInvalidSpec, s.MemoryBytes)
+	}
+	if s.TTL <= 0 {
+		return fmt.Errorf("%w: ttl must be positive, got %s", ErrInvalidSpec, s.TTL)
 	}
 	for _, capability := range s.Capabilities {
 		if !IsAllowedCapability(capability) {

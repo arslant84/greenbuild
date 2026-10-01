@@ -9,6 +9,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/moby/moby/api/types/container"
@@ -61,6 +62,7 @@ func TestSandboxLifecycleOnRealDocker(t *testing.T) {
 		Command:      []string{"sleep", "300"},
 		CPUMillis:    500,
 		MemoryBytes:  64 << 20,
+		TTL:          5 * time.Minute,
 		Capabilities: []string{"CHOWN"},
 	}
 

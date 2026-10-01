@@ -14,7 +14,12 @@ import (
 
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/config"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/health"
+	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/sandbox"
+	"github.com/moby/moby/client"
 )
+
+// reapInterval bounds how long past its deadline a sandbox can survive.
+const reapInterval = 10 * time.Second
 
 func main() {
 	if err := run(); err != nil {
@@ -35,7 +40,20 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
+	docker, err := client.New(client.FromEnv)
+	if err != nil {
+		return fmt.Errorf("create docker client: %w", err)
+	}
+	defer closeDocker(docker)
+	go sandbox.NewManager(docker, cfg.Runtime).RunReaper(ctx, reapInterval)
+
 	return serve(ctx, health.NewServer(cfg.HealthAddr), cfg.ShutdownTimeout)
+}
+
+func closeDocker(docker *client.Client) {
+	if err := docker.Close(); err != nil {
+		slog.Warn("close docker client", "error", err)
+	}
 }
 
 // serve runs server until ctx is cancelled, then shuts it down gracefully.

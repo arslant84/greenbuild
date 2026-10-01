@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"time"
 
 	cerrdefs "github.com/containerd/errdefs"
 	"github.com/moby/moby/client"
@@ -18,6 +19,7 @@ type DockerAPI interface {
 	ExecCreate(ctx context.Context, id string, options client.ExecCreateOptions) (client.ExecCreateResult, error)
 	ExecAttach(ctx context.Context, execID string, options client.ExecAttachOptions) (client.ExecAttachResult, error)
 	ExecInspect(ctx context.Context, execID string, options client.ExecInspectOptions) (client.ExecInspectResult, error)
+	ContainerList(ctx context.Context, options client.ContainerListOptions) (client.ContainerListResult, error)
 }
 
 // SetupScriptPath is where every challenge image keeps the script that breaks its environment.
@@ -28,13 +30,15 @@ var ErrSetupFailed = errors.New("sandbox setup failed")
 
 // Manager creates and destroys sandbox containers.
 type Manager struct {
-	docker  DockerAPI
-	runtime string
+	docker   DockerAPI
+	runtime  string
+	ttlGrace time.Duration
+	now      func() time.Time
 }
 
 // NewManager returns a Manager that runs every sandbox under the given OCI runtime.
 func NewManager(docker DockerAPI, runtime string) *Manager {
-	return &Manager{docker: docker, runtime: runtime}
+	return &Manager{docker: docker, runtime: runtime, ttlGrace: DefaultTTLGrace, now: time.Now}
 }
 
 // CreateSandbox starts an isolated container for spec and returns its ID.
@@ -45,6 +49,7 @@ func (m *Manager) CreateSandbox(ctx context.Context, spec Spec) (string, error) 
 	}
 
 	config, hostConfig := ContainerConfig(spec, m.runtime)
+	config.Labels[LabelDeadline] = strconv.FormatInt(m.deadlineFor(spec).Unix(), 10)
 	created, err := m.docker.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig})
 	if err != nil {
 		return "", fmt.Errorf("create sandbox from %s: %w", spec.Image, err)

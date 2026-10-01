@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	cerrdefs "github.com/containerd/errdefs"
+	"github.com/moby/moby/api/types/container"
 	"github.com/moby/moby/client"
 )
 
@@ -21,6 +22,9 @@ type fakeDocker struct {
 	// execs maps a command's first argument to how the fake runs it; exec IDs map back to it.
 	execs   map[string]fakeExec
 	execIDs map[string]string
+	// sandboxes is what ContainerList returns; listed records the options it was called with.
+	sandboxes []container.Summary
+	listed    client.ContainerListOptions
 }
 
 func (f *fakeDocker) ContainerCreate(_ context.Context, options client.ContainerCreateOptions) (client.ContainerCreateResult, error) {
