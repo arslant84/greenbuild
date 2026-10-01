@@ -15,7 +15,10 @@ import (
 	"github.com/moby/moby/client"
 )
 
-const terminalWait = 15 * time.Second
+const (
+	terminalWait   = 15 * time.Second
+	ttySizeCommand = "stty -F /dev/tty size\n"
+)
 
 // lockedBuffer collects terminal output while the test reads it.
 type lockedBuffer struct {
@@ -62,11 +65,13 @@ func TestTerminalRunsCommandsResizesAndExitsOnRealDocker(t *testing.T) {
 		close(shellDone)
 	}()
 
-	typeAndExpect(t, terminal, output, "stty size\n", "24 80")
+	// Query /dev/tty, not stdin: under gVisor an exec's stdin is a host-backed fd (host:[N]) on which
+	// busybox `stty size` fails, while the PTY itself reports the right size (checked with docker exec -it).
+	typeAndExpect(t, terminal, output, ttySizeCommand, "24 80")
 	if err := terminal.Resize(t.Context(), TerminalSize{Rows: 40, Cols: 120}); err != nil {
 		t.Fatalf("Resize() error = %v", err)
 	}
-	typeAndExpect(t, terminal, output, "stty size\n", "40 120")
+	typeAndExpect(t, terminal, output, ttySizeCommand, "40 120")
 	typeText(t, terminal, "exit 3\n")
 
 	select {
