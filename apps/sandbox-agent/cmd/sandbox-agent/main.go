@@ -28,6 +28,9 @@ func run() error {
 	if err != nil {
 		return fmt.Errorf("load config: %w", err)
 	}
+	if cfg.Runtime != config.RuntimeGVisor {
+		slog.Warn("sandboxes run without gVisor; use only for local development", "runtime", cfg.Runtime)
+	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

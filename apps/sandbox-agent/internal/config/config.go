@@ -11,6 +11,11 @@ import (
 const (
 	envHealthAddr      = "SANDBOX_AGENT_HEALTH_ADDR"
 	envShutdownTimeout = "SANDBOX_AGENT_SHUTDOWN_TIMEOUT"
+	envRuntime         = "SANDBOX_AGENT_RUNTIME"
+
+	// RuntimeGVisor is the production runtime; RuntimeRunc is only for local development without gVisor.
+	RuntimeGVisor = "runsc"
+	RuntimeRunc   = "runc"
 
 	// Loopback by default: the agent must not be reachable by anything but the control plane.
 	defaultHealthAddr      = "127.0.0.1:8081"
@@ -24,11 +29,16 @@ var ErrInvalid = errors.New("invalid config")
 type Config struct {
 	HealthAddr      string
 	ShutdownTimeout time.Duration
+	Runtime         string
 }
 
 // Load reads the config through getenv so tests can supply their own values.
 func Load(getenv func(string) string) (Config, error) {
-	cfg := Config{HealthAddr: defaultHealthAddr, ShutdownTimeout: defaultShutdownTimeout}
+	cfg := Config{
+		HealthAddr:      defaultHealthAddr,
+		ShutdownTimeout: defaultShutdownTimeout,
+		Runtime:         RuntimeGVisor,
+	}
 
 	if addr := getenv(envHealthAddr); addr != "" {
 		if _, _, err := net.SplitHostPort(addr); err != nil {
@@ -43,6 +53,13 @@ func Load(getenv func(string) string) (Config, error) {
 			return Config{}, fmt.Errorf("%w: %s %q: %w", ErrInvalid, envShutdownTimeout, raw, err)
 		}
 		cfg.ShutdownTimeout = timeout
+	}
+
+	if runtime := getenv(envRuntime); runtime != "" {
+		if runtime != RuntimeGVisor && runtime != RuntimeRunc {
+			return Config{}, fmt.Errorf("%w: %s %q: want %s or %s", ErrInvalid, envRuntime, runtime, RuntimeGVisor, RuntimeRunc)
+		}
+		cfg.Runtime = runtime
 	}
 
 	return cfg, nil

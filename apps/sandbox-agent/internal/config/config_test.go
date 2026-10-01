@@ -21,6 +21,19 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.ShutdownTimeout != defaultShutdownTimeout {
 		t.Errorf("ShutdownTimeout = %v, want %v", cfg.ShutdownTimeout, defaultShutdownTimeout)
 	}
+	if cfg.Runtime != RuntimeGVisor {
+		t.Errorf("Runtime = %q, want %q (gVisor by default)", cfg.Runtime, RuntimeGVisor)
+	}
+}
+
+func TestLoadAcceptsRuncForLocalDevelopment(t *testing.T) {
+	cfg, err := Load(envFrom(map[string]string{envRuntime: "runc"}))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Runtime != RuntimeRunc {
+		t.Errorf("Runtime = %q, want %q", cfg.Runtime, RuntimeRunc)
+	}
 }
 
 func TestLoadOverrides(t *testing.T) {
@@ -45,6 +58,7 @@ func TestLoadRejectsInvalidValues(t *testing.T) {
 		"unparsable timeout":   {envShutdownTimeout: "soon"},
 		"zero timeout":         {envShutdownTimeout: "0s"},
 		"negative timeout":     {envShutdownTimeout: "-1s"},
+		"unknown runtime":      {envRuntime: "kata"},
 	}
 	for name, env := range cases {
 		t.Run(name, func(t *testing.T) {
