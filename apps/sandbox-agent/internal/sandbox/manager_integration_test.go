@@ -39,6 +39,11 @@ func newDockerClient(t *testing.T) *client.Client {
 		}
 	})
 
+	// Pull only when missing: a registry round trip per test is slow, and fails on networks
+	// that block Docker Hub even though the image is already cached.
+	if _, err := docker.ImageInspect(t.Context(), integrationImage); err == nil {
+		return docker
+	}
 	pull, err := docker.ImagePull(t.Context(), integrationImage, client.ImagePullOptions{})
 	if err != nil {
 		t.Fatalf("pull %s: %v", integrationImage, err)
