@@ -65,8 +65,7 @@ func TestTerminalRunsCommandsResizesAndExitsOnRealDocker(t *testing.T) {
 		close(shellDone)
 	}()
 
-	// Query /dev/tty, not stdin: under gVisor an exec's stdin is a host-backed fd (host:[N]) on which
-	// busybox `stty size` fails, while the PTY itself reports the right size (checked with docker exec -it).
+	// Under gVisor this only works because OpenTerminal applies the size after start.
 	typeAndExpect(t, terminal, output, ttySizeCommand, "24 80")
 	if err := terminal.Resize(t.Context(), TerminalSize{Rows: 40, Cols: 120}); err != nil {
 		t.Fatalf("Resize() error = %v", err)

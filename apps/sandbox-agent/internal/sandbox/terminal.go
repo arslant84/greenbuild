@@ -48,7 +48,15 @@ func (m *Manager) OpenTerminal(ctx context.Context, id string, size TerminalSize
 	if err != nil {
 		return nil, fmt.Errorf("attach terminal in sandbox %s: %w", id, err)
 	}
-	return &Terminal{docker: m.docker, execID: created.ID, stream: attached.HijackedResponse}, nil
+	terminal := &Terminal{docker: m.docker, execID: created.ID, stream: attached.HijackedResponse}
+
+	// gVisor ignores the size given at creation: until a resize arrives the PTY has no size and
+	// termios calls fail (stty: "Not a tty"), breaking editors and pagers. The Docker CLI also resizes here.
+	if err := terminal.Resize(ctx, size); err != nil {
+		terminal.Close()
+		return nil, err
+	}
+	return terminal, nil
 }
 
 // Input is what the player types; it goes to the shell's stdin.

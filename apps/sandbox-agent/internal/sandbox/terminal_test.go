@@ -36,6 +36,9 @@ func TestOpenTerminalStartsInteractiveShellWithPTY(t *testing.T) {
 	if !slices.Contains(got.Env, "TERM=xterm-256color") {
 		t.Errorf("Env = %v, want TERM=xterm-256color", got.Env)
 	}
+	if want := []string{terminal.execID + " 80x24"}; !slices.Equal(docker.resizes, want) {
+		t.Errorf("resizes = %v, want %v: the size must be applied after start, or gVisor leaves the PTY sizeless", docker.resizes, want)
+	}
 }
 
 func TestTerminalResizeAndExitCodeUseItsExec(t *testing.T) {
@@ -49,7 +52,7 @@ func TestTerminalResizeAndExitCodeUseItsExec(t *testing.T) {
 	if err := terminal.Resize(t.Context(), TerminalSize{Rows: 40, Cols: 120}); err != nil {
 		t.Fatalf("Resize() error = %v", err)
 	}
-	if want := []string{terminal.execID + " 120x40"}; !slices.Equal(docker.resizes, want) {
+	if want := []string{terminal.execID + " 80x24", terminal.execID + " 120x40"}; !slices.Equal(docker.resizes, want) {
 		t.Errorf("resizes = %v, want %v", docker.resizes, want)
 	}
 	if code, err := terminal.ExitCode(t.Context()); err != nil || code != 3 {
