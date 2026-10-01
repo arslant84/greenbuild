@@ -73,6 +73,7 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 - `verify-challenge.sh` reads only flat manifest lines; proper parsing and a JSON schema belong to `packages/challenge-spec` with the challenge CI pipeline.
 - On Windows, stopping `pnpm dev` can leave the `go run` child binaries running (seen: an old `sandbox-agent.exe` holding port 8081). Prefer building Go apps once and running the binary in `dev`.
 - The agent's reaper is the only TTL enforcement; architecture.md also wants the agent to kill sandboxes at 100% CPU for over 60 s (not started).
+- `internal/console` implements raw mode with `golang.org/x/sys` (already a dependency) because `golang.org/x/term` could not be downloaded (golang.org blocked on this network); switch to `x/term` when it is reachable. Raw mode exists for Linux and Windows only.
 - gVisor is pinned in CI (`GVISOR_RELEASE` in `ci.yml`); bump it deliberately in its own PR.
 - Run the agent integration test locally with `pnpm --filter @greenbuild/sandbox-agent test:integration` (needs Docker running).
 - Network: GitHub, npm and the Go proxy are blocked on some networks (filtered upstream, not by Windows); check connectivity before tasks that download dependencies.
