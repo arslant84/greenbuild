@@ -50,3 +50,14 @@ Local addresses under `pnpm dev`:
 | Worker | http://localhost:3002/health |
 | Sandbox engine | http://127.0.0.1:8080/health |
 | Sandbox agent | http://127.0.0.1:8081/health |
+
+## Try a sandbox by hand
+
+Needs Docker running. Opens a shell in a fresh sandbox with the agent's isolation; the sandbox is destroyed when you `exit`.
+
+```sh
+cd apps/sandbox-agent
+go run ./cmd/sandbox-shell                                   # plain alpine:3
+# a challenge, broken with seed 4242 (build its image first with challenges/verify-challenge.sh):
+go run ./cmd/sandbox-shell -image greenbuild-challenge/nginx-502-upstream:verify -seed 4242 -cap CHOWN,SETUID,SETGID
+```
