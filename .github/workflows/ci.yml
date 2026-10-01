@@ -80,6 +80,21 @@ jobs:
 
       - run: bash .github/scripts/install-gvisor.sh "$GVISOR_RELEASE"
 
+      - name: TEMPORARY - diagnose PTY size under runsc vs runc
+        run: |
+          set +e
+          docker pull -q alpine:3
+          for runtime in runsc runc; do
+            c=$(docker run -d --runtime "$runtime" alpine:3 sleep 120)
+            echo "===== $runtime: docker exec -it stty size"
+            script -qec "stty rows 24 cols 80; docker exec -it $c stty size; echo exit=\$?" /dev/null
+            echo "===== $runtime: details"
+            script -qec "stty rows 24 cols 80; docker exec -it $c sh -c 'ls -l /proc/self/fd/0; stty -a 2>&1 | head -3; echo COLUMNS=\$COLUMNS'" /dev/null
+            echo "===== $runtime: busybox stty size on /dev/tty"
+            script -qec "stty rows 24 cols 80; docker exec -it $c sh -c 'stty -F /dev/tty size; echo exit=\$?'" /dev/null
+            docker rm -f "$c" > /dev/null
+          done
+
       # Same test as `pnpm --filter @greenbuild/sandbox-agent test:integration`, under runsc.
       - run: go test -tags integration -count=1 -v -run OnRealDocker ./internal/sandbox/...
         working-directory: apps/sandbox-agent
