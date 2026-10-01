@@ -23,7 +23,7 @@ Last updated: 2026-10-01
 | # | Task | Status | Notes |
 |---|---|---|---|
 | 1 | Agent skeleton | Done | Passed in CI on #7 |
-| 2 | Container with limits | Blocked | Docker Desktop stopped; gVisor not installed |
+| 2 | Container with limits | In progress | 2a done: `Spec` → Docker config with runtime, no network, all caps dropped, no-new-privileges, CPU/memory/PID limits; `SANDBOX_AGENT_RUNTIME` (runsc default, runc for local dev). Next: 2b Docker create/destroy + integration test, 2c gVisor in CI |
 | 3–16 | Remaining slice | Not started | |
 
 ## Setup steps done
@@ -59,14 +59,15 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 - `@swc/core` install script stays disabled (`ignoredBuiltDependencies`).
 - Turborepo agent guidance disabled; no `AGENTS.md`.
 - No Claude attribution in commits or PRs.
+- No branch protection (private repo on the free plan); Claude merges PRs with `gh` only when every check is green. Merged branches are deleted automatically.
+- Local development runs sandboxes with `runc` (architecture.md: dev uses Docker without gVisor); gVisor is verified in CI. The agent defaults to `runsc` and warns at startup otherwise.
+- Docker access through `github.com/moby/moby/api` and `client` (the maintained successor of `github.com/docker/docker`).
 
 ## Open items
 
-- Merge `fix/golangci-parallel` so `main` is green again; only merge PRs whose checks pass.
-- Merge `chore/enforcement`, then require "PR size" and "Lint, typecheck, test, build" in a `main` ruleset.
+- Sandbox limits still to add from architecture.md: open-file limit, disk limit, read-only root where the challenge allows, seccomp profile, user namespaces.
+- CI's Go cache is off ("no go.sum yet"); the agent now has a go.sum, so caching can be enabled.
 - Network: GitHub, npm and the Go proxy are blocked on some networks (filtered upstream, not by Windows); check connectivity before tasks that download dependencies.
-- Start Docker Desktop and install gVisor (`runsc`) in the WSL2 VM for task 2.
 - Add `eslint-config-next` once the web app has real UI.
 - Strip tokens and passwords from logs before request or DB logging is added.
 - Agent and engine duplicate ~60 lines (config loading, health, graceful shutdown); apps cannot import each other. Revisit if a shared Go package under `packages/` becomes worthwhile.
-- Local branch `feat/api-skeleton` can be deleted with `git branch -D` (content is on `main`).
