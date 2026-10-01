@@ -24,7 +24,7 @@ Last updated: 2026-10-01
 |---|---|---|---|
 | 1 | Agent skeleton | Done | Passed in CI on #7 |
 | 2 | Container with limits | In progress | 2a: `Spec` → Docker config (runtime, no network, all caps dropped, no-new-privileges, CPU/memory/PID limits), `SANDBOX_AGENT_RUNTIME`. 2b: `Manager.CreateSandbox`/`Destroy` via the Docker client; start failures remove the container; integration test passes on Docker with runc. 2c: CI job "Sandbox integration (gVisor)" installs pinned gVisor (checksum-verified) and runs the same test under runsc |
-| 3 | First challenge | In progress | `challenges/nginx-502-upstream` (nginx proxies to the wrong port; seed picks ports and app user) and `challenges/verify-challenge.sh`: broken after setup, setup.sh removed, solved by solution.sh, for 3 seeds, under sandbox isolation. Next: hints and write-up |
+| 3 | First challenge | Done | `challenges/nginx-502-upstream` (nginx proxies to the wrong port; seed picks ports and app user), 3 hints and a write-up. `challenges/verify-challenge.sh`: broken after setup, setup.sh removed, solved by solution.sh, for 3 seeds, under sandbox isolation |
 | 4–16 | Remaining slice | Not started | |
 
 ## Setup steps done
@@ -60,6 +60,7 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 - `@swc/core` install script stays disabled (`ignoredBuiltDependencies`).
 - Turborepo agent guidance disabled; no `AGENTS.md`.
 - No Claude attribution in commits or PRs.
+- `CLAUDE.md` is kept locally and ignored by git (owner's decision, 2026-10-01); the size limits stay enforced by ESLint, golangci-lint, CI and Husky.
 - No branch protection (private repo on the free plan); Claude merges PRs with `gh` only when every check is green. Merged branches are deleted automatically.
 - Local development runs sandboxes with `runc` (architecture.md: dev uses Docker without gVisor); gVisor is verified in CI. The agent defaults to `runsc` and warns at startup otherwise.
 - Docker access through `github.com/moby/moby/api` and `client` (the maintained successor of `github.com/docker/docker`).
