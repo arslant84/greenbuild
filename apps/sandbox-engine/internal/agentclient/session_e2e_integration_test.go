@@ -73,18 +73,27 @@ func startRecordedAttach(t *testing.T, client *agentclient.Client, connection st
 	return serveAttach(t, handler)
 }
 
-// awaitLog waits for the log: it is saved after the WebSocket closes.
+// awaitLog waits for the whole log: it is saved after the WebSocket closes, and the append blob
+// exists, still empty, a moment before the session is appended to it.
 func awaitLog(t *testing.T, blob azuritetest.Blob) []sessionlog.Event {
 	t.Helper()
-	deadline := time.Now().Add(logWait)
-	content, _, err := azuritetest.Download(t.Context(), blob)
-	for err != nil && time.Now().Before(deadline) {
-		time.Sleep(200 * time.Millisecond)
+	var content string
+	var err error
+	for deadline := time.Now().Add(logWait); time.Now().Before(deadline); time.Sleep(200 * time.Millisecond) {
 		content, _, err = azuritetest.Download(t.Context(), blob)
+		if err != nil {
+			continue
+		}
+		if events := parseEvents(t, content); len(events) > 0 && events[len(events)-1].Type == sessionlog.EventEnd {
+			return events
+		}
 	}
-	if err != nil {
-		t.Fatalf("no session log within %v: %v", logWait, err)
-	}
+	t.Fatalf("no complete session log within %v: %v (content %q)", logWait, err, content)
+	return nil
+}
+
+func parseEvents(t *testing.T, content string) []sessionlog.Event {
+	t.Helper()
 	var events []sessionlog.Event
 	scanner := bufio.NewScanner(strings.NewReader(content))
 	for scanner.Scan() {
