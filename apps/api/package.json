@@ -10,13 +10,17 @@
     "dev:compile": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev:user-token": "node dist/dev/dev-user-token.js"
   },
   "dependencies": {
+    "@greenbuild/db": "workspace:*",
     "@greenbuild/shared": "workspace:*",
     "@nestjs/common": "^12.1.2",
     "@nestjs/core": "^12.1.2",
     "@nestjs/platform-express": "^12.1.2",
+    "jose": "^6.2.12",
+    "redis": "^6.3.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "zod": "^4.6.5"
