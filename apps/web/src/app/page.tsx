@@ -1,8 +1,6 @@
-export default function HomePage() {
-  return (
-    <main>
-      <h1>Green Build</h1>
-      <p>Daily DevOps challenges. Coming soon.</p>
-    </main>
-  );
+import { redirect } from "next/navigation";
+
+// The Daily Challenge screen is the app's home in the Figma file.
+export default function HomePage(): never {
+  redirect("/play");
 }
