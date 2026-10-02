@@ -1,0 +1,33 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+
+/* Tokens from the HotFix Figma file (play flow frames). */
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  --color-canvas: #0e0e0f;
+  --color-surface: #1c1b1c;
+  --color-surface-raised: #201f20;
+  --color-control: #2a2a2b;
+  --color-line: #353436;
+
+  --color-ink: #e5e2e3;
+  --color-ink-muted: #bbc9cd;
+  --color-ink-subtle: #859397;
+
+  --color-accent: #22d3ee;
+  --color-accent-soft: #8aebff;
+  --color-on-accent: #001f25;
+
+  --color-ok: #64f88a;
+  --color-warn: #ffc640;
+  --color-danger: #ffb4ab;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
