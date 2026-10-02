@@ -210,6 +210,9 @@ importers:
       '@greenbuild/config':
         specifier: workspace:*
         version: link:../config
+      '@types/node':
+        specifier: ^22.20.4
+        version: 22.20.4
       eslint:
         specifier: ^10.11.0
         version: 10.11.0

@@ -1,4 +1,8 @@
 {
   "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // The web app runs this code in the browser: Node APIs are allowed in tests only.
+    "types": []
+  },
   "exclude": ["src/**/*.test.ts"]
 }
