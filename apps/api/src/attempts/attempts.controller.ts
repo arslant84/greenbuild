@@ -1,15 +1,19 @@
-import { type AttemptResponse, startAttemptRequestSchema } from "@greenbuild/shared";
+import { type AttemptResponse, type AttemptResult, type CheckResponse, startAttemptRequestSchema } from "@greenbuild/shared";
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from "@nestjs/common";
 import { z } from "zod";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
 import { CurrentUser, DevUserGuard } from "../auth/dev-user.guard.js";
 import { parseInput } from "../validation.js";
 import { AttemptsService } from "./attempts.service.js";
+import { ChecksService } from "./checks.service.js";
 
 @Controller("v1/attempts")
 @UseGuards(DevUserGuard)
 export class AttemptsController {
-  constructor(private readonly attempts: AttemptsService) {}
+  constructor(
+    private readonly attempts: AttemptsService,
+    private readonly checks: ChecksService,
+  ) {}
 
   @Post()
   @HttpCode(HttpStatus.CREATED)
@@ -21,5 +25,16 @@ export class AttemptsController {
   @Get(":id")
   find(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string): Promise<AttemptResponse> {
     return this.attempts.find(user.id, parseInput(z.uuid(), id));
+  }
+
+  @Post(":id/check")
+  @HttpCode(HttpStatus.OK)
+  check(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string): Promise<CheckResponse> {
+    return this.checks.check(user.id, parseInput(z.uuid(), id));
+  }
+
+  @Get(":id/result")
+  result(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string): Promise<AttemptResult> {
+    return this.checks.result(user.id, parseInput(z.uuid(), id));
   }
 }
