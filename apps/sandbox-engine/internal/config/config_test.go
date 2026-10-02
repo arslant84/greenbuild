@@ -112,3 +112,13 @@ func TestLoadAttachSecret(t *testing.T) {
 		t.Error("the error message leaks the secret")
 	}
 }
+
+func TestLoadAllowedOrigins(t *testing.T) {
+	cfg, err := Load(envFrom(map[string]string{envAllowedOrigins: " greenbuild.dev, ,app.greenbuild.dev "}))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if want := []string{"greenbuild.dev", "app.greenbuild.dev"}; strings.Join(cfg.AllowedOrigins, ",") != strings.Join(want, ",") {
+		t.Errorf("AllowedOrigins = %q, want %q", cfg.AllowedOrigins, want)
+	}
+}

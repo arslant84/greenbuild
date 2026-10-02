@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"strings"
 	"time"
 )
 
@@ -17,6 +18,7 @@ const (
 	envTLSCert         = "SANDBOX_ENGINE_TLS_CERT"
 	envTLSKey          = "SANDBOX_ENGINE_TLS_KEY"
 	envAttachSecret    = "SANDBOX_ENGINE_ATTACH_SECRET"
+	envAllowedOrigins  = "SANDBOX_ENGINE_ALLOWED_ORIGINS"
 
 	// minAttachSecretBytes matches HS256's key size; shorter secrets are easier to brute-force.
 	minAttachSecretBytes = 32
@@ -39,6 +41,9 @@ type Config struct {
 	Agent           AgentConfig
 	// AttachSecret verifies browser attach tokens; empty keeps /attach off. Never log it.
 	AttachSecret string
+	// AllowedOrigins are browser origins besides the engine's own host that may open /attach,
+	// e.g. "greenbuild.dev"; comma-separated in the environment.
+	AllowedOrigins []string
 }
 
 // AgentConfig is how the engine reaches a sandbox agent. Without TLS files the engine does not
@@ -82,6 +87,7 @@ func Load(getenv func(string) string) (Config, error) {
 	if cfg.AttachSecret, err = loadAttachSecret(getenv); err != nil {
 		return Config{}, err
 	}
+	cfg.AllowedOrigins = splitList(getenv(envAllowedOrigins))
 	return cfg, nil
 }
 
@@ -130,6 +136,16 @@ func loadAttachSecret(getenv func(string) string) (string, error) {
 		return "", fmt.Errorf("%w: %s is %d bytes, need at least %d", ErrInvalid, envAttachSecret, len(secret), minAttachSecretBytes)
 	}
 	return secret, nil
+}
+
+func splitList(value string) []string {
+	var items []string
+	for _, item := range strings.Split(value, ",") {
+		if trimmed := strings.TrimSpace(item); trimmed != "" {
+			items = append(items, trimmed)
+		}
+	}
+	return items
 }
 
 func valueOr(value, fallback string) string {

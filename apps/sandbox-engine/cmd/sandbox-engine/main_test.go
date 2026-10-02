@@ -11,7 +11,7 @@ const testShutdownTimeout = time.Second
 
 func TestServeStopsCleanlyWhenContextIsCancelled(t *testing.T) {
 	ctx, cancel := context.WithCancel(t.Context())
-	server := newServer("127.0.0.1:0")
+	server := newServer("127.0.0.1:0", nil)
 
 	done := make(chan error, 1)
 	go func() { done <- serve(ctx, server, testShutdownTimeout) }()
@@ -36,7 +36,7 @@ func TestServeReportsListenErrors(t *testing.T) {
 }
 
 func TestNewServerRoutesHealth(t *testing.T) {
-	server := newServer("127.0.0.1:0")
+	server := newServer("127.0.0.1:0", nil)
 	request, err := http.NewRequestWithContext(t.Context(), http.MethodGet, "/health", nil)
 	if err != nil {
 		t.Fatalf("NewRequest() error = %v", err)
