@@ -1,6 +1,6 @@
 import { ATTEMPT_MAX_CHECKS, SEED_MAX } from "@greenbuild/shared";
 import { sql } from "drizzle-orm";
-import { bigint, boolean, check, index, integer, pgEnum, pgTable, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, integer, pgEnum, pgTable, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { challengeVersions } from "./challenges.js";
 import { idColumn, timestampColumns } from "./columns.js";
 
@@ -33,6 +33,10 @@ export const attempts = pgTable(
   },
   (table) => [
     index("attempts_user_created").on(table.userId, table.createdAt),
+    // architecture.md: one active attempt per user; the index also settles two concurrent starts.
+    uniqueIndex("attempts_one_active_per_user")
+      .on(table.userId)
+      .where(sql`${table.status} in ('starting', 'ready')`),
     check("attempts_seed_range", sql`${table.seed} between 0 and ${sql.raw(String(SEED_MAX))}`),
     check("attempts_checks_range", sql`${table.checksUsed} between 0 and ${sql.raw(String(ATTEMPT_MAX_CHECKS))}`),
     check("attempts_hints_not_negative", sql`${table.hintsUsed} >= 0`),
@@ -48,6 +52,8 @@ export const sandboxSessions = pgTable(
       .references(() => attempts.id, { onDelete: "restrict" }),
     node: text("node"),
     podName: text("pod_name"),
+    // The engine's id for the sandbox, from the ready status; the check and the terminal need it.
+    sandboxId: text("sandbox_id").unique(),
     status: sandboxStatus("status").notNull().default("starting"),
     destroyedAt: timestamp("destroyed_at", { withTimezone: true }),
     exitReason: text("exit_reason"),
