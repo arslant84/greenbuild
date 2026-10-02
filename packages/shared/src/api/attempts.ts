@@ -13,6 +13,9 @@ export const attemptResponseSchema = z.object({
   status: z.enum(ATTEMPT_STATUSES),
   challenge_slug: z.string(),
   created_at: z.iso.datetime(),
+  // When the sandbox became ready; the time limit counts from here.
+  started_at: z.iso.datetime().nullable(),
+  checks_used: z.number().int().nonnegative(),
   // Present while the sandbox is ready: valid for 60 seconds, only for connecting the terminal.
   attach_token: z.string().optional(),
 });
