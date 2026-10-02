@@ -19,9 +19,12 @@ const (
 	envTLSKey          = "SANDBOX_ENGINE_TLS_KEY"
 	envAttachSecret    = "SANDBOX_ENGINE_ATTACH_SECRET"
 	envAllowedOrigins  = "SANDBOX_ENGINE_ALLOWED_ORIGINS"
+	envInternalToken   = "SANDBOX_ENGINE_INTERNAL_TOKEN"
+	envChallengesDir   = "SANDBOX_ENGINE_CHALLENGES_DIR"
 
-	// minAttachSecretBytes matches HS256's key size; shorter secrets are easier to brute-force.
-	minAttachSecretBytes = 32
+	// minSecretBytes applies to the attach secret and the internal token; shorter ones are easier
+	// to brute-force (and 32 bytes is the HS256 key size).
+	minSecretBytes = 32
 
 	// Loopback by default so a local run is not exposed; containers set 0.0.0.0 explicitly.
 	defaultHTTPAddr        = "127.0.0.1:8080"
@@ -44,6 +47,11 @@ type Config struct {
 	// AllowedOrigins are browser origins besides the engine's own host that may open /attach,
 	// e.g. "greenbuild.dev"; comma-separated in the environment.
 	AllowedOrigins []string
+	// InternalToken guards /internal routes; empty keeps them off. Never log it.
+	InternalToken string
+	// ChallengesDir holds one folder per challenge with its check.sh; the checker never ships
+	// in the sandbox image.
+	ChallengesDir string
 }
 
 // AgentConfig is how the engine reaches a sandbox agent. Without TLS files the engine does not
@@ -84,10 +92,14 @@ func Load(getenv func(string) string) (Config, error) {
 	if cfg.Agent.TLS, err = loadTLS(getenv); err != nil {
 		return Config{}, err
 	}
-	if cfg.AttachSecret, err = loadAttachSecret(getenv); err != nil {
+	if cfg.AttachSecret, err = loadSecret(getenv, envAttachSecret); err != nil {
+		return Config{}, err
+	}
+	if cfg.InternalToken, err = loadSecret(getenv, envInternalToken); err != nil {
 		return Config{}, err
 	}
 	cfg.AllowedOrigins = splitList(getenv(envAllowedOrigins))
+	cfg.ChallengesDir = getenv(envChallengesDir)
 	return cfg, nil
 }
 
@@ -129,11 +141,11 @@ func loadTLS(getenv func(string) string) (TLSFiles, error) {
 	return files, nil
 }
 
-// loadAttachSecret reports only the length of a bad secret, never its value.
-func loadAttachSecret(getenv func(string) string) (string, error) {
-	secret := getenv(envAttachSecret)
-	if secret != "" && len(secret) < minAttachSecretBytes {
-		return "", fmt.Errorf("%w: %s is %d bytes, need at least %d", ErrInvalid, envAttachSecret, len(secret), minAttachSecretBytes)
+// loadSecret reports only the length of a bad secret, never its value.
+func loadSecret(getenv func(string) string, key string) (string, error) {
+	secret := getenv(key)
+	if secret != "" && len(secret) < minSecretBytes {
+		return "", fmt.Errorf("%w: %s is %d bytes, need at least %d", ErrInvalid, key, len(secret), minSecretBytes)
 	}
 	return secret, nil
 }
