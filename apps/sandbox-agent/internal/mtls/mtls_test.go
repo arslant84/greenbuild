@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/devpki"
+	"github.com/arslant84/greenbuild/packages/devpki"
 )
 
 const handshakeTimeout = 5 * time.Second

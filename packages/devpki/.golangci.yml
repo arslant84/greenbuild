@@ -1,0 +1,20 @@
+# Limits from CLAUDE.md. Changing them requires explicit approval.
+version: "2"
+
+linters:
+  enable:
+    - errcheck
+    - funlen
+    - gocyclo
+    - nestif
+    - wrapcheck
+  settings:
+    funlen:
+      lines: 40
+      statements: -1
+    gocyclo:
+      min-complexity: 10
+
+formatters:
+  enable:
+    - gofmt

@@ -4,6 +4,7 @@ go 1.27.0
 
 require (
 	github.com/arslant84/greenbuild/packages/agent-api v0.0.0
+	github.com/arslant84/greenbuild/packages/devpki v0.0.0
 	github.com/containerd/errdefs v1.0.0
 	github.com/moby/moby/api v1.56.0
 	github.com/moby/moby/client v0.6.0
@@ -36,3 +37,5 @@ require (
 )
 
 replace github.com/arslant84/greenbuild/packages/agent-api => ../../packages/agent-api
+
+replace github.com/arslant84/greenbuild/packages/devpki => ../../packages/devpki
