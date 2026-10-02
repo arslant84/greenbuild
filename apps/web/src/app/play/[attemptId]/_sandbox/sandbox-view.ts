@@ -15,7 +15,7 @@ export interface SandboxView {
 // sandboxView decides the state from the connection, the last check and the checks used. A solved
 // attempt stays V3; a dropped connection shows V5 over anything but a solve.
 export function sandboxView(status: ConnectionStatus, check: CheckState, checksUsed: number): SandboxView {
-  const checksLeft = Math.max(0, ATTEMPT_MAX_CHECKS - checksUsed);
+  const checksLeft = checksLeftNow(check, checksUsed);
   if (check.kind === "done" && check.result.passed) {
     return { frame: "V3", mode: "exhausted", checksLeft };
   }
@@ -28,4 +28,10 @@ export function sandboxView(status: ConnectionStatus, check: CheckState, checksU
   const exhausted = checksLeft === 0 || (check.kind === "error" && check.status === TOO_MANY_REQUESTS);
   const mode = exhausted || status !== "connected" ? "exhausted" : "ready";
   return { frame: check.kind === "done" ? "V4" : "V1", mode, checksLeft };
+}
+
+// A check answers with its own count before the attempt is read again, so it is the fresher one.
+function checksLeftNow(check: CheckState, checksUsed: number): number {
+  const fromAttempt = Math.max(0, ATTEMPT_MAX_CHECKS - checksUsed);
+  return check.kind === "done" ? Math.min(fromAttempt, check.result.checks_left) : fromAttempt;
 }

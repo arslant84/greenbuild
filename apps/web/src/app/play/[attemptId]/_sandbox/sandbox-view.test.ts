@@ -39,3 +39,11 @@ describe("firstLine", () => {
     expect(firstLine(output)).toBe(line);
   });
 });
+
+describe("checks left right after a check", () => {
+  it("trusts the check's own count while the attempt has not been read again", () => {
+    const justFailed: CheckState = { kind: "done", result: { passed: false, output_tail: "", duration_ms: 90, checks_left: 9 } };
+
+    expect(sandboxView("connected", justFailed, 0).checksLeft).toBe(9);
+  });
+});
