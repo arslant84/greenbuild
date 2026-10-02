@@ -10,11 +10,15 @@ interface SandboxTerminalProps {
   token: string;
   onStatus: (status: ConnectionStatus) => void;
   onSize: (size: TerminalSize) => void;
+  locked: boolean;
 }
 
 // Figma › Terminal Screen Buffer: the live shell, 20 px inside the pane.
-export function SandboxTerminal({ attachUrl, token, onStatus, onSize }: SandboxTerminalProps) {
+export function SandboxTerminal({ attachUrl, token, onStatus, onSize, locked }: SandboxTerminalProps) {
   const container = useRef<HTMLDivElement>(null);
+  // A ref, so locking and unlocking never reconnects the terminal.
+  const lockedRef = useRef(locked);
+  lockedRef.current = locked;
   useEffect(() => {
     const element = container.current;
     if (!element) {
@@ -24,7 +28,7 @@ export function SandboxTerminal({ attachUrl, token, onStatus, onSize }: SandboxT
     let disconnect: (() => void) | undefined;
     let cancelled = false;
     onStatus("connecting");
-    void connectTerminal(element, { attachUrl, token, onStatus, onSize }).then((end) => {
+    void connectTerminal(element, { attachUrl, token, onStatus, onSize, isInputLocked: () => lockedRef.current }).then((end) => {
       if (cancelled) {
         end();
         return;
