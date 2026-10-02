@@ -48,8 +48,16 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	queueConsumer, releaseRedis, err := buildConsumer(cfg, client)
+	if err != nil {
+		return err
+	}
+	defer releaseRedis()
 
-	return serve(ctx, newServer(cfg.HTTPAddr, routes{attach: attachHandler, internal: internalHandler}), cfg.ShutdownTimeout)
+	server := newServer(cfg.HTTPAddr, routes{attach: attachHandler, internal: internalHandler})
+	return runWithConsumer(ctx, queueConsumer, func(ctx context.Context) error {
+		return serve(ctx, server, cfg.ShutdownTimeout)
+	})
 }
 
 // newServer builds the single HTTP server; nil routes are left out.
