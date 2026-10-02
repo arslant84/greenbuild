@@ -21,6 +21,7 @@ type Sandboxes interface {
 	RunSetup(ctx context.Context, id string, seed uint64) error
 	Destroy(ctx context.Context, id string) error
 	CopyIn(ctx context.Context, id string, file sandbox.File) error
+	Run(ctx context.Context, id string, command sandbox.Command) (sandbox.RunResult, error)
 	OpenTerminal(ctx context.Context, id string, size sandbox.TerminalSize) (Terminal, error)
 }
 
@@ -112,7 +113,7 @@ func (s *Server) Health(_ context.Context, _ *agentv1.HealthRequest) (*agentv1.H
 // caller only as a generic Internal error, so Docker details never leave the node.
 func toStatus(action string, err error) error {
 	switch {
-	case errors.Is(err, sandbox.ErrInvalidSpec), errors.Is(err, sandbox.ErrInvalidFile):
+	case errors.Is(err, sandbox.ErrInvalidSpec), errors.Is(err, sandbox.ErrInvalidFile), errors.Is(err, sandbox.ErrInvalidCommand):
 		return grpcError(codes.InvalidArgument, err.Error())
 	case errors.Is(err, sandbox.ErrSetupFailed):
 		// The script's output stays in the agent log; it may reveal how the challenge is broken.

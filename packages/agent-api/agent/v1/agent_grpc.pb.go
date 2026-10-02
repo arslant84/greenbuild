@@ -27,6 +27,7 @@ const (
 	SandboxAgent_Exec_FullMethodName          = "/greenbuild.agent.v1.SandboxAgent/Exec"
 	SandboxAgent_CopyIn_FullMethodName        = "/greenbuild.agent.v1.SandboxAgent/CopyIn"
 	SandboxAgent_Health_FullMethodName        = "/greenbuild.agent.v1.SandboxAgent/Health"
+	SandboxAgent_Run_FullMethodName           = "/greenbuild.agent.v1.SandboxAgent/Run"
 )
 
 // SandboxAgentClient is the client API for SandboxAgent service.
@@ -42,6 +43,8 @@ type SandboxAgentClient interface {
 	// Writes a file into a sandbox, e.g. the checker right before a check.
 	CopyIn(ctx context.Context, in *CopyInRequest, opts ...grpc.CallOption) (*CopyInResponse, error)
 	Health(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error)
+	// Runs a command without a terminal and returns its exit code, e.g. the checker during a check.
+	Run(ctx context.Context, in *RunRequest, opts ...grpc.CallOption) (*RunResponse, error)
 }
 
 type sandboxAgentClient struct {
@@ -105,6 +108,16 @@ func (c *sandboxAgentClient) Health(ctx context.Context, in *HealthRequest, opts
 	return out, nil
 }
 
+func (c *sandboxAgentClient) Run(ctx context.Context, in *RunRequest, opts ...grpc.CallOption) (*RunResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(RunResponse)
+	err := c.cc.Invoke(ctx, SandboxAgent_Run_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SandboxAgentServer is the server API for SandboxAgent service.
 // All implementations must embed UnimplementedSandboxAgentServer
 // for forward compatibility.
@@ -118,6 +131,8 @@ type SandboxAgentServer interface {
 	// Writes a file into a sandbox, e.g. the checker right before a check.
 	CopyIn(context.Context, *CopyInRequest) (*CopyInResponse, error)
 	Health(context.Context, *HealthRequest) (*HealthResponse, error)
+	// Runs a command without a terminal and returns its exit code, e.g. the checker during a check.
+	Run(context.Context, *RunRequest) (*RunResponse, error)
 	mustEmbedUnimplementedSandboxAgentServer()
 }
 
@@ -142,6 +157,9 @@ func (UnimplementedSandboxAgentServer) CopyIn(context.Context, *CopyInRequest) (
 }
 func (UnimplementedSandboxAgentServer) Health(context.Context, *HealthRequest) (*HealthResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Health not implemented")
+}
+func (UnimplementedSandboxAgentServer) Run(context.Context, *RunRequest) (*RunResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method Run not implemented")
 }
 func (UnimplementedSandboxAgentServer) mustEmbedUnimplementedSandboxAgentServer() {}
 func (UnimplementedSandboxAgentServer) testEmbeddedByValue()                      {}
@@ -243,6 +261,24 @@ func _SandboxAgent_Health_Handler(srv interface{}, ctx context.Context, dec func
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SandboxAgent_Run_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RunRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SandboxAgentServer).Run(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SandboxAgent_Run_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SandboxAgentServer).Run(ctx, req.(*RunRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SandboxAgent_ServiceDesc is the grpc.ServiceDesc for SandboxAgent service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -265,6 +301,10 @@ var SandboxAgent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Health",
 			Handler:    _SandboxAgent_Health_Handler,
+		},
+		{
+			MethodName: "Run",
+			Handler:    _SandboxAgent_Run_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

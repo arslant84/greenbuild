@@ -715,6 +715,130 @@ func (x *HealthResponse) GetStatus() string {
 	return ""
 }
 
+type RunRequest struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	SandboxId string                 `protobuf:"bytes,1,opt,name=sandbox_id,json=sandboxId,proto3" json:"sandbox_id,omitempty"`
+	// argv; not run through a shell unless the command itself is a shell.
+	Command []string `protobuf:"bytes,2,rep,name=command,proto3" json:"command,omitempty"`
+	// The command is killed inside the sandbox after this long; 0 means no limit.
+	TimeoutSeconds uint32 `protobuf:"varint,3,opt,name=timeout_seconds,json=timeoutSeconds,proto3" json:"timeout_seconds,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *RunRequest) Reset() {
+	*x = RunRequest{}
+	mi := &file_agent_v1_agent_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RunRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RunRequest) ProtoMessage() {}
+
+func (x *RunRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RunRequest.ProtoReflect.Descriptor instead.
+func (*RunRequest) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *RunRequest) GetSandboxId() string {
+	if x != nil {
+		return x.SandboxId
+	}
+	return ""
+}
+
+func (x *RunRequest) GetCommand() []string {
+	if x != nil {
+		return x.Command
+	}
+	return nil
+}
+
+func (x *RunRequest) GetTimeoutSeconds() uint32 {
+	if x != nil {
+		return x.TimeoutSeconds
+	}
+	return 0
+}
+
+type RunResponse struct {
+	state    protoimpl.MessageState `protogen:"open.v1"`
+	ExitCode int32                  `protobuf:"varint,1,opt,name=exit_code,json=exitCode,proto3" json:"exit_code,omitempty"`
+	// The end of stdout and stderr combined, at most a few kilobytes.
+	OutputTail []byte `protobuf:"bytes,2,opt,name=output_tail,json=outputTail,proto3" json:"output_tail,omitempty"`
+	// True when the command was killed for exceeding timeout_seconds.
+	TimedOut      bool `protobuf:"varint,3,opt,name=timed_out,json=timedOut,proto3" json:"timed_out,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *RunResponse) Reset() {
+	*x = RunResponse{}
+	mi := &file_agent_v1_agent_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *RunResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*RunResponse) ProtoMessage() {}
+
+func (x *RunResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use RunResponse.ProtoReflect.Descriptor instead.
+func (*RunResponse) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *RunResponse) GetExitCode() int32 {
+	if x != nil {
+		return x.ExitCode
+	}
+	return 0
+}
+
+func (x *RunResponse) GetOutputTail() []byte {
+	if x != nil {
+		return x.OutputTail
+	}
+	return nil
+}
+
+func (x *RunResponse) GetTimedOut() bool {
+	if x != nil {
+		return x.TimedOut
+	}
+	return false
+}
+
 var File_agent_v1_agent_proto protoreflect.FileDescriptor
 
 const file_agent_v1_agent_proto_rawDesc = "" +
@@ -764,13 +888,25 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x0eCopyInResponse\"\x0f\n" +
 	"\rHealthRequest\"(\n" +
 	"\x0eHealthResponse\x12\x16\n" +
-	"\x06status\x18\x01 \x01(\tR\x06status2\xc3\x03\n" +
+	"\x06status\x18\x01 \x01(\tR\x06status\"n\n" +
+	"\n" +
+	"RunRequest\x12\x1d\n" +
+	"\n" +
+	"sandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x18\n" +
+	"\acommand\x18\x02 \x03(\tR\acommand\x12'\n" +
+	"\x0ftimeout_seconds\x18\x03 \x01(\rR\x0etimeoutSeconds\"h\n" +
+	"\vRunResponse\x12\x1b\n" +
+	"\texit_code\x18\x01 \x01(\x05R\bexitCode\x12\x1f\n" +
+	"\voutput_tail\x18\x02 \x01(\fR\n" +
+	"outputTail\x12\x1b\n" +
+	"\ttimed_out\x18\x03 \x01(\bR\btimedOut2\x8d\x04\n" +
 	"\fSandboxAgent\x12f\n" +
 	"\rCreateSandbox\x12).greenbuild.agent.v1.CreateSandboxRequest\x1a*.greenbuild.agent.v1.CreateSandboxResponse\x12T\n" +
 	"\aDestroy\x12#.greenbuild.agent.v1.DestroyRequest\x1a$.greenbuild.agent.v1.DestroyResponse\x12O\n" +
 	"\x04Exec\x12 .greenbuild.agent.v1.ExecRequest\x1a!.greenbuild.agent.v1.ExecResponse(\x010\x01\x12Q\n" +
 	"\x06CopyIn\x12\".greenbuild.agent.v1.CopyInRequest\x1a#.greenbuild.agent.v1.CopyInResponse\x12Q\n" +
-	"\x06Health\x12\".greenbuild.agent.v1.HealthRequest\x1a#.greenbuild.agent.v1.HealthResponseBEZCgithub.com/arslant84/greenbuild/packages/agent-api/agent/v1;agentv1b\x06proto3"
+	"\x06Health\x12\".greenbuild.agent.v1.HealthRequest\x1a#.greenbuild.agent.v1.HealthResponse\x12H\n" +
+	"\x03Run\x12\x1f.greenbuild.agent.v1.RunRequest\x1a .greenbuild.agent.v1.RunResponseBEZCgithub.com/arslant84/greenbuild/packages/agent-api/agent/v1;agentv1b\x06proto3"
 
 var (
 	file_agent_v1_agent_proto_rawDescOnce sync.Once
@@ -784,7 +920,7 @@ func file_agent_v1_agent_proto_rawDescGZIP() []byte {
 	return file_agent_v1_agent_proto_rawDescData
 }
 
-var file_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 12)
+var file_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
 var file_agent_v1_agent_proto_goTypes = []any{
 	(*CreateSandboxRequest)(nil),  // 0: greenbuild.agent.v1.CreateSandboxRequest
 	(*CreateSandboxResponse)(nil), // 1: greenbuild.agent.v1.CreateSandboxResponse
@@ -798,6 +934,8 @@ var file_agent_v1_agent_proto_goTypes = []any{
 	(*CopyInResponse)(nil),        // 9: greenbuild.agent.v1.CopyInResponse
 	(*HealthRequest)(nil),         // 10: greenbuild.agent.v1.HealthRequest
 	(*HealthResponse)(nil),        // 11: greenbuild.agent.v1.HealthResponse
+	(*RunRequest)(nil),            // 12: greenbuild.agent.v1.RunRequest
+	(*RunResponse)(nil),           // 13: greenbuild.agent.v1.RunResponse
 }
 var file_agent_v1_agent_proto_depIdxs = []int32{
 	4,  // 0: greenbuild.agent.v1.ExecStart.size:type_name -> greenbuild.agent.v1.TerminalSize
@@ -808,13 +946,15 @@ var file_agent_v1_agent_proto_depIdxs = []int32{
 	6,  // 5: greenbuild.agent.v1.SandboxAgent.Exec:input_type -> greenbuild.agent.v1.ExecRequest
 	8,  // 6: greenbuild.agent.v1.SandboxAgent.CopyIn:input_type -> greenbuild.agent.v1.CopyInRequest
 	10, // 7: greenbuild.agent.v1.SandboxAgent.Health:input_type -> greenbuild.agent.v1.HealthRequest
-	1,  // 8: greenbuild.agent.v1.SandboxAgent.CreateSandbox:output_type -> greenbuild.agent.v1.CreateSandboxResponse
-	3,  // 9: greenbuild.agent.v1.SandboxAgent.Destroy:output_type -> greenbuild.agent.v1.DestroyResponse
-	7,  // 10: greenbuild.agent.v1.SandboxAgent.Exec:output_type -> greenbuild.agent.v1.ExecResponse
-	9,  // 11: greenbuild.agent.v1.SandboxAgent.CopyIn:output_type -> greenbuild.agent.v1.CopyInResponse
-	11, // 12: greenbuild.agent.v1.SandboxAgent.Health:output_type -> greenbuild.agent.v1.HealthResponse
-	8,  // [8:13] is the sub-list for method output_type
-	3,  // [3:8] is the sub-list for method input_type
+	12, // 8: greenbuild.agent.v1.SandboxAgent.Run:input_type -> greenbuild.agent.v1.RunRequest
+	1,  // 9: greenbuild.agent.v1.SandboxAgent.CreateSandbox:output_type -> greenbuild.agent.v1.CreateSandboxResponse
+	3,  // 10: greenbuild.agent.v1.SandboxAgent.Destroy:output_type -> greenbuild.agent.v1.DestroyResponse
+	7,  // 11: greenbuild.agent.v1.SandboxAgent.Exec:output_type -> greenbuild.agent.v1.ExecResponse
+	9,  // 12: greenbuild.agent.v1.SandboxAgent.CopyIn:output_type -> greenbuild.agent.v1.CopyInResponse
+	11, // 13: greenbuild.agent.v1.SandboxAgent.Health:output_type -> greenbuild.agent.v1.HealthResponse
+	13, // 14: greenbuild.agent.v1.SandboxAgent.Run:output_type -> greenbuild.agent.v1.RunResponse
+	9,  // [9:15] is the sub-list for method output_type
+	3,  // [3:9] is the sub-list for method input_type
 	3,  // [3:3] is the sub-list for extension type_name
 	3,  // [3:3] is the sub-list for extension extendee
 	0,  // [0:3] is the sub-list for field type_name
@@ -841,7 +981,7 @@ func file_agent_v1_agent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_v1_agent_proto_rawDesc), len(file_agent_v1_agent_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   12,
+			NumMessages:   14,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
