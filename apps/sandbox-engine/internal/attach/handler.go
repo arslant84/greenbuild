@@ -23,7 +23,6 @@ const (
 	maxMessageBytes = 64 << 10
 )
 
-// Tokens verifies attach tokens.
 type Tokens interface {
 	Verify(token string) (attachtoken.Attach, error)
 }
@@ -37,10 +36,8 @@ type Session interface {
 	Close()
 }
 
-// OpenSession starts a shell in the named sandbox.
 type OpenSession func(ctx context.Context, sandboxID string, size agentclient.TerminalSize) (Session, error)
 
-// Handler serves /attach.
 type Handler struct {
 	tokens         Tokens
 	open           OpenSession

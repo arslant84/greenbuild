@@ -35,8 +35,7 @@ func (fakeTokens) Verify(token string) (attachtoken.Attach, error) {
 type fakeSession struct {
 	events      chan agentclient.Event
 	mu          sync.Mutex
-	writes      []string
-	resizes     []agentclient.TerminalSize
+	calls       []string
 	inputClosed chan struct{}
 	closeOnce   sync.Once
 }
@@ -48,14 +47,14 @@ func newFakeSession() *fakeSession {
 func (f *fakeSession) Write(input []byte) (int, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.writes = append(f.writes, string(input))
+	f.calls = append(f.calls, "write "+string(input))
 	return len(input), nil
 }
 
 func (f *fakeSession) Resize(size agentclient.TerminalSize) error {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	f.resizes = append(f.resizes, size)
+	f.calls = append(f.calls, fmt.Sprintf("resize %dx%d", size.Cols, size.Rows))
 	return nil
 }
 
@@ -74,12 +73,26 @@ func (f *fakeSession) CloseInput() error {
 
 func (f *fakeSession) Close() {}
 
+// waitForCalls blocks until the input side has passed n calls to the session.
+func (f *fakeSession) waitForCalls(t *testing.T, n int) {
+	t.Helper()
+	for deadline := time.Now().Add(testTimeout); time.Now().Before(deadline); time.Sleep(time.Millisecond) {
+		f.mu.Lock()
+		done := len(f.calls) >= n
+		f.mu.Unlock()
+		if done {
+			return
+		}
+	}
+	t.Fatalf("the session did not receive %d calls in time", n)
+}
+
 // serve starts the handler; opened records the sandbox and size it was asked for.
 func serve(t *testing.T, session *fakeSession, openErr error) (string, *[]string) {
 	t.Helper()
 	var opened []string
 	open := func(_ context.Context, sandboxID string, size agentclient.TerminalSize) (Session, error) {
-		opened = append(opened, sandboxID+" "+sizeString(size))
+		opened = append(opened, fmt.Sprintf("%s %dx%d", sandboxID, size.Cols, size.Rows))
 		if openErr != nil {
 			return nil, openErr
 		}
@@ -90,27 +103,12 @@ func serve(t *testing.T, session *fakeSession, openErr error) (string, *[]string
 	return "ws" + strings.TrimPrefix(server.URL, "http"), &opened
 }
 
-func sizeString(size agentclient.TerminalSize) string {
-	return fmt.Sprintf("%dx%d", size.Cols, size.Rows)
-}
-
-func dial(t *testing.T, url string) (*websocket.Conn, *http.Response, error) {
-	t.Helper()
-	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
-	defer cancel()
-	conn, resp, err := websocket.Dial(ctx, url, nil)
-	if err != nil {
-		return nil, resp, fmt.Errorf("dial %s: %w", url, err)
-	}
-	t.Cleanup(func() { _ = conn.CloseNow() })
-	return conn, resp, nil
-}
-
 func TestAttachRefusesABadTokenBeforeUpgrading(t *testing.T) {
 	url, opened := serve(t, newFakeSession(), nil)
 
-	_, resp, err := dial(t, url+"?token=forged")
+	conn, resp, err := websocket.Dial(t.Context(), url+"?token=forged", nil)
 	if err == nil {
+		_ = conn.CloseNow()
 		t.Fatal("Dial() succeeded with a forged token")
 	}
 	if resp == nil || resp.StatusCode != http.StatusUnauthorized {
@@ -124,15 +122,13 @@ func TestAttachRefusesABadTokenBeforeUpgrading(t *testing.T) {
 func TestAttachBridgesInputOutputResizeAndExit(t *testing.T) {
 	session := newFakeSession()
 	url, opened := serve(t, session, nil)
-	conn, _, err := dial(t, url+"?token="+goodToken+"&rows=30&cols=100")
-	if err != nil {
-		t.Fatalf("Dial() error = %v", err)
-	}
-	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
-	defer cancel()
+	conn, ctx := attached(t, url+"?token="+goodToken+"&rows=30&cols=100")
 
 	mustWrite(t, conn, websocket.MessageBinary, "ls\n")
 	mustWrite(t, conn, websocket.MessageText, `{"type":"resize","rows":40,"cols":120}`)
+	// Input and output run concurrently: wait for the input side before the shell exits,
+	// or the exit can close the session first (seen on CI).
+	session.waitForCalls(t, 2)
 	session.events <- agentclient.Event{Output: []byte("bin  etc\n")}
 	expectMessage(t, ctx, conn, websocket.MessageBinary, "bin  etc\n")
 	session.events <- agentclient.Event{Exited: true, ExitCode: 3}
@@ -146,18 +142,15 @@ func TestAttachBridgesInputOutputResizeAndExit(t *testing.T) {
 	}
 	session.mu.Lock()
 	defer session.mu.Unlock()
-	if !slices.Equal(session.writes, []string{"ls\n"}) || !slices.Equal(session.resizes, []agentclient.TerminalSize{{Rows: 40, Cols: 120}}) {
-		t.Errorf("writes %q, resizes %v", session.writes, session.resizes)
+	if want := []string{"write ls\n", "resize 120x40"}; !slices.Equal(session.calls, want) {
+		t.Errorf("session calls %q, want %q", session.calls, want)
 	}
 }
 
 func TestAttachClosesTheShellInputWhenTheBrowserLeaves(t *testing.T) {
 	session := newFakeSession()
 	url, _ := serve(t, session, nil)
-	conn, _, err := dial(t, url+"?token="+goodToken)
-	if err != nil {
-		t.Fatalf("Dial() error = %v", err)
-	}
+	conn, _ := attached(t, url+"?token="+goodToken)
 
 	_ = conn.Close(websocket.StatusNormalClosure, "tab closed")
 	select {
@@ -170,12 +163,7 @@ func TestAttachClosesTheShellInputWhenTheBrowserLeaves(t *testing.T) {
 
 func TestAttachReportsATerminalThatCannotOpen(t *testing.T) {
 	url, _ := serve(t, nil, errors.New("agent unreachable"))
-	conn, _, err := dial(t, url+"?token="+goodToken)
-	if err != nil {
-		t.Fatalf("Dial() error = %v", err)
-	}
-	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
-	defer cancel()
+	conn, ctx := attached(t, url+"?token="+goodToken)
 
 	if _, _, err := conn.Read(ctx); websocket.CloseStatus(err) != websocket.StatusInternalError {
 		t.Errorf("Read() error = %v, want close status %d", err, websocket.StatusInternalError)
@@ -207,4 +195,17 @@ func expectMessage(t *testing.T, ctx context.Context, conn *websocket.Conn, kind
 	if got != kind || string(data) != want {
 		t.Fatalf("Read() = %v %q, want %v %q", got, data, kind, want)
 	}
+}
+
+// attached connects with a valid token and returns the connection and a bounded context.
+func attached(t *testing.T, url string) (*websocket.Conn, context.Context) {
+	t.Helper()
+	ctx, cancel := context.WithTimeout(t.Context(), testTimeout)
+	t.Cleanup(cancel)
+	conn, _, err := websocket.Dial(ctx, url, nil)
+	if err != nil {
+		t.Fatalf("Dial() error = %v", err)
+	}
+	t.Cleanup(func() { _ = conn.CloseNow() })
+	return conn, ctx
 }
