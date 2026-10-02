@@ -4,3 +4,13 @@ export const MAX_PAGE_LIMIT = 100;
 // Used when PORT is not set, e.g. local development.
 export const API_DEFAULT_PORT = 3000;
 export const WORKER_DEFAULT_PORT = 3002;
+
+// architecture.md: an attempt may run the checker at most 10 times.
+export const ATTEMPT_MAX_CHECKS = 10;
+
+// Seeds travel as JSON numbers between the API and the engine; larger ones lose precision in TypeScript.
+export const SEED_MAX = Number.MAX_SAFE_INTEGER;
+
+// Glicko-2 starting values for an unrated player skill or challenge version.
+export const GLICKO_INITIAL_RATING = 1500;
+export const GLICKO_INITIAL_RATING_DEVIATION = 350;
