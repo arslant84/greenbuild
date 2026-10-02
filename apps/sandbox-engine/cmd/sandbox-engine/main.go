@@ -35,13 +35,23 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	return serve(ctx, newServer(cfg.HTTPAddr), cfg.ShutdownTimeout)
+	attachHandler, release, err := buildAttach(cfg)
+	if err != nil {
+		return err
+	}
+	defer release()
+
+	return serve(ctx, newServer(cfg.HTTPAddr, attachHandler), cfg.ShutdownTimeout)
 }
 
-// newServer builds the single HTTP server; /attach and /internal routes join health here later.
-func newServer(addr string) *http.Server {
+// newServer builds the single HTTP server; attachHandler may be nil when /attach is off.
+// /internal routes join here later.
+func newServer(addr string, attachHandler http.Handler) *http.Server {
 	mux := http.NewServeMux()
 	health.Register(mux)
+	if attachHandler != nil {
+		mux.Handle("GET /attach", attachHandler)
+	}
 	return &http.Server{Addr: addr, Handler: mux, ReadHeaderTimeout: readHeaderTimeout}
 }
 
