@@ -34,6 +34,41 @@ func (f *fakeSandboxes) RunSetup(_ context.Context, id string, seed uint64) erro
 	return f.setupErr
 }
 
+func (f *fakeSandboxes) CopyIn(_ context.Context, id string, file sandbox.File) error {
+	f.calls = append(f.calls, fmt.Sprintf("copy %s %s %o %q", id, file.Path, file.Mode, file.Content))
+	if err := file.Validate(); err != nil {
+		return fmt.Errorf("fake copy: %w", err)
+	}
+	return nil
+}
+
+func TestCopyInPassesTheFileToTheSandbox(t *testing.T) {
+	fake := &fakeSandboxes{}
+	req := &agentv1.CopyInRequest{SandboxId: "sbx-1", Path: "/opt/greenbuild/check.sh", Content: []byte("exit 0"), Mode: 0o755}
+
+	if _, err := New(fake).CopyIn(t.Context(), req); err != nil {
+		t.Fatalf("CopyIn() error = %v", err)
+	}
+	if want := []string{`copy sbx-1 /opt/greenbuild/check.sh 755 "exit 0"`}; !slices.Equal(fake.calls, want) {
+		t.Errorf("calls = %v, want %v", fake.calls, want)
+	}
+}
+
+func TestCopyInRejectsBadRequests(t *testing.T) {
+	cases := map[string]*agentv1.CopyInRequest{
+		"no sandbox":    {Path: "/opt/check.sh", Mode: 0o755},
+		"relative path": {SandboxId: "sbx-1", Path: "check.sh", Mode: 0o755},
+		"setuid mode":   {SandboxId: "sbx-1", Path: "/opt/check.sh", Mode: 0o4755},
+	}
+	for name, req := range cases {
+		t.Run(name, func(t *testing.T) {
+			if _, err := New(&fakeSandboxes{}).CopyIn(t.Context(), req); status.Code(err) != codes.InvalidArgument {
+				t.Errorf("code = %v, want InvalidArgument", status.Code(err))
+			}
+		})
+	}
+}
+
 func (f *fakeSandboxes) Destroy(_ context.Context, id string) error {
 	f.calls = append(f.calls, "destroy "+id)
 	return nil
@@ -135,7 +170,7 @@ func TestHealthAndUnimplementedMethods(t *testing.T) {
 	if resp, err := server.Health(t.Context(), &agentv1.HealthRequest{}); err != nil || resp.GetStatus() != "ok" {
 		t.Errorf("Health() = %v, %v; want ok", resp, err)
 	}
-	if _, err := server.CopyIn(t.Context(), &agentv1.CopyInRequest{}); status.Code(err) != codes.Unimplemented {
-		t.Errorf("CopyIn code = %v, want Unimplemented until it is built", status.Code(err))
+	if err := server.Exec(nil); status.Code(err) != codes.Unimplemented {
+		t.Errorf("Exec code = %v, want Unimplemented until it is built", status.Code(err))
 	}
 }

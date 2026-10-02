@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"io"
 	"net"
 	"slices"
 	"strings"
@@ -26,14 +27,27 @@ func (f *fakeDocker) ExecCreate(_ context.Context, _ string, options client.Exec
 		f.execIDs = map[string]string{}
 	}
 	f.execIDs[id] = options.Cmd[0]
+	if f.withStdin == nil {
+		f.withStdin = map[string]bool{}
+	}
+	f.withStdin[id] = options.AttachStdin
 	return client.ExecCreateResult{ID: id}, nil
 }
 
-// ExecAttach streams the fake output in Docker's multiplexed format over an in-memory connection.
+// ExecAttach plays Docker over a loopback TCP connection: TCP supports half-close, so stdin can
+// end before the output is sent. Execs created with stdin read it all first and record it.
 func (f *fakeDocker) ExecAttach(_ context.Context, execID string, _ client.ExecAttachOptions) (client.ExecAttachResult, error) {
-	agentSide, dockerSide := net.Pipe()
+	agentSide, dockerSide, err := tcpPair()
+	if err != nil {
+		return client.ExecAttachResult{}, err
+	}
 	output := []byte(f.execs[f.execIDs[execID]].output)
+	readStdin := f.withStdin[execID]
 	go func() {
+		if readStdin {
+			received, _ := io.ReadAll(dockerSide)
+			f.recordStdin(execID, received)
+		}
 		header := make([]byte, 8)
 		header[0] = 1 // stdout
 		binary.BigEndian.PutUint32(header[4:], uint32(len(output)))
@@ -41,6 +55,38 @@ func (f *fakeDocker) ExecAttach(_ context.Context, execID string, _ client.ExecA
 		_ = dockerSide.Close()
 	}()
 	return client.ExecAttachResult{HijackedResponse: client.NewHijackedResponse(agentSide, "")}, nil
+}
+
+func (f *fakeDocker) recordStdin(execID string, data []byte) {
+	f.stdinMu.Lock()
+	defer f.stdinMu.Unlock()
+	if f.stdin == nil {
+		f.stdin = map[string][]byte{}
+	}
+	f.stdin[execID] = data
+}
+
+func (f *fakeDocker) stdinOf(execID string) []byte {
+	f.stdinMu.Lock()
+	defer f.stdinMu.Unlock()
+	return f.stdin[execID]
+}
+
+func tcpPair() (net.Conn, net.Conn, error) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		return nil, nil, fmt.Errorf("listen: %w", err)
+	}
+	defer func() { _ = listener.Close() }()
+	agentSide, err := net.Dial("tcp", listener.Addr().String())
+	if err != nil {
+		return nil, nil, fmt.Errorf("dial: %w", err)
+	}
+	dockerSide, err := listener.Accept()
+	if err != nil {
+		return nil, nil, errors.Join(fmt.Errorf("accept: %w", err), agentSide.Close())
+	}
+	return agentSide, dockerSide, nil
 }
 
 func (f *fakeDocker) ExecInspect(_ context.Context, execID string, _ client.ExecInspectOptions) (client.ExecInspectResult, error) {
