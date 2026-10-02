@@ -13,22 +13,13 @@ import (
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/config"
 )
 
-// errAttachNeedsAgent means /attach was enabled but the engine cannot reach an agent over mTLS.
-var errAttachNeedsAgent = errors.New("SANDBOX_ENGINE_ATTACH_SECRET is set but the agent TLS files are not")
+// errNeedsAgent means a feature was enabled but the engine cannot reach an agent over mTLS.
+var errNeedsAgent = errors.New("the agent TLS files are not set")
 
-// buildAttach returns the /attach handler and a function that releases its agent connection.
-// Without an attach secret the endpoint stays off (nil handler).
-func buildAttach(cfg config.Config) (http.Handler, func(), error) {
-	if cfg.AttachSecret == "" {
-		slog.Warn("/attach disabled; set SANDBOX_ENGINE_ATTACH_SECRET and the agent TLS files to enable it")
-		return nil, func() {}, nil
-	}
+// dialAgent connects to the agent when its TLS files are configured; otherwise the client is nil.
+func dialAgent(cfg config.Config) (*agentclient.Client, func(), error) {
 	if !cfg.Agent.TLS.Enabled() {
-		return nil, nil, errAttachNeedsAgent
-	}
-	verifier, err := attachtoken.NewVerifier([]byte(cfg.AttachSecret))
-	if err != nil {
-		return nil, nil, fmt.Errorf("attach tokens: %w", err)
+		return nil, func() {}, nil
 	}
 	client, err := agentclient.Dial(agentclient.Options{
 		Addr:       cfg.Agent.Addr,
@@ -45,7 +36,23 @@ func buildAttach(cfg config.Config) (http.Handler, func(), error) {
 			slog.Warn("close agent client", "error", err)
 		}
 	}
-	return attach.NewHandler(verifier, openThrough(client), cfg.AllowedOrigins), release, nil
+	return client, release, nil
+}
+
+// buildAttach returns the /attach handler, or nil when no attach secret is set.
+func buildAttach(cfg config.Config, client *agentclient.Client) (http.Handler, error) {
+	if cfg.AttachSecret == "" {
+		slog.Warn("/attach disabled; set SANDBOX_ENGINE_ATTACH_SECRET and the agent TLS files to enable it")
+		return nil, nil
+	}
+	if client == nil {
+		return nil, fmt.Errorf("/attach: %w", errNeedsAgent)
+	}
+	verifier, err := attachtoken.NewVerifier([]byte(cfg.AttachSecret))
+	if err != nil {
+		return nil, fmt.Errorf("attach tokens: %w", err)
+	}
+	return attach.NewHandler(verifier, openThrough(client), cfg.AllowedOrigins), nil
 }
 
 // openThrough adapts the agent client, whose OpenTerminal returns a concrete type, to attach.
