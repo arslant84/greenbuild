@@ -136,3 +136,20 @@ func TestLoadInternalTokenAndChallengesDir(t *testing.T) {
 		t.Errorf("Load() with a short token error = %v, want ErrInvalid without the token in it", err)
 	}
 }
+
+func TestLoadRedis(t *testing.T) {
+	cfg, err := Load(envFrom(nil))
+	if err != nil || cfg.Redis != nil {
+		t.Fatalf("Load() = %v, %v; want the consumer off by default", cfg.Redis, err)
+	}
+
+	cfg, err = Load(envFrom(map[string]string{envRedisURL: "redis://:s3cret@redis.internal:6380/2"}))
+	if err != nil || cfg.Redis.Addr != "redis.internal:6380" || cfg.Redis.Password != "s3cret" || cfg.Redis.DB != 2 {
+		t.Fatalf("Load() = %+v, %v; want the parsed URL", cfg.Redis, err)
+	}
+
+	_, err = Load(envFrom(map[string]string{envRedisURL: "http://:s3cret@redis.internal:6380"}))
+	if !errors.Is(err, ErrInvalid) || strings.Contains(err.Error(), "s3cret") {
+		t.Errorf("Load() with a bad URL error = %v, want ErrInvalid without the password in it", err)
+	}
+}
