@@ -3,7 +3,7 @@
 import type { AttemptResponse, ChallengeCard } from "@greenbuild/shared";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { PlayTerminal } from "./play-terminal";
+import { SandboxScreen } from "./_sandbox/sandbox-screen";
 import { Provisioning } from "./provisioning";
 import { isFinished, useAttempt } from "./use-attempt";
 
@@ -17,7 +17,7 @@ interface AttemptScreenProps {
 // ready, and the result once the attempt is over.
 export function AttemptScreen({ initial, card, attachUrl }: AttemptScreenProps) {
   const router = useRouter();
-  const { attempt } = useAttempt(initial);
+  const { attempt, refresh } = useAttempt(initial);
   useEffect(() => {
     if (isFinished(attempt.status)) {
       router.replace(`/play/${attempt.id}/result`);
@@ -28,7 +28,7 @@ export function AttemptScreen({ initial, card, attachUrl }: AttemptScreenProps) 
     return <Provisioning card={card} attemptId={attempt.id} createdAt={attempt.created_at} />;
   }
   if (attempt.status === "ready" && attempt.attach_token) {
-    return <PlayTerminal attachUrl={attachUrl} token={attempt.attach_token} />;
+    return <SandboxScreen attempt={attempt} token={attempt.attach_token} card={card} attachUrl={attachUrl} refresh={refresh} />;
   }
   return null;
 }
