@@ -49,7 +49,7 @@ func run() error {
 	manager := sandbox.NewManager(docker, cfg.Runtime)
 	go manager.RunReaper(ctx, reapInterval)
 
-	stopGRPC, err := startGRPC(cfg, agentserver.FromManager(manager))
+	stopGRPC, _, err := startGRPC(cfg, agentserver.FromManager(manager))
 	if err != nil {
 		return err
 	}
