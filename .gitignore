@@ -57,3 +57,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local play stack (scripts/play-stack.sh)
+/.play/

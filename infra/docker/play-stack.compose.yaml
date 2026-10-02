@@ -1,0 +1,25 @@
+# Data services for the local play stack (scripts/play-stack.sh). Loopback only, on ports that do not
+# clash with a local Redis such as Memurai on 6379, and below the ranges Windows reserves dynamically. The password is a throwaway for local use.
+name: greenbuild-play
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: play
+      POSTGRES_DB: greenbuild
+    ports:
+      - "127.0.0.1:15432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres"]
+      interval: 1s
+      retries: 60
+
+  redis:
+    image: redis:8-alpine
+    ports:
+      - "127.0.0.1:16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      retries: 60
