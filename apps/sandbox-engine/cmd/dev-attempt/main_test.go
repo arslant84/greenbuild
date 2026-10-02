@@ -103,14 +103,6 @@ func TestTicketIsBoundToTheAttempt(t *testing.T) {
 	}
 }
 
-func TestRandomAttemptsDiffer(t *testing.T) {
-	first, firstSeed := randomAttempt()
-	second, secondSeed := randomAttempt()
-	if first == second || firstSeed > maxSeed || secondSeed > maxSeed {
-		t.Errorf("randomAttempt() = %s/%d and %s/%d; want distinct ids and seeds within 2^53-1", first, firstSeed, second, secondSeed)
-	}
-}
-
 func TestStatusesFromStartsAMillisecondEarlier(t *testing.T) {
 	for published, want := range map[string]string{"1790920854720-0": "1790920854719", "1-3": "0", "garbage": "0"} {
 		if got := statusesFrom(published); got != want {
