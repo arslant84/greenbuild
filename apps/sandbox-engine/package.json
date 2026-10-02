@@ -5,8 +5,9 @@
   "scripts": {
     "build": "go build -o bin/sandbox-engine ./cmd/sandbox-engine",
     "dev": "go run ./cmd/sandbox-engine",
-    "lint": "golangci-lint run --allow-parallel-runners ./...",
-    "typecheck": "go vet ./...",
-    "test": "go test ./..."
+    "lint": "golangci-lint run --allow-parallel-runners --build-tags integration ./...",
+    "typecheck": "go vet -tags integration ./...",
+    "test": "go test ./...",
+    "test:integration": "go test -tags integration -count=1 -run OnRealDocker ./..."
   }
 }
