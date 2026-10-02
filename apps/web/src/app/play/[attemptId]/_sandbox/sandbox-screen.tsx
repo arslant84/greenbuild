@@ -1,6 +1,6 @@
 "use client";
 
-import type { AttemptResponse, ChallengeCard } from "@greenbuild/shared";
+import { ATTEMPT_MAX_CHECKS, type AttemptResponse, type ChallengeCard } from "@greenbuild/shared";
 import { useEffect, useState } from "react";
 import { useNow } from "../../../../ui/use-now";
 import { useSubmitShortcut } from "../../../../ui/use-shortcut";
@@ -114,7 +114,7 @@ function PanelExtra({ view, check }: { view: SandboxView; check: CheckState }) {
   if (view.frame !== "V4" || check.kind !== "done") return null;
   return (
     <>
-      <AmberAlert>{`1 check consumed. You have ${view.checksLeft} remaining checks for this attempt.`}</AmberAlert>
+      <AmberAlert>{`${ATTEMPT_MAX_CHECKS - view.checksLeft} of ${ATTEMPT_MAX_CHECKS} checks used. You have ${view.checksLeft} remaining checks for this attempt.`}</AmberAlert>
       <CheckerOutput output={check.result.output_tail} />
     </>
   );
