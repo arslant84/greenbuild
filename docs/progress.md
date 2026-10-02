@@ -90,3 +90,4 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 - Add `eslint-config-next` once the web app has real UI.
 - Strip tokens and passwords from logs before request or DB logging is added.
 - Agent and engine duplicate ~60 lines (config loading, health, graceful shutdown); apps cannot import each other. Revisit if a shared Go package under `packages/` becomes worthwhile.
+- Session logs: production should reach Blob Storage with managed identity instead of a connection string; the 90-day deletion (and Hot → Cool after 30 days) is a lifecycle rule for Terraform; a session's log lives in engine memory until it ends, so an engine crash loses the open sessions' logs.
