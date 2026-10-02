@@ -47,6 +47,15 @@ export class RedisClient implements OnApplicationShutdown {
     return this.client;
   }
 
+  // dedicated opens a separate connection for blocking reads, which would otherwise hold up every
+  // other command on the shared one. The caller closes it.
+  async dedicated(): Promise<RedisConnection> {
+    const connection = this.client.duplicate();
+    connection.on("error", (error: unknown) => this.logger.warn(`redis: ${String(error)}`));
+    await connection.connect();
+    return connection;
+  }
+
   async onApplicationShutdown(): Promise<void> {
     if (this.client.isOpen) {
       await this.client.close();

@@ -13,6 +13,8 @@ export const attemptResponseSchema = z.object({
   status: z.enum(ATTEMPT_STATUSES),
   challenge_slug: z.string(),
   created_at: z.iso.datetime(),
+  // Present while the sandbox is ready: valid for 60 seconds, only for connecting the terminal.
+  attach_token: z.string().optional(),
 });
 
 export type StartAttemptRequest = z.infer<typeof startAttemptRequestSchema>;

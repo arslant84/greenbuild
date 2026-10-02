@@ -6,6 +6,7 @@ import postgres from "postgres";
 import { createClient } from "redis";
 import { afterAll, beforeAll } from "vitest";
 import { AppModule } from "../app.module.js";
+import { signDevUserToken } from "../auth/dev-user-token.js";
 import type { ServicesEnv } from "../config/services-env.js";
 import { type Container, startContainer } from "./containers.js";
 
@@ -78,5 +79,22 @@ export function useAttemptsApp(): () => AttemptsApp {
       throw new Error("attempts app not started");
     }
     return started.ready;
+  };
+}
+
+export interface Player {
+  userId: string;
+  start: (body: unknown) => Promise<Response>;
+  find: (id: string) => Promise<Response>;
+}
+
+// player calls the API as one dev user.
+export async function player(app: () => AttemptsApp, userId: string): Promise<Player> {
+  const token = await signDevUserToken(TEST_DEV_AUTH_SECRET, userId);
+  const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
+  return {
+    userId,
+    start: (body) => fetch(`${app().baseUrl}/v1/attempts`, { method: "POST", headers, body: JSON.stringify(body) }),
+    find: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}`, { headers }),
   };
 }

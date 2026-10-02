@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { and, attempts, challenges, challengeVersions, desc, eq } from "@greenbuild/db";
+import { and, attempts, challenges, challengeVersions, desc, eq, sandboxSessions } from "@greenbuild/db";
 import {
   type AttemptResponse,
   ConflictError,
@@ -12,6 +12,7 @@ import {
 } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { DatabaseClient, RedisClient } from "../infra/services.js";
+import { AttachTokens } from "./attach-token.js";
 import { launchPlan } from "./launch-plan.js";
 
 const UNIQUE_VIOLATION = "23505";
@@ -37,6 +38,7 @@ export class AttemptsService {
   constructor(
     private readonly database: DatabaseClient,
     private readonly redis: RedisClient,
+    private readonly attachTokens: AttachTokens,
   ) {}
 
   // start records the attempt, then asks the engine for a sandbox. If the request cannot be
@@ -54,17 +56,30 @@ export class AttemptsService {
   }
 
   // find answers "not found" for another user's attempt too, so ids reveal nothing.
+  // While the sandbox is ready, the answer carries a fresh attach token for the terminal.
   async find(userId: string, attemptId: string): Promise<AttemptResponse> {
     const [row] = await this.database.db
-      .select({ id: attempts.id, userId: attempts.userId, seed: attempts.seed, status: attempts.status, createdAt: attempts.createdAt, slug: challenges.slug })
+      .select({
+        id: attempts.id,
+        userId: attempts.userId,
+        status: attempts.status,
+        createdAt: attempts.createdAt,
+        slug: challenges.slug,
+        sandboxId: sandboxSessions.sandboxId,
+      })
       .from(attempts)
       .innerJoin(challengeVersions, eq(challengeVersions.id, attempts.challengeVersionId))
       .innerJoin(challenges, eq(challenges.id, challengeVersions.challengeId))
+      .leftJoin(sandboxSessions, and(eq(sandboxSessions.attemptId, attempts.id), eq(sandboxSessions.status, "ready")))
       .where(eq(attempts.id, attemptId));
     if (!row || row.userId !== userId) {
       throw new NotFoundError("Attempt not found");
     }
-    return toResponse(row, row.slug);
+    const response = toResponse(row, row.slug);
+    if (row.status !== "ready" || !row.sandboxId) {
+      return response;
+    }
+    return { ...response, attach_token: await this.attachTokens.sign({ sandboxId: row.sandboxId, attemptId: row.id, userId }) };
   }
 
   private async liveVersion(slug: string): Promise<LiveVersion> {
