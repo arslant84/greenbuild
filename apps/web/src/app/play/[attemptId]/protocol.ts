@@ -8,6 +8,8 @@ export interface TerminalSize {
   cols: number;
 }
 
+export type ConnectionStatus = "connecting" | "connected" | "disconnected" | "exited";
+
 export type ControlMessage = { type: "exit"; code: number };
 
 const controlSchema = z.object({ type: z.literal("exit"), code: z.number().int() });
