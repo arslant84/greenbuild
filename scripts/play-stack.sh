@@ -60,32 +60,42 @@ start() {
 wait_for() {
   local name="$1" url="$2" deadline=$((SECONDS + READY_TIMEOUT_S))
   until curl -sf -o /dev/null "$url"; do
-    if [ "$SECONDS" -gt "$deadline" ]; then
+    # Another service on the same port could answer; ours must still be running.
+    if ! kill -0 "$(cat "$PLAY/pids/$name")" 2>/dev/null || [ "$SECONDS" -gt "$deadline" ]; then
       log "$name did not start; last log lines:"
       tail -n 20 "$PLAY/logs/$name.log"
       exit 1
     fi
     sleep 1
   done
+  sleep 1
+  if ! kill -0 "$(cat "$PLAY/pids/$name")" 2>/dev/null; then
+    log "$name exited; is its port taken by another process? Last log lines:"
+    tail -n 20 "$PLAY/logs/$name.log"
+    exit 1
+  fi
   log "$name is up ($url)"
 }
 
 services() {
   local certs="$PLAY/certs"
   start agent SANDBOX_AGENT_RUNTIME=runc SANDBOX_AGENT_TLS_CA="$certs/ca.pem" SANDBOX_AGENT_TLS_CERT="$certs/agent.pem" \
-    SANDBOX_AGENT_TLS_KEY="$certs/agent-key.pem" "$PLAY/bin/sandbox-agent"
-  wait_for agent http://127.0.0.1:8081/health
+    SANDBOX_AGENT_TLS_KEY="$certs/agent-key.pem" SANDBOX_AGENT_HEALTH_ADDR="127.0.0.1:$AGENT_PORT" \
+    SANDBOX_AGENT_GRPC_ADDR="127.0.0.1:$AGENT_GRPC_PORT" "$PLAY/bin/sandbox-agent"
+  wait_for agent "http://127.0.0.1:$AGENT_PORT/health"
   start engine SANDBOX_ENGINE_TLS_CA="$certs/ca.pem" SANDBOX_ENGINE_TLS_CERT="$certs/engine.pem" SANDBOX_ENGINE_TLS_KEY="$certs/engine-key.pem" \
     SANDBOX_ENGINE_ATTACH_SECRET="$ATTACH_SECRET" SANDBOX_ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" SANDBOX_ENGINE_CHALLENGES_DIR="$ROOT/challenges" \
-    SANDBOX_ENGINE_REDIS_URL="$REDIS_URL" SANDBOX_ENGINE_ALLOWED_ORIGINS="localhost:$WEB_PORT,127.0.0.1:$WEB_PORT"     SANDBOX_ENGINE_HTTP_ADDR="127.0.0.1:$ENGINE_PORT" SANDBOX_ENGINE_AGENT_ADDR="127.0.0.1:$AGENT_GRPC_PORT" "$PLAY/bin/sandbox-engine"
+    SANDBOX_ENGINE_REDIS_URL="$REDIS_URL" SANDBOX_ENGINE_ALLOWED_ORIGINS="localhost:$WEB_PORT,127.0.0.1:$WEB_PORT" \
+    SANDBOX_ENGINE_HTTP_ADDR="127.0.0.1:$ENGINE_PORT" SANDBOX_ENGINE_AGENT_ADDR="127.0.0.1:$AGENT_GRPC_PORT" "$PLAY/bin/sandbox-engine"
   wait_for engine "http://127.0.0.1:$ENGINE_PORT/health"
-  start api NODE_ENV=development PORT=3000 DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" ATTACH_SECRET="$ATTACH_SECRET" \
-    ENGINE_INTERNAL_URL=http://127.0.0.1:8080 ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" node apps/api/dist/main.js
-  wait_for api http://127.0.0.1:3000/health
+  start api NODE_ENV=development PORT="$API_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" ATTACH_SECRET="$ATTACH_SECRET" \
+    ENGINE_INTERNAL_URL="http://127.0.0.1:$ENGINE_PORT" ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" \
+    node apps/api/dist/main.js
+  wait_for api "http://127.0.0.1:$API_PORT/health"
   # next dev, not next start: the dev session exists only outside production builds.
-  start web API_URL=http://127.0.0.1:3000 DEV_AUTH_SECRET="$DEV_AUTH_SECRET" ENGINE_ATTACH_URL=ws://127.0.0.1:8080/attach \
-    pnpm --filter @greenbuild/web exec next dev --port 3001
-  wait_for web http://127.0.0.1:3001/health
+  start web API_URL="http://127.0.0.1:$API_PORT" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" ENGINE_ATTACH_URL="ws://127.0.0.1:$ENGINE_PORT/attach" \
+    bash -c "cd apps/web && exec ./node_modules/.bin/next dev --port $WEB_PORT"
+  wait_for web "http://127.0.0.1:$WEB_PORT/health"
 }
 
 # stop ends a service and its children (next dev starts several node processes). On Windows the
@@ -106,8 +116,8 @@ stop() {
 up() {
   mkdir -p "$PLAY/bin" "$PLAY/certs" "$PLAY/logs" "$PLAY/pids"
   secrets
-  DATABASE_URL="postgres://postgres:play@127.0.0.1:55432/greenbuild"
-  REDIS_URL="redis://127.0.0.1:56379"
+  DATABASE_URL="postgres://postgres:play@127.0.0.1:15432/greenbuild"
+  REDIS_URL="redis://127.0.0.1:16379"
   build
   database
   services
