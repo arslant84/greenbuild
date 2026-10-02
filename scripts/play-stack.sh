@@ -57,8 +57,10 @@ start() {
   (cd "$ROOT" && env "$@" > "$PLAY/logs/$name.log" 2>&1 & echo $! > "$PLAY/pids/$name")
 }
 
+# wait_for waits until the service answers /health on its port, then remembers who listens there.
 wait_for() {
-  local name="$1" url="$2" deadline=$((SECONDS + READY_TIMEOUT_S))
+  local name="$1" port="$2" deadline=$((SECONDS + READY_TIMEOUT_S))
+  local url="http://127.0.0.1:$port/health"
   until curl -sf -o /dev/null "$url"; do
     # Another service on the same port could answer; ours must still be running.
     if ! kill -0 "$(cat "$PLAY/pids/$name")" 2>/dev/null || [ "$SECONDS" -gt "$deadline" ]; then
@@ -74,7 +76,16 @@ wait_for() {
     tail -n 20 "$PLAY/logs/$name.log"
     exit 1
   fi
+  remember_listener "$name" "$port"
   log "$name is up ($url)"
+}
+
+# On Windows the recorded PID is Git Bash's wrapper, not the native process. Once our service is up
+# (and still alive), the process listening on its port is ours, so its Windows PID is kept for down.
+remember_listener() {
+  if command -v taskkill >/dev/null 2>&1; then
+    netstat -ano | awk -v port=":$2" '$1 == "TCP" && $4 == "LISTENING" && substr($2, length($2) - length(port) + 1) == port { print $5; exit }' > "$PLAY/pids/$1.win"
+  fi
 }
 
 services() {
@@ -82,31 +93,32 @@ services() {
   start agent SANDBOX_AGENT_RUNTIME=runc SANDBOX_AGENT_TLS_CA="$certs/ca.pem" SANDBOX_AGENT_TLS_CERT="$certs/agent.pem" \
     SANDBOX_AGENT_TLS_KEY="$certs/agent-key.pem" SANDBOX_AGENT_HEALTH_ADDR="127.0.0.1:$AGENT_PORT" \
     SANDBOX_AGENT_GRPC_ADDR="127.0.0.1:$AGENT_GRPC_PORT" "$PLAY/bin/sandbox-agent"
-  wait_for agent "http://127.0.0.1:$AGENT_PORT/health"
+  wait_for agent "$AGENT_PORT"
   start engine SANDBOX_ENGINE_TLS_CA="$certs/ca.pem" SANDBOX_ENGINE_TLS_CERT="$certs/engine.pem" SANDBOX_ENGINE_TLS_KEY="$certs/engine-key.pem" \
     SANDBOX_ENGINE_ATTACH_SECRET="$ATTACH_SECRET" SANDBOX_ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" SANDBOX_ENGINE_CHALLENGES_DIR="$ROOT/challenges" \
     SANDBOX_ENGINE_REDIS_URL="$REDIS_URL" SANDBOX_ENGINE_ALLOWED_ORIGINS="localhost:$WEB_PORT,127.0.0.1:$WEB_PORT" \
     SANDBOX_ENGINE_HTTP_ADDR="127.0.0.1:$ENGINE_PORT" SANDBOX_ENGINE_AGENT_ADDR="127.0.0.1:$AGENT_GRPC_PORT" "$PLAY/bin/sandbox-engine"
-  wait_for engine "http://127.0.0.1:$ENGINE_PORT/health"
+  wait_for engine "$ENGINE_PORT"
   start api NODE_ENV=development PORT="$API_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" ATTACH_SECRET="$ATTACH_SECRET" \
     ENGINE_INTERNAL_URL="http://127.0.0.1:$ENGINE_PORT" ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" \
     node apps/api/dist/main.js
-  wait_for api "http://127.0.0.1:$API_PORT/health"
+  wait_for api "$API_PORT"
   # next dev, not next start: the dev session exists only outside production builds.
   start web API_URL="http://127.0.0.1:$API_PORT" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" ENGINE_ATTACH_URL="ws://127.0.0.1:$ENGINE_PORT/attach" \
     bash -c "cd apps/web && exec ./node_modules/.bin/next dev --port $WEB_PORT"
-  wait_for web "http://127.0.0.1:$WEB_PORT/health"
+  wait_for web "$WEB_PORT"
 }
 
-# stop ends a service and its children (next dev starts several node processes). On Windows the
-# process tree belongs to native processes, so it is ended by its Windows PID.
+# stop ends a service and its children (next dev starts several node processes); on Windows by the
+# listener's Windows PID that wait_for recorded.
 stop() {
-  local pid winpid
+  local pid
   pid="$(cat "$1")"
-  if command -v taskkill >/dev/null 2>&1; then
-    winpid="$(ps -p "$pid" 2>/dev/null | awk 'NR == 2 { print $4 }')"
-    taskkill //PID "${winpid:-$pid}" //T //F >/dev/null 2>&1 || true
-  else
+  if [ -s "$1.win" ]; then
+    taskkill //PID "$(cat "$1.win")" //T //F >/dev/null 2>&1 || true
+    rm -f "$1.win"
+  fi
+  if ! command -v taskkill >/dev/null 2>&1; then
     pkill -TERM -P "$pid" 2>/dev/null || true
     kill "$pid" 2>/dev/null || true
   fi

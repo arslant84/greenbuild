@@ -1,50 +1,39 @@
 # Play a challenge locally
 
-Runs the Stage 1 slice on one machine: agent, engine, Redis and the web app, with `cmd/dev-attempt` standing in for the API (until tasks 14–16). Sandboxes use runc locally; gVisor is covered in CI.
+Runs the whole Stage 1 slice on one machine: Postgres and Redis (Docker Compose), the sandbox agent, the engine, the API and the web app. Sandboxes use runc locally; gVisor is covered in CI.
 
-## Once
+## Needs
 
-```sh
-cd apps/sandbox-agent && go run ./cmd/devcerts   # writes apps/sandbox-agent/.certs (git-ignored)
-docker build -t greenbuild-challenge/nginx-502-upstream:dev challenges/nginx-502-upstream
-```
-
-Pick three random secrets of at least 32 characters, e.g. `openssl rand -hex 32`.
-
-## Environment
-
-Use free ports. On Windows, Memurai often holds 6379, so Redis goes on 6380 here.
-
-```sh
-C=$PWD/apps/sandbox-agent/.certs
-export SANDBOX_AGENT_RUNTIME=runc
-export SANDBOX_AGENT_TLS_CA=$C/ca.pem SANDBOX_AGENT_TLS_CERT=$C/agent.pem SANDBOX_AGENT_TLS_KEY=$C/agent-key.pem
-export SANDBOX_ENGINE_TLS_CA=$C/ca.pem SANDBOX_ENGINE_TLS_CERT=$C/engine.pem SANDBOX_ENGINE_TLS_KEY=$C/engine-key.pem
-export SANDBOX_ENGINE_ATTACH_SECRET=<secret 1> SANDBOX_ENGINE_INTERNAL_TOKEN=<secret 2>
-export SANDBOX_ENGINE_CHALLENGES_DIR=$PWD/challenges SANDBOX_ENGINE_REDIS_URL=redis://127.0.0.1:6380
-export SANDBOX_ENGINE_ALLOWED_ORIGINS=localhost:3001
-export GREENBUILD_DEV_CHECK_SECRET=<secret 3> ENGINE_INTERNAL_TOKEN=<secret 2>
-```
-
-The web app reads `ENGINE_ATTACH_URL` (default `ws://127.0.0.1:8080/attach`) and `ENGINE_INTERNAL_URL` (default `http://127.0.0.1:8080`).
+Docker, Go, Node 22 and pnpm, with `pnpm install` done once. Stop `pnpm dev` first: it uses the same ports, and only one `next dev` can run per folder.
 
 ## Run
 
-In separate terminals with that environment:
-
 ```sh
-docker run --rm -p 127.0.0.1:6380:6379 redis:8-alpine
-cd apps/sandbox-agent && go build -o agent ./cmd/sandbox-agent && ./agent
-cd apps/sandbox-engine && go build -o engine ./cmd/sandbox-engine && ./engine
-cd apps/web && pnpm dev
-cd apps/sandbox-engine && go run ./cmd/dev-attempt
+pnpm play:up      # builds, starts everything, prints the URL
+pnpm play:down    # stops everything
 ```
 
-`dev-attempt` prints a link. Open it within 60 seconds: the attach token is only for connecting, so a reload needs a new link. Solve the challenge in the terminal and press **Check**.
+Then open <http://localhost:3001>. A dev session starts on the first visit. Press **Start Challenge**, wait for the sandbox, fix the site in the terminal and press **Check Solution** (or Cmd/Ctrl+Enter). The result opens from the scorecard's link.
 
-Only one `next dev` can run per folder. Stop the other one, or run the web app from a `git worktree`.
+The first `play:up` builds the Go binaries, the dev certificates, the nginx-502 image and the API, which takes a few minutes; later runs are faster.
+
+## What it sets up
+
+| Service | Address | Notes |
+|---|---|---|
+| Web | `localhost:3001` | `next dev`, so the dev session exists |
+| API | `127.0.0.1:3000` | dev user tokens on |
+| Engine | `127.0.0.1:8080` | consumer on, `/attach` and `/internal` on |
+| Agent | `127.0.0.1:8081`, gRPC `9443` | runc |
+| Postgres | `127.0.0.1:15432` | migrated and seeded with nginx-502 |
+| Redis | `127.0.0.1:16379` | clear of a local Redis on 6379 (e.g. Memurai) |
+
+Each port can be changed with `PLAY_WEB_PORT`, `PLAY_API_PORT`, `PLAY_ENGINE_PORT`, `PLAY_AGENT_PORT` and `PLAY_AGENT_GRPC_PORT`, e.g. to run next to `pnpm dev`.
+
+Everything else lives in `.play/` (git-ignored): binaries, dev certificates, throwaway secrets kept across restarts, process ids and one log per service in `.play/logs`. If a service does not come up, the script stops and prints the end of its log.
 
 ## What protects what
 
-- The terminal opens only with the 60-second attach token, signed with `SANDBOX_ENGINE_ATTACH_SECRET`.
-- **Check** sends the dev ticket (2 hours, bound to the attempt, sandbox and challenge) to the web app's `/play/{attempt}/check`. Only that route holds the engine's internal token. The route is off in production and without both secrets.
+- The terminal opens only with a 60-second attach token, which the API issues to the attempt's owner and the engine verifies.
+- Every API call carries the dev user token from the session cookie; the browser never sees it, and writes also need the `x-greenbuild-request` header.
+- Dev sessions exist only outside production and only with `DEV_AUTH_SECRET`. Auth.js login replaces them.
