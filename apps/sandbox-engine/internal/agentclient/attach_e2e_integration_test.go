@@ -64,6 +64,11 @@ func createSandbox(t *testing.T, client *agentclient.Client) string {
 
 func startAttach(t *testing.T, client *agentclient.Client) string {
 	t.Helper()
+	return serveAttach(t, newAttachHandler(t, client))
+}
+
+func newAttachHandler(t *testing.T, client *agentclient.Client) *attach.Handler {
+	t.Helper()
 	verifier, err := attachtoken.NewVerifier(secret)
 	if err != nil {
 		t.Fatalf("NewVerifier() error = %v", err)
@@ -71,7 +76,12 @@ func startAttach(t *testing.T, client *agentclient.Client) string {
 	open := func(ctx context.Context, sandboxID string, size agentclient.TerminalSize) (attach.Session, error) {
 		return client.OpenTerminal(ctx, sandboxID, size)
 	}
-	server := httptest.NewServer(attach.NewHandler(verifier, open, nil))
+	return attach.NewHandler(verifier, open, nil)
+}
+
+func serveAttach(t *testing.T, handler *attach.Handler) string {
+	t.Helper()
+	server := httptest.NewServer(handler)
 	t.Cleanup(server.Close)
 	return "ws" + strings.TrimPrefix(server.URL, "http")
 }
