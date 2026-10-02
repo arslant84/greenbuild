@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"strings"
 	"testing"
 	"time"
 )
@@ -88,5 +89,26 @@ func TestLoadAgentOverridesAndTLS(t *testing.T) {
 	}
 	if _, err := Load(envFrom(map[string]string{envAgentAddr: "no-port"})); !errors.Is(err, ErrInvalid) {
 		t.Errorf("Load() with a bad agent address error = %v, want ErrInvalid", err)
+	}
+}
+
+func TestLoadAttachSecret(t *testing.T) {
+	cfg, err := Load(envFrom(nil))
+	if err != nil || cfg.AttachSecret != "" {
+		t.Fatalf("Load() = %q, %v; want no secret by default", cfg.AttachSecret, err)
+	}
+
+	strong := strings.Repeat("k", minAttachSecretBytes)
+	if cfg, err := Load(envFrom(map[string]string{envAttachSecret: strong})); err != nil || cfg.AttachSecret != strong {
+		t.Errorf("Load() with a %d-byte secret = %v", minAttachSecretBytes, err)
+	}
+
+	weak := "hunter2-but-short"
+	_, err = Load(envFrom(map[string]string{envAttachSecret: weak}))
+	if !errors.Is(err, ErrInvalid) {
+		t.Fatalf("Load() with a short secret error = %v, want ErrInvalid", err)
+	}
+	if strings.Contains(err.Error(), weak) {
+		t.Error("the error message leaks the secret")
 	}
 }
