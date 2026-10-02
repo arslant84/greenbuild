@@ -31,3 +31,21 @@ body {
   color: var(--color-ink);
   font-family: var(--font-sans);
 }
+
+/* Text styles that repeat across the Figma frames. */
+@utility type-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 12px;
+  letter-spacing: 0.2px;
+}
+
+@utility type-body {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  line-height: 18px;
+}
+
+@utility type-term {
+  font-family: "Liberation Mono", var(--font-mono);
+}
