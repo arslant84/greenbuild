@@ -96,6 +96,7 @@ export interface Player {
   find: (id: string) => Promise<Response>;
   check: (id: string) => Promise<Response>;
   result: (id: string) => Promise<Response>;
+  card: (slug: string) => Promise<Response>;
 }
 
 // player calls the API as one dev user.
@@ -108,5 +109,6 @@ export async function player(app: () => AttemptsApp, userId: string): Promise<Pl
     find: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}`, { headers }),
     check: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/check`, { method: "POST", headers }),
     result: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/result`, { headers }),
+    card: (slug) => fetch(`${app().baseUrl}/v1/challenges/${slug}`, { headers }),
   };
 }

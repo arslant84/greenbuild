@@ -23,7 +23,7 @@ describe("POST and GET /v1/attempts on PostgreSQL and Redis", () => {
     const attempt = (await response.json()) as { id: string; status: string; challenge_slug: string };
 
     expect(response.status).toBe(201);
-    expect(attempt).toMatchObject({ status: "starting", challenge_slug: "nginx-502-upstream" });
+    expect(attempt).toMatchObject({ status: "starting", challenge_slug: "nginx-502-upstream", started_at: null, checks_used: 0 });
     const request = (await queuedRequests(app)).find((queued) => queued.attempt_id === attempt.id);
     expect(request).toMatchObject({ image: "greenbuild-challenge/nginx-502-upstream:dev", cpu_millis: 500, ttl_seconds: 900, network: "none" });
     expect(request?.capabilities).toEqual(["CHOWN", "SETUID", "SETGID"]);

@@ -4,6 +4,7 @@ import { z } from "zod";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
 import { CurrentUser, DevUserGuard } from "../auth/dev-user.guard.js";
 import { parseInput } from "../validation.js";
+import { AttemptReader } from "./attempt-reader.js";
 import { AttemptsService } from "./attempts.service.js";
 import { ChecksService } from "./checks.service.js";
 
@@ -12,6 +13,7 @@ import { ChecksService } from "./checks.service.js";
 export class AttemptsController {
   constructor(
     private readonly attempts: AttemptsService,
+    private readonly reader: AttemptReader,
     private readonly checks: ChecksService,
   ) {}
 
@@ -24,7 +26,7 @@ export class AttemptsController {
 
   @Get(":id")
   find(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string): Promise<AttemptResponse> {
-    return this.attempts.find(user.id, parseInput(z.uuid(), id));
+    return this.reader.find(user.id, parseInput(z.uuid(), id));
   }
 
   @Post(":id/check")
