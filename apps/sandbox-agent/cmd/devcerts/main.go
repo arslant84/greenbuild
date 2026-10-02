@@ -14,7 +14,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/devpki"
+	"github.com/arslant84/greenbuild/packages/devpki"
 )
 
 const (

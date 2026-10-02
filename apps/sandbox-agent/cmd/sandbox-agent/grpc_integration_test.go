@@ -14,9 +14,9 @@ import (
 
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/agentserver"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/config"
-	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/devpki"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/sandbox"
 	agentv1 "github.com/arslant84/greenbuild/packages/agent-api/agent/v1"
+	"github.com/arslant84/greenbuild/packages/devpki"
 	"github.com/moby/moby/client"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
