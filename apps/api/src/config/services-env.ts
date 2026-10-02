@@ -10,6 +10,9 @@ const servicesEnvSchema = z.object({
   REDIS_URL: z.url({ protocol: /^rediss?$/ }),
   // Signs the 60-second attach tokens; the engine verifies them with the same secret.
   ATTACH_SECRET: z.string().min(MIN_SECRET_LENGTH),
+  // The engine's internal API, for checks; the token is its SANDBOX_ENGINE_INTERNAL_TOKEN.
+  ENGINE_INTERNAL_URL: z.url({ protocol: /^https?$/ }),
+  ENGINE_INTERNAL_TOKEN: z.string().min(MIN_SECRET_LENGTH),
   // Verifies dev user tokens until Auth.js login exists; ignored in production.
   DEV_AUTH_SECRET: z.string().min(MIN_SECRET_LENGTH).optional(),
 });

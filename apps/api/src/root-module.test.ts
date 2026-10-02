@@ -17,6 +17,8 @@ describe("rootModule", () => {
       DATABASE_URL: "postgres://api:pw@db/greenbuild",
       REDIS_URL: "redis://redis:6379",
       ATTACH_SECRET: "a".repeat(32),
+      ENGINE_INTERNAL_URL: "http://engine:8080",
+      ENGINE_INTERNAL_TOKEN: "i".repeat(32),
     });
 
     expect(module).toMatchObject({ module: AppModule });

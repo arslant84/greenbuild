@@ -15,6 +15,13 @@
       "when": 1790939521674,
       "tag": "0001_active_attempt_and_sandbox_id",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1790942832392,
+      "tag": "0002_attempt_checks",
+      "breakpoints": true
     }
   ]
 }

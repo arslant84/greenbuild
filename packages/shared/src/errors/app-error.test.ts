@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AppError, ConflictError, NotFoundError, ValidationError } from "./app-error.js";
+import { AppError, ConflictError, NotFoundError, RateLimitedError, UnavailableError, ValidationError } from "./app-error.js";
 import { errorResponseSchema } from "./error-response.js";
 
 describe("AppError", () => {
@@ -38,5 +38,15 @@ describe("errorResponseSchema", () => {
     const result = errorResponseSchema.safeParse({ code: "teapot", message: "No" });
 
     expect(result.success).toBe(false);
+  });
+});
+
+describe("limit and dependency errors", () => {
+  it.each([
+    [new RateLimitedError("No checks left"), "rate_limited"],
+    [new UnavailableError("The check could not run"), "unavailable"],
+  ])("%s has code %s", (error, code) => {
+    expect(error.toResponse()).toEqual({ code, message: error.message });
+    expect(errorResponseSchema.parse(error.toResponse())).toEqual(error.toResponse());
   });
 });
