@@ -55,3 +55,38 @@ func TestLoadRejectsInvalidValues(t *testing.T) {
 		})
 	}
 }
+
+func TestLoadAgentDefaults(t *testing.T) {
+	cfg, err := Load(envFrom(nil))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Agent.Addr != defaultAgentAddr || cfg.Agent.ServerName != defaultAgentServerName {
+		t.Errorf("Agent = %+v, want %s and %s", cfg.Agent, defaultAgentAddr, defaultAgentServerName)
+	}
+	if cfg.Agent.TLS.Enabled() {
+		t.Error("agent TLS enabled without certificate paths")
+	}
+}
+
+func TestLoadAgentOverridesAndTLS(t *testing.T) {
+	all := map[string]string{
+		envAgentAddr: "10.1.0.5:9443", envAgentServerName: "sandbox-agent",
+		envTLSCA: "ca.pem", envTLSCert: "engine.pem", envTLSKey: "engine-key.pem",
+	}
+	cfg, err := Load(envFrom(all))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Agent.Addr != "10.1.0.5:9443" || cfg.Agent.ServerName != "sandbox-agent" || !cfg.Agent.TLS.Enabled() {
+		t.Errorf("Agent = %+v, want the overrides with TLS enabled", cfg.Agent)
+	}
+
+	delete(all, envTLSKey)
+	if _, err := Load(envFrom(all)); !errors.Is(err, ErrInvalid) {
+		t.Errorf("Load() with a partial TLS set error = %v, want ErrInvalid", err)
+	}
+	if _, err := Load(envFrom(map[string]string{envAgentAddr: "no-port"})); !errors.Is(err, ErrInvalid) {
+		t.Errorf("Load() with a bad agent address error = %v, want ErrInvalid", err)
+	}
+}
