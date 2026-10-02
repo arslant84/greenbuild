@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greenbuild.dev/schemas/queue/sandbox.status.v1.json",
+  "title": "sandbox.status v1",
+  "description": "Engine → API: what happened to an attempt's sandbox.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "attempt_id", "status"],
+  "properties": {
+    "version": { "const": 1 },
+    "attempt_id": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "status": { "enum": ["ready", "failed", "destroyed"] },
+    "sandbox_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "reason": { "type": "string", "maxLength": 500, "description": "Why it failed or was destroyed; never secrets or checker output." }
+  },
+  "if": { "properties": { "status": { "const": "ready" } } },
+  "then": { "required": ["sandbox_id"] }
+}
