@@ -16,6 +16,10 @@ const (
 	envTLSCA           = "SANDBOX_ENGINE_TLS_CA"
 	envTLSCert         = "SANDBOX_ENGINE_TLS_CERT"
 	envTLSKey          = "SANDBOX_ENGINE_TLS_KEY"
+	envAttachSecret    = "SANDBOX_ENGINE_ATTACH_SECRET"
+
+	// minAttachSecretBytes matches HS256's key size; shorter secrets are easier to brute-force.
+	minAttachSecretBytes = 32
 
 	// Loopback by default so a local run is not exposed; containers set 0.0.0.0 explicitly.
 	defaultHTTPAddr        = "127.0.0.1:8080"
@@ -33,6 +37,8 @@ type Config struct {
 	HTTPAddr        string
 	ShutdownTimeout time.Duration
 	Agent           AgentConfig
+	// AttachSecret verifies browser attach tokens; empty keeps /attach off. Never log it.
+	AttachSecret string
 }
 
 // AgentConfig is how the engine reaches a sandbox agent. Without TLS files the engine does not
@@ -71,6 +77,9 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	cfg.Agent.ServerName = valueOr(getenv(envAgentServerName), defaultAgentServerName)
 	if cfg.Agent.TLS, err = loadTLS(getenv); err != nil {
+		return Config{}, err
+	}
+	if cfg.AttachSecret, err = loadAttachSecret(getenv); err != nil {
 		return Config{}, err
 	}
 	return cfg, nil
@@ -112,6 +121,15 @@ func loadTLS(getenv func(string) string) (TLSFiles, error) {
 		return TLSFiles{}, fmt.Errorf("%w: set all of %s, %s, %s or none", ErrInvalid, envTLSCA, envTLSCert, envTLSKey)
 	}
 	return files, nil
+}
+
+// loadAttachSecret reports only the length of a bad secret, never its value.
+func loadAttachSecret(getenv func(string) string) (string, error) {
+	secret := getenv(envAttachSecret)
+	if secret != "" && len(secret) < minAttachSecretBytes {
+		return "", fmt.Errorf("%w: %s is %d bytes, need at least %d", ErrInvalid, envAttachSecret, len(secret), minAttachSecretBytes)
+	}
+	return secret, nil
 }
 
 func valueOr(value, fallback string) string {

@@ -5,6 +5,7 @@ go 1.27.0
 require (
 	github.com/arslant84/greenbuild/packages/agent-api v0.0.0
 	github.com/arslant84/greenbuild/packages/devpki v0.0.0
+	github.com/golang-jwt/jwt/v5 v5.3.1
 	google.golang.org/grpc v1.84.0
 )
 
