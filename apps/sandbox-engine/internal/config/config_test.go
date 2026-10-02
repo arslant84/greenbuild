@@ -98,9 +98,9 @@ func TestLoadAttachSecret(t *testing.T) {
 		t.Fatalf("Load() = %q, %v; want no secret by default", cfg.AttachSecret, err)
 	}
 
-	strong := strings.Repeat("k", minAttachSecretBytes)
+	strong := strings.Repeat("k", minSecretBytes)
 	if cfg, err := Load(envFrom(map[string]string{envAttachSecret: strong})); err != nil || cfg.AttachSecret != strong {
-		t.Errorf("Load() with a %d-byte secret = %v", minAttachSecretBytes, err)
+		t.Errorf("Load() with a %d-byte secret = %v", minSecretBytes, err)
 	}
 
 	weak := "hunter2-but-short"
@@ -120,5 +120,19 @@ func TestLoadAllowedOrigins(t *testing.T) {
 	}
 	if want := []string{"greenbuild.dev", "app.greenbuild.dev"}; strings.Join(cfg.AllowedOrigins, ",") != strings.Join(want, ",") {
 		t.Errorf("AllowedOrigins = %q, want %q", cfg.AllowedOrigins, want)
+	}
+}
+
+func TestLoadInternalTokenAndChallengesDir(t *testing.T) {
+	strong := strings.Repeat("i", minSecretBytes)
+	cfg, err := Load(envFrom(map[string]string{envInternalToken: strong, envChallengesDir: "/srv/challenges"}))
+	if err != nil || cfg.InternalToken != strong || cfg.ChallengesDir != "/srv/challenges" {
+		t.Fatalf("Load() = %q, %q, %v", cfg.InternalToken, cfg.ChallengesDir, err)
+	}
+
+	weak := "short-internal-token"
+	_, err = Load(envFrom(map[string]string{envInternalToken: weak}))
+	if !errors.Is(err, ErrInvalid) || strings.Contains(err.Error(), weak) {
+		t.Errorf("Load() with a short token error = %v, want ErrInvalid without the token in it", err)
 	}
 }

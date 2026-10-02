@@ -24,6 +24,8 @@ type fakeAgent struct {
 	mu        sync.Mutex
 	created   *agentv1.CreateSandboxRequest
 	destroyed string
+	copied    *agentv1.CopyInRequest
+	ran       *agentv1.RunRequest
 }
 
 func (f *fakeAgent) Health(context.Context, *agentv1.HealthRequest) (*agentv1.HealthResponse, error) {
