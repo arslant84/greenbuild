@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/agentserver"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/config"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/health"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/sandbox"
@@ -48,7 +49,7 @@ func run() error {
 	manager := sandbox.NewManager(docker, cfg.Runtime)
 	go manager.RunReaper(ctx, reapInterval)
 
-	stopGRPC, err := startGRPC(cfg, manager)
+	stopGRPC, err := startGRPC(cfg, agentserver.FromManager(manager))
 	if err != nil {
 		return err
 	}

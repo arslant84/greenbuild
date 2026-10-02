@@ -21,6 +21,9 @@ type fakeSandboxes struct {
 	spec      sandbox.Spec
 	createErr error
 	setupErr  error
+	// terminal is what OpenTerminal returns; nil makes it fail.
+	terminal     Terminal
+	terminalSize sandbox.TerminalSize
 }
 
 func (f *fakeSandboxes) CreateSandbox(_ context.Context, spec sandbox.Spec) (string, error) {
@@ -165,12 +168,8 @@ func TestDestroyRequiresAnID(t *testing.T) {
 	}
 }
 
-func TestHealthAndUnimplementedMethods(t *testing.T) {
-	server := New(&fakeSandboxes{})
-	if resp, err := server.Health(t.Context(), &agentv1.HealthRequest{}); err != nil || resp.GetStatus() != "ok" {
+func TestHealth(t *testing.T) {
+	if resp, err := New(&fakeSandboxes{}).Health(t.Context(), &agentv1.HealthRequest{}); err != nil || resp.GetStatus() != "ok" {
 		t.Errorf("Health() = %v, %v; want ok", resp, err)
-	}
-	if err := server.Exec(nil); status.Code(err) != codes.Unimplemented {
-		t.Errorf("Exec code = %v, want Unimplemented until it is built", status.Code(err))
 	}
 }
