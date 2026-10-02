@@ -3,11 +3,13 @@ package main
 import (
 	"errors"
 	"net/http"
+	"net/http/httptest"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/agentclient"
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/config"
 	"github.com/arslant84/greenbuild/packages/devpki"
 )
@@ -41,34 +43,65 @@ func routePattern(t *testing.T, server *http.Server, path string) string {
 	return pattern
 }
 
-func TestAttachStaysOffWithoutASecret(t *testing.T) {
-	handler, release, err := buildAttach(config.Config{})
-	if err != nil || handler != nil {
-		t.Fatalf("buildAttach() = %v, %v; want no handler and no error", handler, err)
+// configured returns a config with agent TLS and a live (not yet connected) agent client.
+func configured(t *testing.T) (config.Config, *agentclient.Client) {
+	t.Helper()
+	cfg := config.Config{Agent: config.AgentConfig{Addr: "127.0.0.1:9443", ServerName: "localhost", TLS: agentTLS(t)}}
+	client, release, err := dialAgent(cfg)
+	if err != nil {
+		t.Fatalf("dialAgent() error = %v", err)
 	}
-	release()
-	if pattern := routePattern(t, newServer("127.0.0.1:0", nil), "/attach"); pattern != "" {
-		t.Errorf("/attach is routed (%q) while disabled", pattern)
+	t.Cleanup(release)
+	return cfg, client
+}
+
+func TestOptionalRoutesStayOffWithoutTheirSecrets(t *testing.T) {
+	cfg, client := configured(t)
+	attachHandler, attachErr := buildAttach(cfg, client)
+	internalHandler, internalErr := buildInternal(cfg, client)
+	if attachHandler != nil || internalHandler != nil || attachErr != nil || internalErr != nil {
+		t.Fatalf("got %v %v %v %v; want both off without errors", attachHandler, internalHandler, attachErr, internalErr)
+	}
+	server := newServer("127.0.0.1:0", routes{})
+	if routePattern(t, server, "/attach") != "" || routePattern(t, server, "/internal/attempts/a/check") != "" {
+		t.Error("a disabled route is still routed")
 	}
 }
 
-func TestAttachNeedsTheAgentTLSFiles(t *testing.T) {
-	if _, _, err := buildAttach(config.Config{AttachSecret: attachSecret}); !errors.Is(err, errAttachNeedsAgent) {
-		t.Errorf("buildAttach() error = %v, want errAttachNeedsAgent", err)
+func TestOptionalRoutesRefuseIncompleteConfig(t *testing.T) {
+	if _, err := buildAttach(config.Config{AttachSecret: attachSecret}, nil); !errors.Is(err, errNeedsAgent) {
+		t.Errorf("attach without agent: %v, want errNeedsAgent", err)
+	}
+	if _, err := buildInternal(config.Config{InternalToken: attachSecret}, nil); !errors.Is(err, errNeedsAgent) {
+		t.Errorf("internal without agent: %v, want errNeedsAgent", err)
+	}
+	cfg, client := configured(t)
+	cfg.InternalToken = attachSecret
+	if _, err := buildInternal(cfg, client); !errors.Is(err, errNeedsChallengesDir) {
+		t.Errorf("internal without challenges dir: %v, want errNeedsChallengesDir", err)
 	}
 }
 
-func TestAttachIsServedWhenConfigured(t *testing.T) {
-	cfg := config.Config{AttachSecret: attachSecret, Agent: config.AgentConfig{
-		Addr: "127.0.0.1:9443", ServerName: "localhost", TLS: agentTLS(t),
-	}}
-
-	handler, release, err := buildAttach(cfg)
-	if err != nil || handler == nil {
-		t.Fatalf("buildAttach() = %v, %v; want a handler", handler, err)
+func TestOptionalRoutesAreServedWhenConfigured(t *testing.T) {
+	cfg, client := configured(t)
+	cfg.AttachSecret, cfg.InternalToken, cfg.ChallengesDir = attachSecret, attachSecret, t.TempDir()
+	attachHandler, err := buildAttach(cfg, client)
+	if err != nil {
+		t.Fatalf("buildAttach() error = %v", err)
 	}
-	defer release()
-	if pattern := routePattern(t, newServer("127.0.0.1:0", handler), "/attach"); pattern != "GET /attach" {
-		t.Errorf("/attach route = %q, want GET /attach", pattern)
+	internalHandler, err := buildInternal(cfg, client)
+	if err != nil {
+		t.Fatalf("buildInternal() error = %v", err)
+	}
+	server := newServer("127.0.0.1:0", routes{attach: attachHandler, internal: internalHandler})
+
+	if pattern := routePattern(t, server, "/attach"); pattern != "GET /attach" {
+		t.Errorf("/attach route = %q", pattern)
+	}
+	request := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/internal/attempts/att-1/check", nil)
+	recorder := httptest.NewRecorder()
+	server.Handler.ServeHTTP(recorder, request)
+	if recorder.Code != http.StatusUnauthorized {
+		t.Errorf("check without the internal token: status %d, want 401", recorder.Code)
 	}
 }
