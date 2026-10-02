@@ -9,6 +9,7 @@ import { AppModule } from "../app.module.js";
 import { signDevUserToken } from "../auth/dev-user-token.js";
 import type { ServicesEnv } from "../config/services-env.js";
 import { type Container, startContainer } from "./containers.js";
+import { type FakeEngine, startFakeEngine } from "./fake-engine.js";
 
 const STARTUP_TIMEOUT_MS = 180_000;
 export const TEST_DEV_AUTH_SECRET = "dev-auth-secret-dev-auth-secret-32";
@@ -18,6 +19,7 @@ export const TEST_ENGINE_TOKEN = "engine-internal-token-engine-32byte";
 export interface AttemptsApp {
   baseUrl: string;
   env: ServicesEnv;
+  engine: FakeEngine;
 }
 
 async function startPostgres(): Promise<Container> {
@@ -51,16 +53,18 @@ async function startRedis(): Promise<Container> {
 
 // useAttemptsApp runs the API with its real services: migrated and seeded PostgreSQL 16, and Redis.
 export function useAttemptsApp(): () => AttemptsApp {
-  const started: { app?: INestApplication; containers: Container[]; ready?: AttemptsApp } = { containers: [] };
+  const started: { app?: INestApplication; containers: Container[]; engine?: FakeEngine; ready?: AttemptsApp } = { containers: [] };
   beforeAll(async () => {
     const [database, redis] = await Promise.all([startPostgres(), startRedis()]);
     started.containers.push(database, redis);
+    const engine = await startFakeEngine();
+    started.engine = engine;
     const env: ServicesEnv = {
       NODE_ENV: "test",
       DATABASE_URL: `postgres://postgres:test@${database.address}/postgres`,
       REDIS_URL: `redis://${redis.address}`,
       ATTACH_SECRET: TEST_ATTACH_SECRET,
-      ENGINE_INTERNAL_URL: "http://127.0.0.1:1",
+      ENGINE_INTERNAL_URL: engine.url,
       ENGINE_INTERNAL_TOKEN: TEST_ENGINE_TOKEN,
       DEV_AUTH_SECRET: TEST_DEV_AUTH_SECRET,
     };
@@ -71,10 +75,11 @@ export function useAttemptsApp(): () => AttemptsApp {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule.forRoot(env)] }).compile();
     started.app = moduleRef.createNestApplication({ logger: false });
     await started.app.listen(0);
-    started.ready = { baseUrl: await started.app.getUrl(), env };
+    started.ready = { baseUrl: await started.app.getUrl(), env, engine };
   }, STARTUP_TIMEOUT_MS);
   afterAll(async () => {
     await started.app?.close();
+    await started.engine?.close();
     await Promise.all(started.containers.map((container) => container.stop()));
   });
   return () => {
@@ -89,6 +94,8 @@ export interface Player {
   userId: string;
   start: (body: unknown) => Promise<Response>;
   find: (id: string) => Promise<Response>;
+  check: (id: string) => Promise<Response>;
+  result: (id: string) => Promise<Response>;
 }
 
 // player calls the API as one dev user.
@@ -99,5 +106,7 @@ export async function player(app: () => AttemptsApp, userId: string): Promise<Pl
     userId,
     start: (body) => fetch(`${app().baseUrl}/v1/attempts`, { method: "POST", headers, body: JSON.stringify(body) }),
     find: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}`, { headers }),
+    check: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/check`, { method: "POST", headers }),
+    result: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/result`, { headers }),
   };
 }
