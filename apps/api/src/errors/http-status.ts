@@ -8,6 +8,7 @@ const STATUS_BY_CODE: Record<ErrorCode, HttpStatus> = {
   not_found: HttpStatus.NOT_FOUND,
   conflict: HttpStatus.CONFLICT,
   rate_limited: HttpStatus.TOO_MANY_REQUESTS,
+  unavailable: HttpStatus.SERVICE_UNAVAILABLE,
   internal: HttpStatus.INTERNAL_SERVER_ERROR,
 };
 

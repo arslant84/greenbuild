@@ -48,3 +48,16 @@ export class ConflictError extends AppError {
     super("conflict", message, details);
   }
 }
+
+export class RateLimitedError extends AppError {
+  constructor(message: string) {
+    super("rate_limited", message);
+  }
+}
+
+// UnavailableError means a service the request depends on, such as the sandbox engine, did not answer.
+export class UnavailableError extends AppError {
+  constructor(message: string) {
+    super("unavailable", message);
+  }
+}

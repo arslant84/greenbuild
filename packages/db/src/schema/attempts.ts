@@ -64,3 +64,20 @@ export const sandboxSessions = pgTable(
   },
   (table) => [index("sandbox_sessions_attempt").on(table.attemptId)],
 );
+
+// One row per checker run; architecture.md allows ATTEMPT_MAX_CHECKS per attempt.
+export const attemptChecks = pgTable(
+  "attempt_checks",
+  {
+    id: idColumn(),
+    attemptId: uuid("attempt_id")
+      .notNull()
+      .references(() => attempts.id, { onDelete: "restrict" }),
+    passed: boolean("passed").notNull(),
+    // The checker's last output lines, shown to the player; the agent caps them.
+    outputTail: text("output_tail").notNull(),
+    durationMs: integer("duration_ms").notNull(),
+    ...timestampColumns(),
+  },
+  (table) => [index("attempt_checks_attempt_created").on(table.attemptId, table.createdAt)],
+);

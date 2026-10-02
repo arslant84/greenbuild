@@ -13,6 +13,7 @@ import { type Container, startContainer } from "./containers.js";
 const STARTUP_TIMEOUT_MS = 180_000;
 export const TEST_DEV_AUTH_SECRET = "dev-auth-secret-dev-auth-secret-32";
 export const TEST_ATTACH_SECRET = "attach-secret-attach-secret-32byte";
+export const TEST_ENGINE_TOKEN = "engine-internal-token-engine-32byte";
 
 export interface AttemptsApp {
   baseUrl: string;
@@ -59,6 +60,8 @@ export function useAttemptsApp(): () => AttemptsApp {
       DATABASE_URL: `postgres://postgres:test@${database.address}/postgres`,
       REDIS_URL: `redis://${redis.address}`,
       ATTACH_SECRET: TEST_ATTACH_SECRET,
+      ENGINE_INTERNAL_URL: "http://127.0.0.1:1",
+      ENGINE_INTERNAL_TOKEN: TEST_ENGINE_TOKEN,
       DEV_AUTH_SECRET: TEST_DEV_AUTH_SECRET,
     };
     await applyMigrations(env.DATABASE_URL);

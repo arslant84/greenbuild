@@ -6,6 +6,8 @@ const valid = {
   DATABASE_URL: "postgres://api:db-password@db:5432/greenbuild",
   REDIS_URL: "redis://:redis-password@redis:6379",
   ATTACH_SECRET: "a".repeat(32),
+  ENGINE_INTERNAL_URL: "http://engine:8080",
+  ENGINE_INTERNAL_TOKEN: "i".repeat(32),
   DEV_AUTH_SECRET: "d".repeat(32),
 };
 
@@ -32,7 +34,7 @@ describe("loadServicesEnv", () => {
     expect(JSON.stringify((error as ValidationError).toResponse())).not.toMatch(/db-password|short-secret/);
   });
 
-  it.each(["DATABASE_URL", "REDIS_URL", "ATTACH_SECRET"])("requires %s", (name) => {
+  it.each(["DATABASE_URL", "REDIS_URL", "ATTACH_SECRET", "ENGINE_INTERNAL_URL", "ENGINE_INTERNAL_TOKEN"])("requires %s", (name) => {
     expect(() => loadServicesEnv({ ...valid, [name]: undefined })).toThrow(ValidationError);
   });
 });

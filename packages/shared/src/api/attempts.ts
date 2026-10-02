@@ -19,3 +19,28 @@ export const attemptResponseSchema = z.object({
 
 export type StartAttemptRequest = z.infer<typeof startAttemptRequestSchema>;
 export type AttemptResponse = z.infer<typeof attemptResponseSchema>;
+
+// POST /v1/attempts/{id}/check
+export const checkResponseSchema = z.object({
+  passed: z.boolean(),
+  output_tail: z.string(),
+  duration_ms: z.number().int().nonnegative(),
+  checks_left: z.number().int().nonnegative(),
+});
+
+// GET /v1/attempts/{id}/result; XP, rating and the write-up join it in Stage 2.
+export const attemptResultSchema = z.object({
+  id: z.uuid(),
+  status: z.enum(ATTEMPT_STATUSES),
+  challenge_slug: z.string(),
+  checks_used: z.number().int().nonnegative(),
+  // From the sandbox being ready to the passing check.
+  duration_ms: z.number().int().nonnegative().nullable(),
+  finished_at: z.iso.datetime().nullable(),
+  checks: z.array(
+    z.object({ passed: z.boolean(), output_tail: z.string(), duration_ms: z.number().int().nonnegative(), checked_at: z.iso.datetime() }),
+  ),
+});
+
+export type CheckResponse = z.infer<typeof checkResponseSchema>;
+export type AttemptResult = z.infer<typeof attemptResultSchema>;
