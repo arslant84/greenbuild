@@ -68,10 +68,21 @@ export function TerminalChrome({ status, incident }: { status: ConnectionStatus;
   );
 }
 
-// Figma › Terminal Bottom Footer Status Bar (920 × 24).
-export function TerminalFooter({ size }: { size: TerminalSize | null }) {
+interface FooterNotice {
+  text: string;
+  tone: "accent" | "danger";
+}
+
+// Figma › Terminal Bottom Footer Status Bar (920 × 24); V2 and V4 put their status on the left.
+export function TerminalFooter({ size, notice }: { size: TerminalSize | null; notice: FooterNotice | null }) {
   return (
     <div className="flex h-6 shrink-0 items-center justify-between bg-surface px-3">
+      {notice ? (
+        <span className="flex items-center gap-2">
+          <span className={`size-2 rounded-full ${notice.tone === "accent" ? "bg-accent" : "bg-danger"}`} />
+          <span className={`type-label font-semibold tracking-[0.25px] ${notice.tone === "accent" ? "text-accent-soft" : "text-danger"}`}>{notice.text}</span>
+        </span>
+      ) : (
       <span className="flex items-center gap-2">
         <span className="flex items-center gap-1">
           <span className="size-1.5 rounded-full bg-ok" />
@@ -82,6 +93,7 @@ export function TerminalFooter({ size }: { size: TerminalSize | null }) {
         <span className="type-label text-ink-subtle">·</span>
         <span className="type-label text-ink-subtle">{size ? `${size.cols}×${size.rows}` : "—"}</span>
       </span>
+      )}
       <span className="flex items-center gap-1 text-accent-soft">
         <ShieldIcon />
         <span className="type-label text-ink-muted">root-isolated container: cgroup-v2</span>

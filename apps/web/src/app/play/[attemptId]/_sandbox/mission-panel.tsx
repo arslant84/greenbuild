@@ -9,11 +9,13 @@ interface MissionPanelProps {
   card: ChallengeCard;
   remainingSeconds: number;
   checksUsed: number;
+  // State blocks under the checks card (V4 alert and checker output, V5 disconnection card).
+  extra: ReactNode;
   actions: ReactNode;
 }
 
 // Figma › Aside - RIGHT PANE (360 px MISSION CONTROL PANEL).
-export function MissionPanel({ card, remainingSeconds, checksUsed, actions }: MissionPanelProps) {
+export function MissionPanel({ card, remainingSeconds, checksUsed, extra, actions }: MissionPanelProps) {
   return (
     <aside className="flex w-[360px] shrink-0 flex-col justify-between bg-surface-raised p-5">
       <div className="flex flex-col gap-5">
@@ -27,6 +29,7 @@ export function MissionPanel({ card, remainingSeconds, checksUsed, actions }: Mi
         <Brief card={card} />
         <TimerCard remainingSeconds={remainingSeconds} limitSeconds={card.time_limit_sec} />
         <ChecksCard checksUsed={checksUsed} />
+        {extra}
       </div>
       {actions}
     </aside>

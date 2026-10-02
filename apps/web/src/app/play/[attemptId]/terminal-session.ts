@@ -6,6 +6,8 @@ export interface TerminalSessionOptions {
   token: string;
   onStatus: (status: ConnectionStatus) => void;
   onSize: (size: TerminalSize) => void;
+  // Keystrokes are dropped while this returns true, e.g. while the checker runs.
+  isInputLocked: () => boolean;
 }
 
 // Colors and type from the Figma sandbox frames (terminal buffer, prompt green, cyan cursor).
@@ -30,19 +32,7 @@ const THEME: ITheme = {
 // connectTerminal shows the sandbox shell in element and returns a function that ends the session.
 // xterm needs the DOM, so it is loaded here, in the browser, and never during server rendering.
 export async function connectTerminal(element: HTMLElement, options: TerminalSessionOptions): Promise<() => void> {
-  const [{ Terminal }, { FitAddon }] = await Promise.all([import("@xterm/xterm"), import("@xterm/addon-fit")]);
-  const terminal = new Terminal({
-    cursorBlink: true,
-    cursorStyle: "block",
-    fontFamily: '"JetBrains Mono Variable", ui-monospace, monospace',
-    fontSize: FONT_SIZE,
-    lineHeight: LINE_HEIGHT_PX / FONT_SIZE,
-    theme: THEME,
-  });
-  const fit = new FitAddon();
-  terminal.loadAddon(fit);
-  terminal.open(element);
-  fit.fit();
+  const { terminal, fit } = await openTerminal(element);
   options.onSize({ rows: terminal.rows, cols: terminal.cols });
 
   const socket = new WebSocket(attachUrl(options.attachUrl, options.token, { rows: terminal.rows, cols: terminal.cols }));
@@ -55,7 +45,11 @@ export async function connectTerminal(element: HTMLElement, options: TerminalSes
   };
 
   const encoder = new TextEncoder();
-  const input = terminal.onData((keys) => sendWhenOpen(socket, encoder.encode(keys)));
+  const input = terminal.onData((keys) => {
+    if (!options.isInputLocked()) {
+      sendWhenOpen(socket, encoder.encode(keys));
+    }
+  });
   const resize = terminal.onResize((size) => {
     options.onSize(size);
     sendWhenOpen(socket, resizeMessage(size));
@@ -71,6 +65,24 @@ export async function connectTerminal(element: HTMLElement, options: TerminalSes
     socket.close();
     terminal.dispose();
   };
+}
+
+// openTerminal loads xterm in the browser and fits it to element.
+async function openTerminal(element: HTMLElement) {
+  const [{ Terminal }, { FitAddon }] = await Promise.all([import("@xterm/xterm"), import("@xterm/addon-fit")]);
+  const terminal = new Terminal({
+    cursorBlink: true,
+    cursorStyle: "block",
+    fontFamily: '"JetBrains Mono Variable", ui-monospace, monospace',
+    fontSize: FONT_SIZE,
+    lineHeight: LINE_HEIGHT_PX / FONT_SIZE,
+    theme: THEME,
+  });
+  const fit = new FitAddon();
+  terminal.loadAddon(fit);
+  terminal.open(element);
+  fit.fit();
+  return { terminal, fit };
 }
 
 // showFrame writes output and reports whether the frame said the shell exited.
