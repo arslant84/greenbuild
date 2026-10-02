@@ -42,6 +42,7 @@ type Handler struct {
 	tokens         Tokens
 	open           OpenSession
 	originPatterns []string
+	record         StartRecording
 }
 
 // NewHandler returns a handler. originPatterns lists browser origins allowed besides the
@@ -68,6 +69,9 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer func() { _ = conn.CloseNow() }()
 	conn.SetReadLimit(maxMessageBytes)
+	// Started before the terminal, so it is saved after the terminal closes, even if opening fails.
+	recording := h.startRecording(attach)
+	defer recording.Finish(context.WithoutCancel(r.Context()))
 
 	session, err := h.open(r.Context(), attach.SandboxID, initialSize(r))
 	if err != nil {
@@ -77,7 +81,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer session.Close()
 
-	bridge(r.Context(), conn, session)
+	bridge(r.Context(), conn, recorded{Session: session, recording: recording})
 }
 
 // initialSize reads ?rows=&cols=, falling back to 24x80 for missing or out-of-range values.
