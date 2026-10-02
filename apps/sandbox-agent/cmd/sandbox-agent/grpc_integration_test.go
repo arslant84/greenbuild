@@ -5,6 +5,7 @@ package main
 import (
 	"crypto/tls"
 	"crypto/x509"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -53,6 +54,7 @@ func startAgent(t *testing.T) (string, devpki.Bundle) {
 		t.Fatalf("docker client: %v", err)
 	}
 	t.Cleanup(func() { _ = docker.Close() })
+	ensureImage(t, docker)
 
 	cfg := config.Config{GRPCAddr: "127.0.0.1:0", TLS: config.TLSFiles{
 		CA:   filepath.Join(dir, devpki.CAFile),
@@ -65,6 +67,23 @@ func startAgent(t *testing.T) (string, devpki.Bundle) {
 	}
 	t.Cleanup(stop)
 	return addr, bundle
+}
+
+// ensureImage pulls the test image when it is missing. Packages may run in any order on a fresh
+// CI runner, so this test cannot rely on another package having pulled it.
+func ensureImage(t *testing.T, docker *client.Client) {
+	t.Helper()
+	if _, err := docker.ImageInspect(t.Context(), e2eImage); err == nil {
+		return
+	}
+	pull, err := docker.ImagePull(t.Context(), e2eImage, client.ImagePullOptions{})
+	if err != nil {
+		t.Fatalf("pull %s: %v", e2eImage, err)
+	}
+	defer func() { _ = pull.Close() }()
+	if _, err := io.Copy(io.Discard, pull); err != nil {
+		t.Fatalf("read pull progress: %v", err)
+	}
 }
 
 func dial(t *testing.T, addr string, bundle devpki.Bundle, withCertificate bool) agentv1.SandboxAgentClient {
