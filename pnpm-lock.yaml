@@ -153,6 +153,8 @@ importers:
 
   packages/devpki: {}
 
+  packages/queue: {}
+
   packages/shared:
     dependencies:
       zod:
