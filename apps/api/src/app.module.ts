@@ -3,6 +3,7 @@ import { APP_FILTER } from "@nestjs/core";
 import type { ServicesEnv } from "./config/services-env.js";
 import { AppErrorFilter } from "./errors/app-error.filter.js";
 import { HealthController } from "./health/health.controller.js";
+import { AttemptsModule } from "./attempts/attempts.module.js";
 import { InfraModule } from "./infra/infra.module.js";
 
 @Module({
@@ -12,6 +13,6 @@ import { InfraModule } from "./infra/infra.module.js";
 export class AppModule {
   // forRoot adds the features that need PostgreSQL, Redis and the secrets.
   static forRoot(services: ServicesEnv): DynamicModule {
-    return { module: AppModule, imports: [InfraModule.forRoot(services)] };
+    return { module: AppModule, imports: [InfraModule.forRoot(services), AttemptsModule] };
   }
 }
