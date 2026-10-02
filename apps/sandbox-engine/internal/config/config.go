@@ -24,6 +24,7 @@ const (
 	envInternalToken   = "SANDBOX_ENGINE_INTERNAL_TOKEN"
 	envChallengesDir   = "SANDBOX_ENGINE_CHALLENGES_DIR"
 	envRedisURL        = "SANDBOX_ENGINE_REDIS_URL"
+	envSessionBlob     = "SANDBOX_ENGINE_SESSION_BLOB_CONNECTION_STRING"
 
 	// minSecretBytes applies to the attach secret and the internal token; shorter ones are easier
 	// to brute-force (and 32 bytes is the HS256 key size).
@@ -58,6 +59,9 @@ type Config struct {
 	// Redis is where sandbox.create is read and sandbox.status written; nil keeps the consumer off.
 	// It may hold a password, so never log it.
 	Redis *redis.Options
+	// SessionBlobConnectionString reaches the Blob Storage account for session logs; empty keeps
+	// recording off. It holds the account key, so never log it.
+	SessionBlobConnectionString string
 }
 
 // AgentConfig is how the engine reaches a sandbox agent. Without TLS files the engine does not
@@ -106,6 +110,7 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	cfg.AllowedOrigins = splitList(getenv(envAllowedOrigins))
 	cfg.ChallengesDir = getenv(envChallengesDir)
+	cfg.SessionBlobConnectionString = getenv(envSessionBlob)
 	if cfg.Redis, err = loadRedis(getenv); err != nil {
 		return Config{}, err
 	}

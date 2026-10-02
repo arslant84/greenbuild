@@ -153,3 +153,11 @@ func TestLoadRedis(t *testing.T) {
 		t.Errorf("Load() with a bad URL error = %v, want ErrInvalid without the password in it", err)
 	}
 }
+
+func TestLoadSessionBlob(t *testing.T) {
+	connection := "AccountName=greenbuild;AccountKey=a2V5;EndpointSuffix=core.windows.net"
+	cfg, err := Load(envFrom(map[string]string{envSessionBlob: connection}))
+	if err != nil || cfg.SessionBlobConnectionString != connection {
+		t.Fatalf("Load() = %q, %v; want the connection string", cfg.SessionBlobConnectionString, err)
+	}
+}

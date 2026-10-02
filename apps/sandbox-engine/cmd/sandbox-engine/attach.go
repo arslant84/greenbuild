@@ -52,7 +52,11 @@ func buildAttach(cfg config.Config, client *agentclient.Client) (http.Handler, e
 	if err != nil {
 		return nil, fmt.Errorf("attach tokens: %w", err)
 	}
-	return attach.NewHandler(verifier, openThrough(client), cfg.AllowedOrigins), nil
+	handler := attach.NewHandler(verifier, openThrough(client), cfg.AllowedOrigins)
+	if err := recordSessions(cfg, handler); err != nil {
+		return nil, err
+	}
+	return handler, nil
 }
 
 // openThrough adapts the agent client, whose OpenTerminal returns a concrete type, to attach.
