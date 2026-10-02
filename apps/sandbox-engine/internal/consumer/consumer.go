@@ -21,6 +21,7 @@ const Group = "sandbox-engine"
 const (
 	readBlock  = 5 * time.Second
 	batchSize  = 10
+	claimIdle  = 30 * time.Second
 	retryDelay = time.Second
 )
 
@@ -74,6 +75,25 @@ func (c *Consumer) ensureGroup(ctx context.Context) error {
 }
 
 func (c *Consumer) poll(ctx context.Context) error {
+	if err := c.reclaim(ctx); err != nil {
+		return err
+	}
+	return c.readNew(ctx)
+}
+
+// reclaim takes over messages left pending by a failed try or by an engine that crashed.
+func (c *Consumer) reclaim(ctx context.Context) error {
+	messages, _, err := c.redis.XAutoClaim(ctx, &redis.XAutoClaimArgs{
+		Stream: queue.StreamSandboxCreate, Group: Group, Consumer: c.name,
+		MinIdle: claimIdle, Start: "0-0", Count: batchSize,
+	}).Result()
+	if err != nil {
+		return fmt.Errorf("claim pending %s: %w", queue.StreamSandboxCreate, err)
+	}
+	return c.handleAll(ctx, messages)
+}
+
+func (c *Consumer) readNew(ctx context.Context) error {
 	streams, err := c.redis.XReadGroup(ctx, &redis.XReadGroupArgs{
 		Group: Group, Consumer: c.name, Streams: []string{queue.StreamSandboxCreate, ">"},
 		Count: batchSize, Block: readBlock,

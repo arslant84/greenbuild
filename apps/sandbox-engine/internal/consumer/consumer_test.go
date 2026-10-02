@@ -123,6 +123,12 @@ func TestReadyAfterTheSandboxStarts(t *testing.T) {
 	if got := h.statuses(t); len(got) != 1 || got[0] != ready {
 		t.Errorf("statuses = %+v, want %+v", got, ready)
 	}
+	if got, _ := h.server.Get(AttemptSandboxKey("att-1")); got != "sbx-1" {
+		t.Errorf("attempt mapping = %q, want sbx-1", got)
+	}
+	if ttl := h.server.TTL(AttemptSandboxKey("att-1")); ttl != 900*time.Second+mappingGrace {
+		t.Errorf("mapping TTL = %v, want sandbox TTL plus grace", ttl)
+	}
 	if n := h.pending(t); n != 0 {
 		t.Errorf("pending = %d, want 0", n)
 	}
@@ -136,6 +142,23 @@ func TestInvalidMessageIsDropped(t *testing.T) {
 	}
 	if len(h.agent.requests) != 0 || len(h.statuses(t)) != 0 || h.pending(t) != 0 {
 		t.Errorf("requests %d, statuses %v, pending %d; want the message acked and nothing else", len(h.agent.requests), h.statuses(t), h.pending(t))
+	}
+}
+
+func TestRedeliveryReusesTheSandbox(t *testing.T) {
+	h := newHarness(t)
+	if err := h.server.Set(AttemptSandboxKey("att-1"), "sbx-earlier"); err != nil {
+		t.Fatal(err)
+	}
+	h.publishValid(t)
+	if err := h.consumer.poll(t.Context()); err != nil {
+		t.Fatalf("poll() error = %v", err)
+	}
+	if len(h.agent.requests) != 0 {
+		t.Errorf("agent called %d times, want 0", len(h.agent.requests))
+	}
+	if got := h.statuses(t); len(got) != 1 || got[0].SandboxID != "sbx-earlier" {
+		t.Errorf("statuses = %+v, want ready with sbx-earlier", got)
 	}
 }
 

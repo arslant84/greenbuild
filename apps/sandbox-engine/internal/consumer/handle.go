@@ -2,8 +2,10 @@ package consumer
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
+	"time"
 
 	agentv1 "github.com/arslant84/greenbuild/packages/agent-api/agent/v1"
 	"github.com/arslant84/greenbuild/packages/queue"
@@ -11,7 +13,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const statusStreamMaxLen = 100_000
+const (
+	mappingGrace       = 10 * time.Minute
+	statusStreamMaxLen = 100_000
+)
 
 // job is one sandbox.create message being handled.
 type job struct {
@@ -19,7 +24,12 @@ type job struct {
 	create    queue.SandboxCreate
 }
 
-// handle returns an error only when Redis fails; agent failures become a failed status.
+// AttemptSandboxKey holds the sandbox started for an attempt.
+func AttemptSandboxKey(attemptID string) string {
+	return "engine:attempt:" + attemptID + ":sandbox"
+}
+
+// handle returns an error only when Redis fails; agent failures become a failed status or a retry.
 func (c *Consumer) handle(ctx context.Context, message redis.XMessage) error {
 	create, err := c.decode(message)
 	if err != nil {
@@ -27,9 +37,10 @@ func (c *Consumer) handle(ctx context.Context, message redis.XMessage) error {
 		slog.Warn("drop invalid sandbox.create", "message", message.ID, "error", err)
 		return c.ack(ctx, message.ID)
 	}
-	sandboxID, err := c.agent.CreateSandbox(ctx, createRequest(create))
+	current := job{messageID: message.ID, create: create}
+	sandboxID, err := c.sandboxFor(ctx, create)
 	if err != nil {
-		return c.fail(ctx, job{messageID: message.ID, create: create}, err)
+		return c.handleFailure(ctx, current, err)
 	}
 	return c.finish(ctx, message.ID, queue.SandboxStatus{
 		Version: queue.Version, AttemptID: create.AttemptID, Status: queue.StatusReady, SandboxID: sandboxID,
@@ -46,6 +57,28 @@ func (c *Consumer) decode(message redis.XMessage) (queue.SandboxCreate, error) {
 		return queue.SandboxCreate{}, fmt.Errorf("decode %s: %w", queue.StreamSandboxCreate, err)
 	}
 	return create, nil
+}
+
+// sandboxFor starts the attempt's sandbox once; a redelivered message gets the same sandbox back.
+// If saving the mapping fails, the retry starts a second sandbox and the agent's TTL reaper removes the first.
+func (c *Consumer) sandboxFor(ctx context.Context, create queue.SandboxCreate) (string, error) {
+	key := AttemptSandboxKey(create.AttemptID)
+	existing, err := c.redis.Get(ctx, key).Result()
+	if err == nil {
+		return existing, nil
+	}
+	if !errors.Is(err, redis.Nil) {
+		return "", fmt.Errorf("read %s: %w", key, err)
+	}
+	sandboxID, err := c.agent.CreateSandbox(ctx, createRequest(create))
+	if err != nil {
+		return "", fmt.Errorf("start sandbox for attempt %s: %w", create.AttemptID, err)
+	}
+	ttl := time.Duration(create.TTLSeconds)*time.Second + mappingGrace
+	if err := c.redis.Set(ctx, key, sandboxID, ttl).Err(); err != nil {
+		return "", fmt.Errorf("save %s: %w", key, err)
+	}
+	return sandboxID, nil
 }
 
 // The challenge's setup.sh starts its services; the container's own process only keeps it alive.
