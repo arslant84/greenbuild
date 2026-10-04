@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greenbuild.dev/schemas/queue/attempt.finished.v1.json",
+  "title": "attempt.finished v1",
+  "description": "API → worker (through the outbox): an attempt reached its final status. Rating, XP and streak jobs start from it.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "attempt_id", "user_id", "challenge_version_id", "status", "checks_used", "finished_at"],
+  "properties": {
+    "version": { "const": 1 },
+    "attempt_id": { "type": "string", "format": "uuid" },
+    "user_id": { "type": "string", "format": "uuid" },
+    "challenge_version_id": { "type": "string", "format": "uuid" },
+    "status": { "enum": ["solved", "failed", "expired", "abandoned"] },
+    "duration_ms": { "type": "integer", "minimum": 0, "description": "From the sandbox being ready to the solve; absent when the attempt never got that far." },
+    "checks_used": { "type": "integer", "minimum": 0, "maximum": 10 },
+    "finished_at": { "type": "string", "format": "date-time" }
+  }
+}

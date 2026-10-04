@@ -1,8 +1,9 @@
-import { and, attempts, eq, inArray } from "@greenbuild/db";
+import { attempts, eq } from "@greenbuild/db";
 import { type AttemptResponse, ConflictError, NotFoundError } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { DatabaseClient } from "../infra/services.js";
 import { AttemptReader } from "./attempt-reader.js";
+import { finishAttempt } from "./finished-events.js";
 import { SandboxRequests } from "./sandbox-requests.js";
 
 const OPEN_STATUSES = ["starting", "ready"] as const;
@@ -27,10 +28,7 @@ export class AbandonService {
     if (!attempt || attempt.userId !== userId) {
       throw new NotFoundError("Attempt not found");
     }
-    await this.database.db
-      .update(attempts)
-      .set({ status: "abandoned", finishedAt: new Date() })
-      .where(and(eq(attempts.id, attemptId), inArray(attempts.status, [...OPEN_STATUSES])));
+    await this.database.db.transaction((tx) => finishAttempt(tx, { attemptId, from: OPEN_STATUSES, to: "abandoned" }));
     const current = await this.reader.find(userId, attemptId);
     if (current.status !== "abandoned") {
       throw new ConflictError("The attempt is already over");

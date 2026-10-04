@@ -1,10 +1,11 @@
 import { randomBytes } from "node:crypto";
-import { attempts, eq } from "@greenbuild/db";
+import { attempts } from "@greenbuild/db";
 import { type AttemptResponse, ConflictError, SEED_MAX } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { LiveVersions } from "../challenges/live-versions.js";
 import { DatabaseClient } from "../infra/services.js";
 import { type AttemptRow, toResponse } from "./attempt-response.js";
+import { finishAttempt } from "./finished-events.js";
 import { SandboxRequests } from "./sandbox-requests.js";
 
 const UNIQUE_VIOLATION = "23505";
@@ -30,7 +31,7 @@ export class AttemptsService {
     try {
       await this.sandboxes.request(attempt, version);
     } catch (error) {
-      await this.database.db.update(attempts).set({ status: "failed" }).where(eq(attempts.id, attempt.id));
+      await this.database.db.transaction((tx) => finishAttempt(tx, { attemptId: attempt.id, from: ["starting"], to: "failed" }));
       throw error;
     }
     return toResponse(attempt, challengeSlug);
