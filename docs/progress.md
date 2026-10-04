@@ -2,20 +2,20 @@
 
 Where the build stands against [architecture.md](architecture.md). Update this file in the same PR as the work it describes.
 
-Last updated: 2026-10-02
+Last updated: 2026-10-04
 
 ## Stage 0 — foundation and demand
 
 | Item from architecture.md | Status | Notes |
 |---|---|---|
 | Monorepo, `CLAUDE.md`, linters with size limits, CI | Done | CI green on #7; broken on `main` since #8 by parallel golangci-lint runs, fixed in `fix/golangci-parallel` |
-| Terraform: core and sandbox networks, Container Apps, PostgreSQL, Redis, ACR, Key Vault, Blob | Not started | Approved; Terraform 1.16 installed |
+| Terraform: core and sandbox networks, Container Apps, PostgreSQL, Redis, ACR, Key Vault, Blob | Not started | Approved; Terraform 1.16 installed. Without it there is no staging, so Stage 0's gate (a commit to `main` reaches staging automatically) is not met; Stage 1 started without it |
 | Skeletons with health check: `web` | Done | Next.js 16, `GET /health`, port 3001 |
 | Skeletons with health check: `api` | Done | NestJS 12 (ESM), `GET /health`, port 3000, shared error format |
 | Skeletons with health check: `sandbox-agent` | Done | Go, `GET /health` on 127.0.0.1:8081 |
 | Skeletons with health check: `sandbox-engine` | Done | Go, `GET /health` on 127.0.0.1:8080; gRPC client to the agent comes with task 7 |
 | Skeletons with health check: `worker` | Done | TypeScript, plain `node:http` `GET /health`, port 3002; jobs come with the queue (task 10) |
-| DB schema incl. consent and company tables | Not started | Stage 1 task 13 covers the first tables |
+| DB schema incl. consent and company tables | Partly done | `challenges`, `challenge_versions`, `attempts`, `sandbox_sessions` (task 13) and `attempt_checks` (task 15) exist; users, consent and company tables not started |
 | Mockups, design-partner calls, lawyer, ADR-001…007 | Not started | Non-code items for the founder; ADRs can be drafted on request |
 
 ## Stage 1 — vertical slice (tasks from architecture.md)
@@ -38,6 +38,23 @@ Last updated: 2026-10-02
 | 14 | Start an attempt | Done | Auth until Auth.js login exists: a dev user token (HS256, off in production), decided 2026-10-02. 14a: zod versions of `sandbox.create`/`sandbox.status` in `packages/shared` with a drift test against the JSON Schemas in `packages/queue` (source of truth); shared builds without Node types so browser code cannot use Node APIs. 14b: migration 0001 (additive) — `sandbox_sessions.sandbox_id` (unique) and the partial unique index `attempts_one_active_per_user` (status starting or ready), so concurrent starts cannot both win. 14c: API `loadServicesEnv` (`DATABASE_URL`, `REDIS_URL`, `ATTACH_SECRET`, optional `DEV_AUTH_SECRET`; errors name variables, never values), attempts turn on only when configured (a partial setup fails startup, so `pnpm dev` still runs without them), `DatabaseClient` and lazily connecting `RedisClient` (node-redis), `DevUserGuard` + `@CurrentUser()` (jose, HS256, audience `greenbuild-dev-user`, user id must be a UUID, admits nobody in production), `dev:user-token` script. 14d-1: shared `/v1/attempts` request and response schemas (attempt statuses defined once, the DB enum uses them), `launchPlan` turns a version manifest (`500m`, `1`, `512Mi`, `1Gi`, `time_limit_sec`, capabilities) into `sandbox.create` limits; `packages/db` re-exports Drizzle operators, the seed and `applyMigrations`. 14d-2: `POST /v1/attempts` (dev user, `{challenge_slug}` → latest live version → random seed ≤ 2^53−1 → attempt `starting` → `sandbox.create`; a second active attempt gets 409; if queuing fails the attempt is marked failed) and `GET /v1/attempts/{id}` (owner only; others get 404); e2e on real PostgreSQL and Redis containers. 14e: the API consumes `sandbox.status` (group `api`, own connection for blocking reads, retries its own unacked messages, drops malformed ones): ready → attempt `ready` + sandbox session with the engine's sandbox id; failed → attempt `failed` (frees the user); destroyed → session destroyed, attempt `expired`; each change only moves forward, so repeats do nothing. While ready, `GET /v1/attempts/{id}` returns `attach_token` (HS256, audience `sandbox-attach`, sandbox, attempt, user, exactly 60 s). E2e on PostgreSQL and Redis with the engine's statuses simulated |
 | 15 | Check and result | Done | 15a: table `attempt_checks` (migration 0002: passed, output tail, duration per checker run), shared `checkResponseSchema`/`attemptResultSchema`, shared errors `rate_limited` (`RateLimitedError`, 429) and `unavailable` (`UnavailableError`, 503), API `EngineClient` for the engine's internal check (`ENGINE_INTERNAL_URL`, `ENGINE_INTERNAL_TOKEN`; 30 s; every failure becomes 503 without details). 15b: `POST /v1/attempts/{id}/check` (owner; attempt must be ready with a sandbox, else 409; a check is spent atomically before the engine runs it, so parallel requests cannot pass 10, the 11th gets 429; an engine failure gives the check back and answers 503; each run is stored; a pass makes the attempt `solved` with `finished_at` and `duration_ms` from the sandbox being ready) and `GET /v1/attempts/{id}/result` (owner; status, checks used, duration, every run). E2e on PostgreSQL and Redis with a fake engine HTTP server |
 | 16 | Slice assembly | Done | Decided 2026-10-02: screens follow the owner's Figma (HotFix file: daily start, provisioning, sandbox states, debrief), showing only data that exists (XP, rating, streak, leaderboard, hints wait for Stage 2), brand text "greenbuild"; verified on the local stack and in a new CI e2e job (staging comes with Terraform). 16a: API `GET /v1/challenges/{slug}` (title, statement, difficulty, skills, time limit of the live version), attempts gain `started_at` and `checks_used`; `AttemptsService` split into `AttemptsService` (start), `AttemptReader` (read + attach token) and `SandboxRequests` (queue). 16b: web groundwork — Tailwind CSS 4 with the Figma tokens (colors, Inter and JetBrains Mono, self-hosted via Fontsource), dev session started by `src/proxy.ts` on the first `/play` visit (dev only: httpOnly SameSite=Lax cookie holding a dev user token, signed with `DEV_AUTH_SECRET`), proxy routes `/api/attempts…` and `/api/challenges/{slug}` forwarding to `API_URL` with that token (writes need the `x-greenbuild-request` header against CSRF; ids and slugs validated first; API down → 503). 16c-1: Daily screen shell from the Figma frame — text styles, Material Symbols icons exported from the file, sidebar, status bar, the "500" error card, and `apiGet` for server components (reads as the signed-in user, validates with zod). 16c-2: `/play` (Daily) — challenge card from `GET /v1/challenges/{slug}` (title, statement, difficulty dots, skills, time limit; terminal preview shows only a prompt until challenges ship a teaser), Start Challenge (also Cmd/Ctrl+Enter) creates the attempt and opens its sandbox screen, with messages for 409/401/503; recent attempts and the right aside show empty states; today's challenge is nginx-502 until the daily rotation exists. Rendered at 1280×1024 and compared with the frame. 16d: `/play/{attempt}` — provisioning (7:11835; elapsed time instead of simulated steps), the sandbox screen (V1 3:837: header, terminal pane in the frame's colors and type, 360 px mission panel, shortcuts) and its states on V1's fixed layout (owner, 2026-10-02): V2 checking overlay with terminal input locked, V4 failure banner with the checker's output, V3 solved panel with a copyable scorecard, V5 reconnect with up to five retries; ten check indicators (owner kept 10 checks). `/play/{attempt}/result` — the debrief (3:1462). `/` redirects to `/play`. Each screen rendered at 1280 px and compared with its frame. 16e: dev stand-ins removed (`cmd/dev-attempt`, the web dev check route and its ticket) now that the API starts attempts and runs checks; `pnpm play:up` / `play:down` (`scripts/play-stack.sh`) run Postgres and Redis in Docker Compose plus the agent (runc), engine, API and web with throwaway secrets in `.play/`; ports overridable with `PLAY_*_PORT`; runbook rewritten. The checks-left count after a check now comes from the check itself. 16f: Playwright test `apps/web/e2e/slice.pw.ts` (`pnpm --filter @greenbuild/web test:e2e`) plays nginx-502 in Chromium on that stack: Start, wait for the sandbox, a failing check (9 left), the fix typed into xterm, a passing check (2/10 used), the debrief (1/2 checks passed); CI job "Slice e2e (Playwright)" runs it on every PR. Passed locally 2026-10-02 |
+
+## Stage 1 — checklist from architecture.md
+
+The vertical slice above covers part of Stage 1. Status of each Stage 1 item:
+
+| Item from architecture.md | Status | Notes |
+|---|---|---|
+| Challenge JSON schema and challenge CI pipeline | In progress | Manifest schema (`challengeManifestSchema` in `packages/shared`) and folder validator (`packages/challenge-spec`, `pnpm challenges:validate`) on branch `feat/challenge-spec`. Still to do: CI job that validates and runs setup → check fails → solution → check passes for changed challenges under gVisor; JSON Schema file for editors; seed and verify script reading manifests instead of the hardcoded nginx-502 values |
+| Control plane: Redis Streams, node selection, TTL; node agent: gVisor, limits, mTLS | Mostly done | Streams (task 10), TTL (4), limits (2), mTLS (6), gVisor verified in CI. Node selection not built: the engine talks to one agent |
+| WebSocket proxy with JWT, xterm.js | Done | Tasks 8, 12, 16 |
+| Check, session log in Blob Storage, deleted after 90 days | Mostly done | Check (tasks 9, 15), session log (11). The 90-day deletion is a lifecycle rule that comes with Terraform |
+| Login with GitHub and email, sign-up from 16 | Not started | Dev user sessions stand in (off in production) |
+| Challenge page: statement, terminal, timer, check, hint | Mostly done | All but hints: the hint button is shown disabled |
+| 15 challenges, 1–2 private per design partner | 1 of 15 | nginx-502 |
+| Sandbox escape and mining test against a checklist | Not started | |
+
+Stage 1 gate (20 engineers solve challenges; p95 start < 20 s; < 3% failed starts; no sandbox escape): not measured yet; needs staging.
 
 ## Setup steps done
 
@@ -80,6 +97,7 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 
 ## Open items
 
+- Found in local testing (owner, 2026-10-02): a dev session cookie the API rejects is never replaced, so the Daily page stays on its error card; the sandbox screen overflows windows wider than the 1280 px frame; `pnpm play:up` from PowerShell runs WSL's bash on Windows (Git Bash works); the Daily screen cannot reopen a running attempt (needs a design decision).
 - Task 16 runs end to end locally and in CI; the same journey still has to pass in staging once Terraform creates it.
 - Sandbox limits still to add from architecture.md: open-file limit, disk limit, read-only root where the challenge allows, seccomp profile, user namespaces.
 - `verify-challenge.sh` reads only flat manifest lines; proper parsing and a JSON schema belong to `packages/challenge-spec` with the challenge CI pipeline.
