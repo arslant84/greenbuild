@@ -28,14 +28,16 @@ const (
 // Agent is the part of the agent client the consumer needs.
 type Agent interface {
 	CreateSandbox(ctx context.Context, req *agentv1.CreateSandboxRequest) (string, error)
+	Destroy(ctx context.Context, sandboxID string) error
 }
 
-// Options configures a Consumer. Name must be unique per engine instance.
+// Options configures a Consumer. Name must be unique per engine instance. Now defaults to time.Now.
 type Options struct {
 	Redis redis.Cmdable
 	Agent Agent
 	Codec *queue.Codec
 	Name  string
+	Now   func() time.Time
 }
 
 // Consumer handles sandbox.create messages one at a time.
@@ -44,19 +46,30 @@ type Consumer struct {
 	agent Agent
 	codec *queue.Codec
 	name  string
+	now   func() time.Time
 }
 
 // New returns a Consumer; call Run to start it.
 func New(opts Options) *Consumer {
-	return &Consumer{redis: opts.Redis, agent: opts.Agent, codec: opts.Codec, name: opts.Name}
+	now := opts.Now
+	if now == nil {
+		now = time.Now
+	}
+	return &Consumer{redis: opts.Redis, agent: opts.Agent, codec: opts.Codec, name: opts.Name, now: now}
 }
 
-// Run consumes until ctx is cancelled. Redis errors are logged and retried, not returned,
-// so a Redis restart does not stop the engine.
+// Run consumes until ctx is cancelled, and destroys sandboxes whose time ran out meanwhile.
+// Redis errors are logged and retried, not returned, so a Redis restart does not stop the engine.
 func (c *Consumer) Run(ctx context.Context) error {
 	if err := c.ensureGroup(ctx); err != nil {
 		return err
 	}
+	expiryDone := make(chan struct{})
+	go func() {
+		defer close(expiryDone)
+		c.expireLoop(ctx)
+	}()
+	defer func() { <-expiryDone }()
 	for ctx.Err() == nil {
 		if err := c.poll(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("read sandbox.create", "error", err)

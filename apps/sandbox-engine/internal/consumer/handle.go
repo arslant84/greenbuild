@@ -42,6 +42,9 @@ func (c *Consumer) handle(ctx context.Context, message redis.XMessage) error {
 	if err != nil {
 		return c.handleFailure(ctx, current, err)
 	}
+	if err := c.scheduleExpiry(ctx, create); err != nil {
+		return err
+	}
 	return c.finish(ctx, message.ID, queue.SandboxStatus{
 		Version: queue.Version, AttemptID: create.AttemptID, Status: queue.StatusReady, SandboxID: sandboxID,
 	})
@@ -102,6 +105,13 @@ func (c *Consumer) fail(ctx context.Context, failed job, cause error) error {
 
 // finish publishes before it acks: a crash in between repeats the status, which the API must accept.
 func (c *Consumer) finish(ctx context.Context, messageID string, message queue.SandboxStatus) error {
+	if err := c.publish(ctx, message); err != nil {
+		return err
+	}
+	return c.ack(ctx, messageID)
+}
+
+func (c *Consumer) publish(ctx context.Context, message queue.SandboxStatus) error {
 	payload, err := c.codec.EncodeSandboxStatus(message)
 	if err != nil {
 		return fmt.Errorf("encode %s: %w", queue.StreamSandboxStatus, err)
@@ -113,7 +123,7 @@ func (c *Consumer) finish(ctx context.Context, messageID string, message queue.S
 	if err != nil {
 		return fmt.Errorf("publish %s for attempt %s: %w", message.Status, message.AttemptID, err)
 	}
-	return c.ack(ctx, messageID)
+	return nil
 }
 
 func (c *Consumer) ack(ctx context.Context, messageID string) error {
