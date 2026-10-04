@@ -58,6 +58,45 @@ func TestQueueMessageBringsASandboxUpOnRealDocker(t *testing.T) {
 	}
 }
 
+// architecture.md, task 17b: when the time limit passes, the engine destroys the sandbox and reports
+// destroyed with reason expired, which frees the attempt in the API.
+func TestExpiredSandboxIsDestroyedOnRealDocker(t *testing.T) {
+	buildChallengeImage(t)
+	opts := agentclient.EngineOptions(t, "localhost", agentclient.NewBundle(t, "localhost"))
+	agentclient.StartRealAgent(t, opts)
+	client := agentclient.Dialed(t, opts)
+	rdb := startRedis(t)
+	codec, err := queue.NewCodec()
+	if err != nil {
+		t.Fatal(err)
+	}
+	runConsumer(t, consumer.New(consumer.Options{Redis: rdb, Agent: client, Codec: codec, Name: "engine-e2e"}))
+
+	payload, err := codec.EncodeSandboxCreate(queue.SandboxCreate{
+		Version: queue.Version, AttemptID: "att-expiry", Image: challengeImage, Seed: 4242, CPUMillis: 500,
+		MemoryBytes: 512 << 20, TTLSeconds: 5, Network: "none", Capabilities: []string{"CHOWN", "SETUID", "SETGID"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := rdb.XAdd(t.Context(), &redis.XAddArgs{Stream: queue.StreamSandboxCreate, Values: map[string]any{queue.PayloadField: string(payload)}}).Err(); err != nil {
+		t.Fatalf("XAdd() error = %v", err)
+	}
+
+	ready := awaitStatusAfter(t, rdb, codec, "0")
+	if ready.Status != queue.StatusReady || ready.SandboxID == "" {
+		t.Fatalf("first status = %+v, want ready", ready.SandboxStatus)
+	}
+	got := awaitStatusAfter(t, rdb, codec, ready.ID)
+	want := queue.SandboxStatus{Version: queue.Version, AttemptID: "att-expiry", Status: queue.StatusDestroyed, SandboxID: ready.SandboxID, Reason: queue.ReasonExpired}
+	if got.SandboxStatus != want {
+		t.Fatalf("second status = %+v, want %+v", got.SandboxStatus, want)
+	}
+	if _, err := exec.CommandContext(t.Context(), "docker", "inspect", ready.SandboxID).Output(); err == nil {
+		t.Errorf("container %s still exists after expiry", ready.SandboxID)
+	}
+}
+
 // startRedis runs Redis on a free loopback port and returns a client that has answered PING.
 func startRedis(t *testing.T) *redis.Client {
 	t.Helper()
@@ -100,14 +139,26 @@ func runConsumer(t *testing.T, queueConsumer *consumer.Consumer) {
 
 func awaitStatus(t *testing.T, rdb *redis.Client, codec *queue.Codec) queue.SandboxStatus {
 	t.Helper()
-	streams, err := rdb.XRead(t.Context(), &redis.XReadArgs{Streams: []string{queue.StreamSandboxStatus, "0"}, Count: 1, Block: statusWait}).Result()
+	return awaitStatusAfter(t, rdb, codec, "0").SandboxStatus
+}
+
+type statusEntry struct {
+	queue.SandboxStatus
+	ID string
+}
+
+// awaitStatusAfter returns the first sandbox.status entry after the given stream id.
+func awaitStatusAfter(t *testing.T, rdb *redis.Client, codec *queue.Codec, after string) statusEntry {
+	t.Helper()
+	streams, err := rdb.XRead(t.Context(), &redis.XReadArgs{Streams: []string{queue.StreamSandboxStatus, after}, Count: 1, Block: statusWait}).Result()
 	if err != nil {
-		t.Fatalf("no sandbox.status within %v: %v", statusWait, err)
+		t.Fatalf("no sandbox.status after %s within %v: %v", after, statusWait, err)
 	}
-	payload, _ := streams[0].Messages[0].Values[queue.PayloadField].(string)
-	status, err := codec.DecodeSandboxStatus([]byte(payload))
+	entry := streams[0].Messages[0]
+	payload, _ := entry.Values[queue.PayloadField].(string)
+	decoded, err := codec.DecodeSandboxStatus([]byte(payload))
 	if err != nil {
 		t.Fatalf("decode status: %v", err)
 	}
-	return status
+	return statusEntry{SandboxStatus: decoded, ID: entry.ID}
 }

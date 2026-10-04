@@ -69,7 +69,7 @@ Order follows the recommendation for decision D2. "Blocked" means the task waits
 | # | Task | Status | Notes |
 |---|---|---|---|
 | 17a | Bug: expired sandbox never frees the attempt | Done | The engine records each sandbox's deadline (start + time limit) in the Redis sorted set `engine:deadlines` (NX, so a redelivery keeps the first one); a loop every 10 s claims due entries, destroys the sandbox through the agent (NotFound counts as gone) and publishes `destroyed` with reason `expired` (`queue.ReasonExpired`); agent or Redis failures retry after 30 s. Tests with miniredis and a fake clock; the main one failed before the fix. Only `expired` is defined: `idle`, `abandoned` and `abuse` come with tasks 18, 19 and 33f; the API does not read reasons, so no shared constant |
-| 17b | Expiry end to end | Not started | Engine e2e under gVisor; API e2e: user can start again |
+| 17b | Expiry end to end | Done | Engine: `TestExpiredSandboxIsDestroyedOnRealDocker` (real agent, Redis and challenge image; a 5 s limit) sees `ready`, then `destroyed` with reason `expired`, and the container is gone; runs in the gVisor CI job, passed locally on runc in ~20 s. API e2e: after `destroyed` the attempt is `expired` and the same user can start again (201). No test-only TTL override was needed: the limit comes from the message. The agent never returns NotFound for a gone sandbox (its Destroy already succeeds), so the NotFound branch in 17a is a harmless safeguard |
 | 18 | Idle timeout | Not started | `SANDBOX_ENGINE_IDLE_TIMEOUT`, default 5m |
 | 19a | `sandbox.destroy` contract and engine consumer | Not started | |
 | 19b | `POST /v1/attempts/{id}/abandon` | Not started | `abandoned` is already in the status enum; no migration |
@@ -225,7 +225,7 @@ Each item points to the task that resolves it, or says why it's deferred or drop
   - The sandbox screen overflows windows wider than 1280 px: task 22.
   - `pnpm play:up` from PowerShell runs WSL's bash: task 37c.
   - The Daily screen cannot reopen a running attempt: 21a (API) and 21b (UI, blocked on a Figma frame).
-- Expired sandboxes now publish `destroyed` (17a); the end-to-end proof that the user can start again is 17b. No idle timeout (18), no abandon (19a–19c), no `attempt.finished` (20a–20b); "Exit Attempt" is only a link to /play (19c).
+- Expired sandboxes now publish `destroyed` and the user can start again (17a, proven end to end in 17b). No idle timeout (18), no abandon (19a–19c), no `attempt.finished` (20a–20b); "Exit Attempt" is only a link to /play (19c).
 - Task 16 journey in staging: task 28h.
 - Sandbox limits still to add (open files, disk, read-only root, seccomp, user namespaces, kill at 100% CPU for over 60 s): tasks 33a–33f.
 - `verify-challenge.sh` reads only flat manifest lines: task 23c. Seed hardcodes the nginx-502 manifest: task 23d.
