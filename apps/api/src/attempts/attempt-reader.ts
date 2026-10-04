@@ -1,9 +1,20 @@
-import { and, attempts, challenges, challengeVersions, eq, sandboxSessions } from "@greenbuild/db";
-import { type AttemptResponse, NotFoundError } from "@greenbuild/shared";
+import { and, attempts, challenges, challengeVersions, type Database, eq, inArray, sandboxSessions } from "@greenbuild/db";
+import { type AttemptListResponse, type AttemptResponse, NotFoundError } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { DatabaseClient } from "../infra/services.js";
 import { AttachTokens } from "./attach-token.js";
 import { toResponse } from "./attempt-response.js";
+
+const ACTIVE_STATUSES = ["starting", "ready"] as const;
+
+// activeAttemptId is the player's starting or ready attempt; the database allows at most one.
+export async function activeAttemptId(db: Database, userId: string): Promise<string | undefined> {
+  const [active] = await db
+    .select({ id: attempts.id })
+    .from(attempts)
+    .where(and(eq(attempts.userId, userId), inArray(attempts.status, [...ACTIVE_STATUSES])));
+  return active?.id;
+}
 
 @Injectable()
 export class AttemptReader {
@@ -39,5 +50,11 @@ export class AttemptReader {
       return response;
     }
     return { ...response, attach_token: await this.attachTokens.sign({ sandboxId: row.sandboxId, attemptId: row.id, userId }) };
+  }
+
+  // listActive answers the player's running attempt, so a player who left the sandbox can return.
+  async listActive(userId: string): Promise<AttemptListResponse> {
+    const id = await activeAttemptId(this.database.db, userId);
+    return { attempts: id ? [await this.find(userId, id)] : [] };
   }
 }

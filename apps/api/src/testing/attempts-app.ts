@@ -94,6 +94,7 @@ export interface Player {
   userId: string;
   start: (body: unknown) => Promise<Response>;
   find: (id: string) => Promise<Response>;
+  list: (query: string) => Promise<Response>;
   check: (id: string) => Promise<Response>;
   abandon: (id: string) => Promise<Response>;
   result: (id: string) => Promise<Response>;
@@ -108,6 +109,7 @@ export async function player(app: () => AttemptsApp, userId: string): Promise<Pl
     userId,
     start: (body) => fetch(`${app().baseUrl}/v1/attempts`, { method: "POST", headers, body: JSON.stringify(body) }),
     find: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}`, { headers }),
+    list: (query) => fetch(`${app().baseUrl}/v1/attempts${query}`, { headers }),
     check: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/check`, { method: "POST", headers }),
     abandon: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/abandon`, { method: "POST", headers }),
     result: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/result`, { headers }),

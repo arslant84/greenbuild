@@ -23,6 +23,15 @@ export const attemptResponseSchema = z.object({
 export type StartAttemptRequest = z.infer<typeof startAttemptRequestSchema>;
 export type AttemptResponse = z.infer<typeof attemptResponseSchema>;
 
+// details of the 409 a start gets while another attempt of the player is still active
+export const activeAttemptConflictSchema = z.object({ active_attempt_id: z.uuid() });
+
+// GET /v1/attempts?status=active: the player's running attempt; at most one, so no pagination.
+export const listAttemptsQuerySchema = z.strictObject({ status: z.literal("active") });
+export const attemptListResponseSchema = z.object({ attempts: z.array(attemptResponseSchema).max(1) });
+
+export type AttemptListResponse = z.infer<typeof attemptListResponseSchema>;
+
 // POST /v1/attempts/{id}/check
 export const checkResponseSchema = z.object({
   passed: z.boolean(),
