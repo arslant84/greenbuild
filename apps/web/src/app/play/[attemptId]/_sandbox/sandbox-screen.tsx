@@ -17,6 +17,7 @@ import { AmberAlert, CheckerOutput, DisconnectedCard } from "./states/panel-bloc
 import { SolvedPanel } from "./states/solved-panel";
 import { PaneSwitcher, TerminalChrome, TerminalFooter } from "./terminal-bars";
 import { type CheckState, useCheck } from "./use-check";
+import { useLeave } from "./use-leave";
 import { MAX_RECONNECTS, useReconnect } from "./use-reconnect";
 
 const MS_PER_SECOND = 1_000;
@@ -36,6 +37,7 @@ export function SandboxScreen({ attempt, token, card, attachUrl, refresh }: Sand
   const [size, setSize] = useState<TerminalSize | null>(null);
   const { state: check, check: runCheck } = useCheck(attempt.id, refresh);
   const reconnect = useReconnect(token, status, refresh);
+  const leave = useLeave(attempt.id);
   const elapsed = (useNow() - Date.parse(attempt.started_at ?? attempt.created_at)) / MS_PER_SECOND;
   const solvedIn = useSolvedTime(check, elapsed);
   const view = sandboxView(status, check, attempt.checks_used);
@@ -44,7 +46,7 @@ export function SandboxScreen({ attempt, token, card, attachUrl, refresh }: Sand
   useRefreshWhenTimeIsUp(card.time_limit_sec - elapsed, refresh);
   return (
     <div className="flex h-screen flex-col bg-canvas">
-      <SandboxHeader incident={incident} elapsedSeconds={solvedIn ?? elapsed} />
+      <SandboxHeader incident={incident} elapsedSeconds={solvedIn ?? elapsed} onExit={leave.exit} />
       <main className="flex min-h-0 flex-1">
         <section className="relative flex min-w-0 flex-1 flex-col">
           <PaneSwitcher status={status} />
@@ -62,7 +64,7 @@ export function SandboxScreen({ attempt, token, card, attachUrl, refresh }: Sand
             remainingSeconds={card.time_limit_sec - elapsed}
             checksUsed={attempt.checks_used}
             extra={<PanelExtra view={view} check={check} />}
-            actions={<ActionPanel mode={view.mode} onCheck={() => void runCheck()} />}
+            actions={<ActionPanel mode={view.mode} onCheck={() => void runCheck()} onGiveUp={leave.giveUp} />}
           />
         )}
       </main>
