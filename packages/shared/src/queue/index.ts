@@ -6,6 +6,7 @@ import { SEED_MAX } from "../constants/index.js";
 
 export const STREAM_SANDBOX_CREATE = "sandbox.create";
 export const STREAM_SANDBOX_STATUS = "sandbox.status";
+export const STREAM_SANDBOX_DESTROY = "sandbox.destroy";
 export const QUEUE_PAYLOAD_FIELD = "payload";
 export const QUEUE_VERSION = 1;
 
@@ -50,3 +51,12 @@ export const sandboxStatusSchema = z
 
 export type SandboxCreate = z.infer<typeof sandboxCreateSchema>;
 export type SandboxStatus = z.infer<typeof sandboxStatusSchema>;
+
+// The API asks the engine to destroy a sandbox early; "abandoned" is reported back on sandbox.status.
+export const sandboxDestroySchema = z.strictObject({
+  version: z.literal(QUEUE_VERSION),
+  attempt_id: z.string().min(1).max(ATTEMPT_ID_MAX_LENGTH),
+  reason: z.enum(["abandoned"]),
+});
+
+export type SandboxDestroy = z.infer<typeof sandboxDestroySchema>;

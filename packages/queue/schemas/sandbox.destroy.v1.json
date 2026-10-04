@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://greenbuild.dev/schemas/queue/sandbox.destroy.v1.json",
+  "title": "sandbox.destroy v1",
+  "description": "API → engine: destroy an attempt's sandbox before its time limit, e.g. when the player gives up.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "attempt_id", "reason"],
+  "properties": {
+    "version": { "const": 1 },
+    "attempt_id": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "reason": { "enum": ["abandoned"], "description": "Reported back on the destroyed status." }
+  }
+}

@@ -17,8 +17,10 @@ import (
 const (
 	StreamSandboxCreate = "sandbox.create"
 	StreamSandboxStatus = "sandbox.status"
-	PayloadField        = "payload"
-	Version             = 1
+	// StreamSandboxDestroy carries the API's requests to destroy a sandbox early.
+	StreamSandboxDestroy = "sandbox.destroy"
+	PayloadField         = "payload"
+	Version              = 1
 )
 
 // Sandbox statuses the engine reports.
@@ -28,15 +30,18 @@ const (
 	StatusDestroyed = "destroyed"
 )
 
-// Reasons on a destroyed status: the challenge time limit ran out, or the player was inactive too long.
+// Reasons on a destroyed status: the challenge time limit ran out, the player was inactive too
+// long, or the player gave up (the only reason the API sends on sandbox.destroy).
 const (
-	ReasonExpired = "expired"
-	ReasonIdle    = "idle"
+	ReasonExpired   = "expired"
+	ReasonIdle      = "idle"
+	ReasonAbandoned = "abandoned"
 )
 
 const (
-	createSchemaURL = "https://greenbuild.dev/schemas/queue/sandbox.create.v1.json"
-	statusSchemaURL = "https://greenbuild.dev/schemas/queue/sandbox.status.v1.json"
+	createSchemaURL  = "https://greenbuild.dev/schemas/queue/sandbox.create.v1.json"
+	statusSchemaURL  = "https://greenbuild.dev/schemas/queue/sandbox.status.v1.json"
+	destroySchemaURL = "https://greenbuild.dev/schemas/queue/sandbox.destroy.v1.json"
 )
 
 //go:embed schemas/*.json
@@ -67,10 +72,18 @@ type SandboxStatus struct {
 	Reason    string `json:"reason,omitempty"`
 }
 
+// SandboxDestroy asks the engine to destroy an attempt's sandbox before its time limit.
+type SandboxDestroy struct {
+	Version   int    `json:"version"`
+	AttemptID string `json:"attempt_id"`
+	Reason    string `json:"reason"`
+}
+
 // Codec validates and converts messages; create one at startup and share it.
 type Codec struct {
-	create *jsonschema.Schema
-	status *jsonschema.Schema
+	create  *jsonschema.Schema
+	status  *jsonschema.Schema
+	destroy *jsonschema.Schema
 }
 
 // NewCodec compiles the embedded schemas.
@@ -79,6 +92,7 @@ func NewCodec() (*Codec, error) {
 	for _, file := range []struct{ name, url string }{
 		{"schemas/sandbox.create.v1.json", createSchemaURL},
 		{"schemas/sandbox.status.v1.json", statusSchemaURL},
+		{"schemas/sandbox.destroy.v1.json", destroySchemaURL},
 	} {
 		raw, err := schemaFiles.ReadFile(file.name)
 		if err != nil {
@@ -92,10 +106,10 @@ func NewCodec() (*Codec, error) {
 			return nil, fmt.Errorf("add %s: %w", file.name, err)
 		}
 	}
-	return compileBoth(compiler)
+	return compileAll(compiler)
 }
 
-func compileBoth(compiler *jsonschema.Compiler) (*Codec, error) {
+func compileAll(compiler *jsonschema.Compiler) (*Codec, error) {
 	create, err := compiler.Compile(createSchemaURL)
 	if err != nil {
 		return nil, fmt.Errorf("compile sandbox.create: %w", err)
@@ -104,7 +118,11 @@ func compileBoth(compiler *jsonschema.Compiler) (*Codec, error) {
 	if err != nil {
 		return nil, fmt.Errorf("compile sandbox.status: %w", err)
 	}
-	return &Codec{create: create, status: status}, nil
+	destroy, err := compiler.Compile(destroySchemaURL)
+	if err != nil {
+		return nil, fmt.Errorf("compile sandbox.destroy: %w", err)
+	}
+	return &Codec{create: create, status: status, destroy: destroy}, nil
 }
 
 // DecodeSandboxCreate validates a payload from the sandbox.create stream.
@@ -133,6 +151,20 @@ func (c *Codec) EncodeSandboxStatus(message SandboxStatus) ([]byte, error) {
 // EncodeSandboxCreate is what the API does; Go uses it in tests and tools.
 func (c *Codec) EncodeSandboxCreate(message SandboxCreate) ([]byte, error) {
 	return encode(c.create, message)
+}
+
+// DecodeSandboxDestroy validates a payload from the sandbox.destroy stream.
+func (c *Codec) DecodeSandboxDestroy(payload []byte) (SandboxDestroy, error) {
+	var message SandboxDestroy
+	if err := decode(c.destroy, payload, &message); err != nil {
+		return SandboxDestroy{}, err
+	}
+	return message, nil
+}
+
+// EncodeSandboxDestroy is what the API does; Go uses it in tests.
+func (c *Codec) EncodeSandboxDestroy(message SandboxDestroy) ([]byte, error) {
+	return encode(c.destroy, message)
 }
 
 func decode(schema *jsonschema.Schema, payload []byte, target any) error {
