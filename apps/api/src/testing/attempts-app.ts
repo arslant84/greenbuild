@@ -8,7 +8,7 @@ import { afterAll, beforeAll } from "vitest";
 import { AppModule } from "../app.module.js";
 import { signDevUserToken } from "../auth/dev-user-token.js";
 import type { ServicesEnv } from "../config/services-env.js";
-import { type Container, startContainer } from "./containers.js";
+import { type Container, startContainer } from "@greenbuild/testkit";
 import { type FakeEngine, startFakeEngine } from "./fake-engine.js";
 
 const STARTUP_TIMEOUT_MS = 180_000;

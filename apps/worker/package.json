@@ -13,11 +13,14 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@greenbuild/db": "workspace:*",
     "@greenbuild/shared": "workspace:*",
+    "redis": "^6.3.0",
     "zod": "^4.6.5"
   },
   "devDependencies": {
     "@greenbuild/config": "workspace:*",
+    "@greenbuild/testkit": "workspace:*",
     "@types/node": "^22.20.4",
     "eslint": "^10.11.0",
     "typescript": "~6.0.3",
