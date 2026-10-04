@@ -57,8 +57,8 @@ func configured(t *testing.T) (config.Config, *agentclient.Client) {
 
 func TestOptionalRoutesStayOffWithoutTheirSecrets(t *testing.T) {
 	cfg, client := configured(t)
-	attachHandler, attachErr := buildAttach(cfg, client)
-	internalHandler, internalErr := buildInternal(cfg, client)
+	attachHandler, attachErr := buildAttach(cfg, client, nil)
+	internalHandler, internalErr := buildInternal(cfg, client, nil)
 	if attachHandler != nil || internalHandler != nil || attachErr != nil || internalErr != nil {
 		t.Fatalf("got %v %v %v %v; want both off without errors", attachHandler, internalHandler, attachErr, internalErr)
 	}
@@ -69,15 +69,15 @@ func TestOptionalRoutesStayOffWithoutTheirSecrets(t *testing.T) {
 }
 
 func TestOptionalRoutesRefuseIncompleteConfig(t *testing.T) {
-	if _, err := buildAttach(config.Config{AttachSecret: attachSecret}, nil); !errors.Is(err, errNeedsAgent) {
+	if _, err := buildAttach(config.Config{AttachSecret: attachSecret}, nil, nil); !errors.Is(err, errNeedsAgent) {
 		t.Errorf("attach without agent: %v, want errNeedsAgent", err)
 	}
-	if _, err := buildInternal(config.Config{InternalToken: attachSecret}, nil); !errors.Is(err, errNeedsAgent) {
+	if _, err := buildInternal(config.Config{InternalToken: attachSecret}, nil, nil); !errors.Is(err, errNeedsAgent) {
 		t.Errorf("internal without agent: %v, want errNeedsAgent", err)
 	}
 	cfg, client := configured(t)
 	cfg.InternalToken = attachSecret
-	if _, err := buildInternal(cfg, client); !errors.Is(err, errNeedsChallengesDir) {
+	if _, err := buildInternal(cfg, client, nil); !errors.Is(err, errNeedsChallengesDir) {
 		t.Errorf("internal without challenges dir: %v, want errNeedsChallengesDir", err)
 	}
 }
@@ -85,11 +85,11 @@ func TestOptionalRoutesRefuseIncompleteConfig(t *testing.T) {
 func TestOptionalRoutesAreServedWhenConfigured(t *testing.T) {
 	cfg, client := configured(t)
 	cfg.AttachSecret, cfg.InternalToken, cfg.ChallengesDir = attachSecret, attachSecret, t.TempDir()
-	attachHandler, err := buildAttach(cfg, client)
+	attachHandler, err := buildAttach(cfg, client, nil)
 	if err != nil {
 		t.Fatalf("buildAttach() error = %v", err)
 	}
-	internalHandler, err := buildInternal(cfg, client)
+	internalHandler, err := buildInternal(cfg, client, nil)
 	if err != nil {
 		t.Fatalf("buildInternal() error = %v", err)
 	}

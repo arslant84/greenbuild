@@ -14,6 +14,7 @@ import (
 const (
 	envHTTPAddr        = "SANDBOX_ENGINE_HTTP_ADDR"
 	envShutdownTimeout = "SANDBOX_ENGINE_SHUTDOWN_TIMEOUT"
+	envIdleTimeout     = "SANDBOX_ENGINE_IDLE_TIMEOUT"
 	envAgentAddr       = "SANDBOX_ENGINE_AGENT_ADDR"
 	envAgentServerName = "SANDBOX_ENGINE_AGENT_SERVER_NAME"
 	envTLSCA           = "SANDBOX_ENGINE_TLS_CA"
@@ -33,6 +34,8 @@ const (
 	// Loopback by default so a local run is not exposed; containers set 0.0.0.0 explicitly.
 	defaultHTTPAddr        = "127.0.0.1:8080"
 	defaultShutdownTimeout = 10 * time.Second
+	// architecture.md: a sandbox with no player activity for 5 minutes is destroyed.
+	defaultIdleTimeout = 5 * time.Minute
 	// Matches the agent's default gRPC address and a name in its dev certificate.
 	defaultAgentAddr       = "127.0.0.1:9443"
 	defaultAgentServerName = "localhost"
@@ -45,7 +48,9 @@ var ErrInvalid = errors.New("invalid config")
 type Config struct {
 	HTTPAddr        string
 	ShutdownTimeout time.Duration
-	Agent           AgentConfig
+	// IdleTimeout is how long a sandbox may go without terminal input or a check before it is destroyed.
+	IdleTimeout time.Duration
+	Agent       AgentConfig
 	// AttachSecret verifies browser attach tokens; empty keeps /attach off. Never log it.
 	AttachSecret string
 	// AllowedOrigins are browser origins besides the engine's own host that may open /attach,
@@ -92,7 +97,10 @@ func Load(getenv func(string) string) (Config, error) {
 	if cfg.HTTPAddr, err = loadAddr(getenv, envHTTPAddr, defaultHTTPAddr); err != nil {
 		return Config{}, err
 	}
-	if cfg.ShutdownTimeout, err = loadShutdownTimeout(getenv); err != nil {
+	if cfg.ShutdownTimeout, err = loadDuration(getenv, envShutdownTimeout, defaultShutdownTimeout); err != nil {
+		return Config{}, err
+	}
+	if cfg.IdleTimeout, err = loadDuration(getenv, envIdleTimeout, defaultIdleTimeout); err != nil {
 		return Config{}, err
 	}
 	if cfg.Agent.Addr, err = loadAddr(getenv, envAgentAddr, defaultAgentAddr); err != nil {
@@ -141,16 +149,16 @@ func loadAddr(getenv func(string) string, key, fallback string) (string, error) 
 	return addr, nil
 }
 
-func loadShutdownTimeout(getenv func(string) string) (time.Duration, error) {
-	raw := getenv(envShutdownTimeout)
+func loadDuration(getenv func(string) string, key string, fallback time.Duration) (time.Duration, error) {
+	raw := getenv(key)
 	if raw == "" {
-		return defaultShutdownTimeout, nil
+		return fallback, nil
 	}
-	timeout, err := parsePositiveDuration(raw)
+	duration, err := parsePositiveDuration(raw)
 	if err != nil {
-		return 0, fmt.Errorf("%w: %s %q: %w", ErrInvalid, envShutdownTimeout, raw, err)
+		return 0, fmt.Errorf("%w: %s %q: %w", ErrInvalid, key, raw, err)
 	}
-	return timeout, nil
+	return duration, nil
 }
 
 // loadTLS accepts all three paths or none; a partial set is a deployment mistake.

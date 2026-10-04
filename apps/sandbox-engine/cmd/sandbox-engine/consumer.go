@@ -39,7 +39,8 @@ func buildConsumer(cfg config.Config, client *agentclient.Client) (*consumer.Con
 			slog.Warn("close redis client", "error", err)
 		}
 	}
-	return consumer.New(consumer.Options{Redis: redisClient, Agent: client, Codec: codec, Name: name}), release, nil
+	queueConsumer := consumer.New(consumer.Options{Redis: redisClient, Agent: client, Codec: codec, Name: name, IdleTimeout: cfg.IdleTimeout})
+	return queueConsumer, release, nil
 }
 
 // runWithConsumer serves HTTP and consumes the queue together; when either one stops, both stop.

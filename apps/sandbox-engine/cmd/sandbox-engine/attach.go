@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/agentclient"
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/attach"
@@ -39,8 +40,9 @@ func dialAgent(cfg config.Config) (*agentclient.Client, func(), error) {
 	return client, release, nil
 }
 
-// buildAttach returns the /attach handler, or nil when no attach secret is set.
-func buildAttach(cfg config.Config, client *agentclient.Client) (http.Handler, error) {
+// buildAttach returns the /attach handler, or nil when no attach secret is set. Typing counts as
+// player activity when activity is not nil.
+func buildAttach(cfg config.Config, client *agentclient.Client, activity toucher) (http.Handler, error) {
 	if cfg.AttachSecret == "" {
 		slog.Warn("/attach disabled; set SANDBOX_ENGINE_ATTACH_SECRET and the agent TLS files to enable it")
 		return nil, nil
@@ -53,9 +55,15 @@ func buildAttach(cfg config.Config, client *agentclient.Client) (http.Handler, e
 		return nil, fmt.Errorf("attach tokens: %w", err)
 	}
 	handler := attach.NewHandler(verifier, openThrough(client), cfg.AllowedOrigins)
-	if err := recordSessions(cfg, handler); err != nil {
+	sessions, err := sessionRecordings(cfg)
+	if err != nil {
 		return nil, err
 	}
+	var typing attach.StartRecording
+	if activity != nil {
+		typing = activityRecordings(activity, time.Now)
+	}
+	handler.RecordSessions(allRecordings(sessions, typing))
 	return handler, nil
 }
 
