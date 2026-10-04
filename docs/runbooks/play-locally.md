@@ -37,3 +37,7 @@ Everything else lives in `.play/` (git-ignored): binaries, dev certificates, thr
 - The terminal opens only with a 60-second attach token, which the API issues to the attempt's owner and the engine verifies.
 - Every API call carries the dev user token from the session cookie; the browser never sees it, and writes also need the `x-greenbuild-request` header.
 - Dev sessions exist only outside production and only with `DEV_AUTH_SECRET`. Auth.js login replaces them.
+
+## End-to-end test
+
+With the stack up, `pnpm --filter @greenbuild/web test:e2e` plays nginx-502 in Chromium from Start to the debrief (`apps/web/e2e/slice.pw.ts`). Install the browser once with `pnpm --filter @greenbuild/web exec playwright install chromium`. Set `PLAY_WEB_URL` when the web app is not on `http://localhost:3001`. CI's "Slice e2e (Playwright)" job runs the same test on a fresh stack.
