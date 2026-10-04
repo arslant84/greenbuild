@@ -5,11 +5,12 @@ export type ActionMode = "ready" | "checking" | "reconnecting" | "exhausted";
 interface ActionPanelProps {
   mode: ActionMode;
   onCheck: () => void;
+  onGiveUp: () => void;
 }
 
 // Figma › Action Panel & Verification CTA, with V2's checking and V5's reconnecting buttons.
-// Hints and giving up arrive with their API endpoints; until then they are shown but inert.
-export function ActionPanel({ mode, onCheck }: ActionPanelProps) {
+// Hints arrive with their API endpoint; until then the hint row is shown but inert.
+export function ActionPanel({ mode, onCheck, onGiveUp }: ActionPanelProps) {
   return (
     <div className="flex flex-col gap-3 pt-5">
       <span className="flex h-10 items-center justify-between rounded-lg bg-surface px-3 opacity-60 shadow-[0_1px_2px_rgba(0,0,0,0.05)]" aria-disabled="true">
@@ -23,15 +24,15 @@ export function ActionPanel({ mode, onCheck }: ActionPanelProps) {
         </span>
       </span>
       <CheckButton mode={mode} onCheck={onCheck} />
-      <span className="flex items-center justify-center gap-1 pt-1 text-ink-subtle" aria-disabled="true">
+      <button type="button" onClick={onGiveUp} className="flex cursor-pointer items-center justify-center gap-1 pt-1 text-ink-subtle">
         <FlagIcon />
         <span className="type-label">Give up attempt and inspect solution runbook</span>
-      </span>
+      </button>
     </div>
   );
 }
 
-function CheckButton({ mode, onCheck }: ActionPanelProps) {
+function CheckButton({ mode, onCheck }: Pick<ActionPanelProps, "mode" | "onCheck">) {
   if (mode === "checking") {
     return (
       <div className="flex flex-col gap-1">

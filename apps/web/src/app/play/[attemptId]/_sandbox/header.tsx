@@ -4,10 +4,11 @@ import { BrandIcon, LogoutIcon, PersonIcon, TimerCompactIcon } from "../../../..
 interface SandboxHeaderProps {
   incident: string;
   elapsedSeconds: number;
+  onExit: () => void;
 }
 
 // Figma "Hotfix Sandbox — V1 Default State" › Header (1280 × 44).
-export function SandboxHeader({ incident, elapsedSeconds }: SandboxHeaderProps) {
+export function SandboxHeader({ incident, elapsedSeconds, onExit }: SandboxHeaderProps) {
   return (
     <header className="relative z-10 flex h-11 shrink-0 items-center justify-between bg-surface px-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
       <div className="flex items-center gap-3">
@@ -29,10 +30,10 @@ export function SandboxHeader({ incident, elapsedSeconds }: SandboxHeaderProps) 
           <span className="type-label text-ink-subtle">SYNCED</span>
         </span>
         <span className="flex items-center gap-3">
-          <a href="/play" className="flex items-center gap-1 text-ink-muted">
+          <button type="button" onClick={onExit} className="flex cursor-pointer items-center gap-1 text-ink-muted">
             <LogoutIcon />
             <span className="font-mono text-[13px] leading-[18px]">Exit Attempt</span>
-          </a>
+          </button>
           <span className="flex size-7 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
             <PersonIcon width={11} height={11} />
           </span>
