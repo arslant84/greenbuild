@@ -28,6 +28,9 @@ const (
 	StatusDestroyed = "destroyed"
 )
 
+// ReasonExpired is the reason on a destroyed status when the challenge time limit ran out.
+const ReasonExpired = "expired"
+
 const (
 	createSchemaURL = "https://greenbuild.dev/schemas/queue/sandbox.create.v1.json"
 	statusSchemaURL = "https://greenbuild.dev/schemas/queue/sandbox.status.v1.json"

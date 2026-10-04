@@ -16,8 +16,10 @@ import (
 )
 
 type fakeAgent struct {
-	requests []*agentv1.CreateSandboxRequest
-	err      error
+	requests   []*agentv1.CreateSandboxRequest
+	err        error
+	destroyed  []string
+	destroyErr error
 }
 
 func (a *fakeAgent) CreateSandbox(_ context.Context, req *agentv1.CreateSandboxRequest) (string, error) {
@@ -28,12 +30,21 @@ func (a *fakeAgent) CreateSandbox(_ context.Context, req *agentv1.CreateSandboxR
 	return fmt.Sprintf("sbx-%d", len(a.requests)), nil
 }
 
+func (a *fakeAgent) Destroy(_ context.Context, sandboxID string) error {
+	if a.destroyErr != nil {
+		return a.destroyErr
+	}
+	a.destroyed = append(a.destroyed, sandboxID)
+	return nil
+}
+
 type harness struct {
 	consumer *Consumer
 	agent    *fakeAgent
 	server   *miniredis.Miniredis
 	redis    *redis.Client
 	codec    *queue.Codec
+	clock    time.Time
 }
 
 func newHarness(t *testing.T) *harness {
@@ -46,8 +57,9 @@ func newHarness(t *testing.T) *harness {
 	server.SetTime(time.Now())
 	client := redis.NewClient(&redis.Options{Addr: server.Addr()})
 	t.Cleanup(func() { _ = client.Close() })
-	h := &harness{agent: &fakeAgent{}, server: server, redis: client, codec: codec}
-	h.consumer = New(Options{Redis: client, Agent: h.agent, Codec: codec, Name: "engine-1"})
+	h := &harness{agent: &fakeAgent{}, server: server, redis: client, codec: codec, clock: time.Unix(1_800_000_000, 0)}
+	now := func() time.Time { return h.clock }
+	h.consumer = New(Options{Redis: client, Agent: h.agent, Codec: codec, Name: "engine-1", Now: now})
 	if err := h.consumer.ensureGroup(t.Context()); err != nil {
 		t.Fatalf("ensureGroup() error = %v", err)
 	}
