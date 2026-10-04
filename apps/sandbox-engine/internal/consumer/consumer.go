@@ -1,5 +1,5 @@
-// Package consumer reads sandbox.create from Redis Streams, starts the sandbox through the agent
-// and reports the outcome on sandbox.status.
+// Package consumer reads sandbox.create and sandbox.destroy from Redis Streams, starts and
+// destroys sandboxes through the agent and reports the outcome on sandbox.status.
 package consumer
 
 import (
@@ -17,6 +17,9 @@ import (
 
 // Group is the consumer group every engine instance joins, so each message goes to one engine.
 const Group = "sandbox-engine"
+
+// streams are read together; a message is handled by the function for its stream.
+var streams = []string{queue.StreamSandboxCreate, queue.StreamSandboxDestroy}
 
 const (
 	readBlock  = 5 * time.Second
@@ -84,9 +87,11 @@ func (c *Consumer) Run(ctx context.Context) error {
 }
 
 func (c *Consumer) ensureGroup(ctx context.Context) error {
-	err := c.redis.XGroupCreateMkStream(ctx, queue.StreamSandboxCreate, Group, "0").Err()
-	if err != nil && !strings.HasPrefix(err.Error(), "BUSYGROUP") {
-		return fmt.Errorf("create group %s on %s: %w", Group, queue.StreamSandboxCreate, err)
+	for _, stream := range streams {
+		err := c.redis.XGroupCreateMkStream(ctx, stream, Group, "0").Err()
+		if err != nil && !strings.HasPrefix(err.Error(), "BUSYGROUP") {
+			return fmt.Errorf("create group %s on %s: %w", Group, stream, err)
+		}
 	}
 	return nil
 }
@@ -100,38 +105,47 @@ func (c *Consumer) poll(ctx context.Context) error {
 
 // reclaim takes over messages left pending by a failed try or by an engine that crashed.
 func (c *Consumer) reclaim(ctx context.Context) error {
-	messages, _, err := c.redis.XAutoClaim(ctx, &redis.XAutoClaimArgs{
-		Stream: queue.StreamSandboxCreate, Group: Group, Consumer: c.name,
-		MinIdle: claimIdle, Start: "0-0", Count: batchSize,
-	}).Result()
-	if err != nil {
-		return fmt.Errorf("claim pending %s: %w", queue.StreamSandboxCreate, err)
-	}
-	return c.handleAll(ctx, messages)
-}
-
-func (c *Consumer) readNew(ctx context.Context) error {
-	streams, err := c.redis.XReadGroup(ctx, &redis.XReadGroupArgs{
-		Group: Group, Consumer: c.name, Streams: []string{queue.StreamSandboxCreate, ">"},
-		Count: batchSize, Block: readBlock,
-	}).Result()
-	if errors.Is(err, redis.Nil) {
-		return nil
-	}
-	if err != nil {
-		return fmt.Errorf("read %s: %w", queue.StreamSandboxCreate, err)
-	}
 	for _, stream := range streams {
-		if err := c.handleAll(ctx, stream.Messages); err != nil {
+		messages, _, err := c.redis.XAutoClaim(ctx, &redis.XAutoClaimArgs{
+			Stream: stream, Group: Group, Consumer: c.name,
+			MinIdle: claimIdle, Start: "0-0", Count: batchSize,
+		}).Result()
+		if err != nil {
+			return fmt.Errorf("claim pending %s: %w", stream, err)
+		}
+		if err := c.handleAll(ctx, stream, messages); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func (c *Consumer) handleAll(ctx context.Context, messages []redis.XMessage) error {
+func (c *Consumer) readNew(ctx context.Context) error {
+	read, err := c.redis.XReadGroup(ctx, &redis.XReadGroupArgs{
+		Group: Group, Consumer: c.name, Streams: []string{queue.StreamSandboxCreate, queue.StreamSandboxDestroy, ">", ">"},
+		Count: batchSize, Block: readBlock,
+	}).Result()
+	if errors.Is(err, redis.Nil) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("read %v: %w", streams, err)
+	}
+	for _, stream := range read {
+		if err := c.handleAll(ctx, stream.Stream, stream.Messages); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func (c *Consumer) handleAll(ctx context.Context, stream string, messages []redis.XMessage) error {
+	handle := c.handle
+	if stream == queue.StreamSandboxDestroy {
+		handle = c.handleDestroy
+	}
 	for _, message := range messages {
-		if err := c.handle(ctx, message); err != nil {
+		if err := handle(ctx, message); err != nil {
 			return err
 		}
 	}

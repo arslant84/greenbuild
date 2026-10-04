@@ -35,7 +35,7 @@ func (c *Consumer) handle(ctx context.Context, message redis.XMessage) error {
 	if err != nil {
 		// Redelivering cannot fix a malformed message, and without a valid attempt id there is no one to tell.
 		slog.Warn("drop invalid sandbox.create", "message", message.ID, "error", err)
-		return c.ack(ctx, message.ID)
+		return c.ack(ctx, queue.StreamSandboxCreate, message.ID)
 	}
 	current := job{messageID: message.ID, create: create}
 	sandboxID, err := c.sandboxFor(ctx, create)
@@ -108,7 +108,7 @@ func (c *Consumer) finish(ctx context.Context, messageID string, message queue.S
 	if err := c.publish(ctx, message); err != nil {
 		return err
 	}
-	return c.ack(ctx, messageID)
+	return c.ack(ctx, queue.StreamSandboxCreate, messageID)
 }
 
 func (c *Consumer) publish(ctx context.Context, message queue.SandboxStatus) error {
@@ -126,9 +126,9 @@ func (c *Consumer) publish(ctx context.Context, message queue.SandboxStatus) err
 	return nil
 }
 
-func (c *Consumer) ack(ctx context.Context, messageID string) error {
-	if err := c.redis.XAck(ctx, queue.StreamSandboxCreate, Group, messageID).Err(); err != nil {
-		return fmt.Errorf("ack %s: %w", messageID, err)
+func (c *Consumer) ack(ctx context.Context, stream, messageID string) error {
+	if err := c.redis.XAck(ctx, stream, Group, messageID).Err(); err != nil {
+		return fmt.Errorf("ack %s %s: %w", stream, messageID, err)
 	}
 	return nil
 }

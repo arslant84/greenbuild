@@ -92,7 +92,11 @@ func TestSandboxStatusRules(t *testing.T) {
 
 // The Go types must match the schemas field for field; this fails when one changes without the other.
 func TestGoTypesMatchTheSchemas(t *testing.T) {
-	cases := map[string]any{"schemas/sandbox.create.v1.json": SandboxCreate{}, "schemas/sandbox.status.v1.json": SandboxStatus{}}
+	cases := map[string]any{
+		"schemas/sandbox.create.v1.json":  SandboxCreate{},
+		"schemas/sandbox.status.v1.json":  SandboxStatus{},
+		"schemas/sandbox.destroy.v1.json": SandboxDestroy{},
+	}
 	for file, value := range cases {
 		raw, err := schemaFiles.ReadFile(file)
 		if err != nil {
@@ -131,4 +135,24 @@ func jsonFields(typ reflect.Type) ([]string, []string) {
 	slices.Sort(fields)
 	slices.Sort(required)
 	return fields, required
+}
+
+func TestSandboxDestroyAcceptsOnlyTheAbandonedReason(t *testing.T) {
+	c := codec(t)
+	payload, err := c.EncodeSandboxDestroy(SandboxDestroy{Version: Version, AttemptID: "att-1", Reason: ReasonAbandoned})
+	if err != nil {
+		t.Fatalf("EncodeSandboxDestroy() error = %v", err)
+	}
+	if got, err := c.DecodeSandboxDestroy(payload); err != nil || got.Reason != ReasonAbandoned {
+		t.Errorf("DecodeSandboxDestroy() = %+v, %v; want the abandoned request back", got, err)
+	}
+	for _, payload := range []string{
+		`{"version":1,"attempt_id":"att-1","reason":"expired"}`,
+		`{"version":1,"attempt_id":"","reason":"abandoned"}`,
+		`{"version":1,"attempt_id":"att-1"}`,
+	} {
+		if _, err := c.DecodeSandboxDestroy([]byte(payload)); !errors.Is(err, ErrInvalidMessage) {
+			t.Errorf("DecodeSandboxDestroy(%s) error = %v, want ErrInvalidMessage", payload, err)
+		}
+	}
 }

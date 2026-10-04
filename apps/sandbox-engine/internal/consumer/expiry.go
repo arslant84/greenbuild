@@ -15,10 +15,12 @@ import (
 )
 
 // DeadlinesKey and IdleDeadlinesKey are sorted sets of attempt ids, scored by the Unix second
-// their time limit ends and the second they count as idle.
+// their time limit ends and the second they count as idle. AbandonRequestsKey holds attempts the
+// API asked to destroy, due at once, so the same loop destroys and reports them.
 const (
-	DeadlinesKey     = "engine:deadlines"
-	IdleDeadlinesKey = "engine:idle-deadlines"
+	DeadlinesKey       = "engine:deadlines"
+	IdleDeadlinesKey   = "engine:idle-deadlines"
+	AbandonRequestsKey = "engine:abandon-requests"
 )
 
 // deadlineSet is one way a sandbox runs out, and the reason reported when it does.
@@ -27,7 +29,12 @@ type deadlineSet struct {
 	reason string
 }
 
-var deadlineSets = []deadlineSet{{DeadlinesKey, queue.ReasonExpired}, {IdleDeadlinesKey, queue.ReasonIdle}}
+// The player's own request is reported first when several deadlines are due at once.
+var deadlineSets = []deadlineSet{
+	{AbandonRequestsKey, queue.ReasonAbandoned},
+	{DeadlinesKey, queue.ReasonExpired},
+	{IdleDeadlinesKey, queue.ReasonIdle},
+}
 
 const (
 	expiryInterval   = 10 * time.Second
