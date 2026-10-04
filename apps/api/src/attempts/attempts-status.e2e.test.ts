@@ -29,13 +29,14 @@ describe("the API applies sandbox.status", () => {
     expect((await user.start(NGINX_502)).status).toBe(201);
   });
 
-  it("expires the attempt when its sandbox is destroyed", async () => {
+  it("expires the attempt when its sandbox is destroyed and lets the user start again", async () => {
     const user = await player(app, randomUUID());
     const { id } = await startedBy(user);
     await engineReports(app, statusMessage({ attempt_id: id, status: "ready", sandbox_id: `sbx-${id}` }));
     await waitForStatus(user, id, "ready");
-    await engineReports(app, statusMessage({ attempt_id: id, status: "destroyed", reason: "ttl" }));
+    await engineReports(app, statusMessage({ attempt_id: id, status: "destroyed", sandbox_id: `sbx-${id}`, reason: "expired" }));
 
     expect(await waitForStatus(user, id, "expired")).not.toHaveProperty("attach_token");
+    expect((await user.start(NGINX_502)).status).toBe(201);
   });
 });
