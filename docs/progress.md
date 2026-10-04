@@ -68,7 +68,7 @@ Order follows the recommendation for decision D2. "Blocked" means the task waits
 
 | # | Task | Status | Notes |
 |---|---|---|---|
-| 17a | Bug: expired sandbox never frees the attempt | Not started | Failing test first; engine deadlines in Redis, publishes `destroyed` (`expired`) |
+| 17a | Bug: expired sandbox never frees the attempt | Done | The engine records each sandbox's deadline (start + time limit) in the Redis sorted set `engine:deadlines` (NX, so a redelivery keeps the first one); a loop every 10 s claims due entries, destroys the sandbox through the agent (NotFound counts as gone) and publishes `destroyed` with reason `expired` (`queue.ReasonExpired`); agent or Redis failures retry after 30 s. Tests with miniredis and a fake clock; the main one failed before the fix. Only `expired` is defined: `idle`, `abandoned` and `abuse` come with tasks 18, 19 and 33f; the API does not read reasons, so no shared constant |
 | 17b | Expiry end to end | Not started | Engine e2e under gVisor; API e2e: user can start again |
 | 18 | Idle timeout | Not started | `SANDBOX_ENGINE_IDLE_TIMEOUT`, default 5m |
 | 19a | `sandbox.destroy` contract and engine consumer | Not started | |
@@ -225,7 +225,7 @@ Each item points to the task that resolves it, or says why it's deferred or drop
   - The sandbox screen overflows windows wider than 1280 px: task 22.
   - `pnpm play:up` from PowerShell runs WSL's bash: task 37c.
   - The Daily screen cannot reopen a running attempt: 21a (API) and 21b (UI, blocked on a Figma frame).
-- Nothing publishes `sandbox.status = destroyed`, so an expired attempt stays `ready` and blocks the user with 409: task 17 (first). No idle timeout (18), no abandon (19a–19c), no `attempt.finished` (20a–20b); "Exit Attempt" is only a link to /play (19c).
+- Expired sandboxes now publish `destroyed` (17a); the end-to-end proof that the user can start again is 17b. No idle timeout (18), no abandon (19a–19c), no `attempt.finished` (20a–20b); "Exit Attempt" is only a link to /play (19c).
 - Task 16 journey in staging: task 28h.
 - Sandbox limits still to add (open files, disk, read-only root, seccomp, user namespaces, kill at 100% CPU for over 60 s): tasks 33a–33f.
 - `verify-challenge.sh` reads only flat manifest lines: task 23c. Seed hardcodes the nginx-502 manifest: task 23d.
