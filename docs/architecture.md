@@ -1,10 +1,10 @@
-# Green Build — архитектура и план MVP
+# greenbuild — архитектура и план MVP
 
-Sep 30, 2026 · @Arslan
+Sep 30, 2026 · @Arslan · обновлено 4 октября 2026
 
 ## Обзор и позиционирование
 
-Green Build — ежедневная игра для DevOps и облачных инженеров, в которой проверенный навык становится публичным сертификатом. Бизнес-модель — маркетплейс найма: компании платят за доступ к кандидатам с доказанным уровнем, для игроков всё бесплатно и без рекламы. Главный риск на этапах 0–2 — удержание: без игроков, которые возвращаются, маркетплейса не будет, поэтому основная часть документа строит игру и сигнал.
+greenbuild — ежедневная игра для DevOps и облачных инженеров, в которой проверенный навык становится публичным сертификатом. Бизнес-модель — маркетплейс найма: компании платят за доступ к кандидатам с доказанным уровнем, для игроков всё бесплатно и без рекламы. Главный риск на этапах 0–2 — удержание: без игроков, которые возвращаются, маркетплейса не будет, поэтому основная часть документа строит игру и сигнал.
 
 **Для кандидата:** бесплатный публичный профиль-сертификат навыков, который растёт с каждым решённым заданием и открывает предложения работы — только с его согласия.
 
@@ -29,7 +29,7 @@ Green Build — ежедневная игра для DevOps и облачных 
 
 ### Границы MVP (этапы 0–2)
 
-- Нет мобильного приложения (только адаптивный PWA).
+- Нет мобильного приложения (только адаптивный PWA). Пока экраны фиксированы на 1280 px — см. «Интерфейс и Figma» и решение D5.
 - Нет открытой регистрации компаний и платного поиска: на этапах 1.5–2 работают только приглашённые дизайн-партнёры (оценки своих кандидатов и бесплатный ранний поиск).
 - Нет пользовательских заданий от сообщества.
 - Нет Kubernetes-заданий внутри песочницы.
@@ -67,94 +67,112 @@ Green Build — ежедневная игра для DevOps и облачных 
 
 ## Технологический стек
 
-TypeScript почти везде, Go только в движке песочниц; всё разворачивается в Azure на старте.
+TypeScript почти везде, Go только в движке песочниц; всё разворачивается в Azure на старте. Столбец «Статус» показывает, что уже есть в коде (на 4 октября 2026), а что запланировано и к какому этапу.
 
-| Слой | Технология | Зачем |
-| --- | --- | --- |
-| Веб-фронтенд | Next.js (App Router), TypeScript | SSR для публичных профилей и лидербордов, SEO, превью при шеринге |
-| UI | Tailwind CSS, shadcn/ui, Framer Motion | Быстрая сборка интерфейса, анимации наград |
-| Терминал и редактор | xterm.js, Monaco Editor | Терминал песочницы в браузере, правка файлов |
-| Состояние на клиенте | TanStack Query, Zustand | Кэш запросов, таймер и состояние сессии |
-| PWA | Serwist | Установка на телефон, push на Android и десктопе |
-| API | NestJS (TypeScript) | Модульный монолит, DI, валидация, OpenAPI из коробки |
-| ORM | Drizzle ORM | Типобезопасные запросы, прозрачный SQL, миграции |
-| Основная БД | PostgreSQL 16 (Azure Flexible Server) | Пользователи, задания, попытки, компании |
-| Кэш и рейтинги | Redis (Azure Cache for Redis) | Лидерборды (sorted sets), стрики, rate limiting, сессии |
-| Очередь | Redis Streams (MVP) → Azure Service Bus (рост) | Нейтральна к языку: API на TypeScript пишет, движок на Go читает |
-| Движок песочниц | Go: control plane + агент ноды, client-go на этапе 4 | Создание, проксирование и уничтожение песочниц |
-| Изоляция | gVisor на VM (MVP) → AKS Pod Sandboxing на Kata (рост) | Защита хоста от кода пользователя |
-| Лог сессий | Azure Blob Storage (JSONL) → ClickHouse (рост) | Команды и тайминги для античита и аналитики |
-| Авторизация | Auth.js: GitHub OAuth, Google, email-ссылка | Разработчики входят через GitHub |
-| ИИ | Claude API | Генерация черновиков заданий, подсказки |
-| Платежи (этап 1.5) | Stripe Billing | Подписки компаний, счета, налоги |
-| Мобильное (этап 4) | Expo (React Native) | Push-напоминания, мини-задания |
-| IaC | Terraform | Azure сейчас, Hetzner позже — одним инструментом |
-| CI/CD | GitHub Actions | Сборка, тесты, деплой, сборка образов заданий |
-| Мониторинг | Azure Application Insights, OpenTelemetry | Трейсы, метрики, ошибки, алерты |
-| Ошибки фронта | Sentry | Ошибки в браузере с контекстом |
-| Аналитика продукта | PostHog | Воронки, удержание, стрики |
-| Email | Resend или Azure Communication Services | Вход по ссылке, напоминания о стрике |
+| Слой | Технология | Зачем | Статус |
+| --- | --- | --- | --- |
+| Веб-фронтенд | Next.js 16 (App Router), TypeScript | SSR для публичных профилей и лидербордов, SEO, превью при шеринге | Используется |
+| UI | Tailwind CSS 4 с токенами из Figma; шрифты Inter и JetBrains Mono через Fontsource (self-hosted); иконки, экспортированные из Figma как SVG-компоненты | Точное соответствие макетам Figma без внешних библиотек компонентов | Используется. shadcn/ui и Framer Motion не используются — решение владельца D4 |
+| Терминал | xterm.js 6 с fit-аддоном | Терминал песочницы в браузере | Используется |
+| Редактор | Monaco Editor | Правка файлов в браузере | Исключён из MVP: в песочнице есть vi и nano; вернуть, если появятся задания, где нужен редактор в браузере |
+| Состояние на клиенте | TanStack Query, Zustand | Кэш запросов, состояние сессии | Не используется: хватает серверных компонентов и локального состояния React. Добавлять, только если задача этого требует |
+| JWT | jose (TypeScript), golang-jwt/jwt v5 (Go) | Токены подключения к терминалу, временная dev-сессия | Используется |
+| PWA | Serwist | Установка на телефон, push | Запланировано, этап 2 (задача 56), вместе с адаптивной вёрсткой |
+| API | NestJS 12 (TypeScript, ES-модули, SWC в тестах) | Модульный монолит, DI, валидация | Используется |
+| Валидация | zod (схемы в `packages/shared`) | Единые схемы запросов, ответов, манифестов и сообщений очереди | Используется |
+| ORM | Drizzle ORM | Типобезопасные запросы, прозрачный SQL, миграции | Используется (`packages/db`, миграции 0000–0002) |
+| Основная БД | PostgreSQL 16 (Azure Flexible Server) | Пользователи, задания, попытки, компании | Используется локально и в CI; Azure — задача 28c |
+| Кэш и рейтинги | Redis (Azure Cache for Redis) | Лидерборды, стрики, rate limiting | Используется как очередь; лидерборды — этап 2 |
+| Очередь | Redis Streams (MVP) → Azure Service Bus (рост) | Нейтральна к языку: API на TypeScript пишет, движок на Go читает | Используется: `sandbox.create`, `sandbox.status` |
+| Движок песочниц | Go: control plane + агент ноды (Docker через `github.com/moby/moby`); client-go на этапе 4 | Создание, проксирование и уничтожение песочниц | Используется |
+| Изоляция | gVisor (runsc) на VM (MVP) → AKS Pod Sandboxing на Kata (рост) | Защита хоста от кода пользователя | Используется; локально runc, gVisor проверяется в отдельной CI-задаче |
+| Лог сессий | Azure Blob Storage, append blobs (JSONL) → ClickHouse (рост) | Команды и тайминги для античита и аналитики | Используется (Azurite в тестах) |
+| Авторизация | Auth.js в `apps/web`: GitHub и email-ссылка на этапе 1, Google на этапе 2 | Разработчики входят через GitHub | Не установлено. Временно — dev-токен (см. ниже); замена — задачи 30a–30e |
+| ИИ | Claude API | Черновики заданий | Запланировано, задача 24 |
+| Платежи (этап 1.5) | Stripe Billing | Подписки компаний, счета, налоги | Запланировано, этап 1.5 |
+| Мобильное (этап 4) | Expo (React Native) | Push-напоминания, мини-задания | Запланировано, этап 4 |
+| IaC | Terraform | Azure сейчас, Hetzner позже — одним инструментом | Не начато, задача 28 |
+| CI/CD | GitHub Actions | Сборка, тесты, деплой, сборка образов заданий | Используется: lint, typecheck, test, build, размер PR, gVisor-интеграция, Playwright e2e; деплоя нет (задача 28g) |
+| E2E-тесты | Playwright | Проверка всего пути игрока | Используется (CI-задача «Slice e2e (Playwright)») |
+| Мониторинг | Azure Application Insights, OpenTelemetry | Трейсы, метрики, алерты | Запланировано, этап 2 (задача 58); ворота этапа 1 меряются отчётом из БД (задача 39a) |
+| Ошибки фронта | Sentry | Ошибки в браузере с контекстом | Запланировано, этап 2 (задача 58) |
+| Аналитика продукта | PostHog | Воронки, удержание, стрики | Запланировано, этап 2 (задача 58), до публичного запуска |
+| Email | Resend или Azure Communication Services | Вход по ссылке, напоминания о стрике | Не выбрано — решение владельца D6; нужно для задачи 30a |
+
+### Временная авторизация (dev-токен)
+
+До Auth.js API принимает dev-токен пользователя: JWT HS256, подписанный `DEV_AUTH_SECRET`, аудитория `greenbuild-dev-user`, id пользователя — UUID. `DevUserGuard` и декоратор `@CurrentUser()` в API его проверяют; в production guard не пускает никого. Веб при первом заходе на `/play` выдаёт случайному id httpOnly-cookie `gb_dev_session` (SameSite=Lax), а серверные обработчики `/api/*` пересылают запросы в API с этим токеном. Изменяющие запросы требуют заголовок `x-greenbuild-request: 1` (защита от CSRF).
+
+Как убирается: Auth.js в `apps/web` выдаёт сессию, API проверяет короткоживущий подписанный токен за тем же интерфейсом `@CurrentUser()` (задачи 30a–30c). Playwright переходит на тестовый провайдер входа (30d), и только после этого отдельной задачей удаляются `DevUserGuard`, скрипт `dev:user-token`, выдача `gb_dev_session` и `DEV_AUTH_SECRET` (30e). Решение по CSRF пересматривается там же.
+
+## Интерфейс и Figma
+
+Все экраны повторяют файл Figma владельца «HotFix» (Page 1) точно: раскладку, отступы, цвета, шрифты и состояния. Текст бренда в интерфейсе — «greenbuild». Блоки, для которых ещё нет данных (XP, уровень, стрик, рейтинг, лидерборд, «вчерашний результат», подсказки), строятся на своём месте и показывают нейтральные пустые значения, а не примерные числа из макета.
+
+Все фреймы шириной 1280 px. Пока владелец не решил вопрос адаптивности (D5): минимальная ширина 1280 px, на более широких окнах содержимое по центру, ничего не обрезается.
+
+| Область | Фреймы (node id) |
+| --- | --- |
+| Игрок — построено | Daily Challenge (3:2); Sandbox V1 Default (3:837), V2 Checking (3:4221), V3 Solved (3:1128), V4 Failed (3:3401), V5 Connection Lost (3:2428); Sandbox Provisioning (7:11654, 7:11835); Incident Debrief & Verifiable Credential (3:1462) |
+| Игрок — есть фрейм, не построено | Landing (3:411); Verifiable Credential Profile (3:2750); Profile Multi-State Evaluator (3:4532); Global Standings & Leaderboards (3:3639); Authentication Suite, 6 состояний (7:9957); First-Time Onboarding, 3 шага (7:10146); Player Settings & Privacy Console (7:10273); Browse Challenge Catalog (7:10962); Global Error, Edge States & Resilience Console (7:12001); Transparent Pricing (8:12544); Email Template System, 8 шаблонов (8:13213) |
+| Маркетплейс и компании | Verified Talent Marketplace (3:1732); Candidate Search & Talent Directory (3:5158); Candidate Detail Modal (3:7963); Contact Request Flow, 5 состояний (3:8456); Candidate Inbox & Consent Management (3:8560); Company Dashboard Home (3:8899); Company Settings & Billing (3:9549); Company Signup & Onboarding, 5 шагов (8:12320) |
+| Фрейма нет | Показ подсказки (в V1 есть только кнопка «Get Diagnostic Hint»); возобновление попытки; мобильная и адаптивная вёрстка; картинка карточки для шеринга; экспорт и удаление данных (проверить, покрывает ли их 7:10273) |
+
+UI-задача без фрейма помечается «блок: нужен фрейм Figma (владелец)»; её серверная часть планируется отдельной задачей и не ждёт макета.
 
 ## Структура монорепо
 
-Один репозиторий на pnpm workspaces + Turborepo; общие типы и схемы живут в `packages`, приложения — в `apps`.
+Один репозиторий на pnpm workspaces + Turborepo; общие типы и схемы живут в `packages`, приложения — в `apps`. Ниже — фактическая структура; новые пакеты создаются задачей, которой они впервые нужны (исключение — пустая заготовка `packages/ui`, оставшаяся с начала проекта).
 
 ```
 greenbuild/
 ├─ apps/
-│  ├─ web/             # Next.js: игроки, профили, кабинет компании
-│  ├─ api/             # NestJS: модульный монолит
-│  │  └─ src/modules/
-│  │     ├─ auth/         # вход, сессии, OAuth, возраст
-│  │     ├─ users/        # профиль, режим видимости
-│  │     ├─ challenges/   # каталог, задание дня, версии
-│  │     ├─ attempts/     # старт, сабмит, результат
-│  │     ├─ game/         # очки, рейтинг, стрики, уровни
-│  │     ├─ leaderboards/
-│  │     ├─ anticheat/    # сигналы, флаги, ревью
-│  │     ├─ consent/      # режимы, запросы, принятие, отзыв
-│  │     ├─ privacy/      # экспорт, удаление, сроки хранения
-│  │     ├─ companies/    # аккаунты, команда, верификация
-│  │     ├─ search/       # поиск, сохранённые поиски, алерты
-│  │     ├─ assessments/  # приватные задания компаний
-│  │     ├─ trust/        # жалобы, санкционный скрининг, репутация
-│  │     ├─ billing/      # Stripe, кредиты, лимиты планов
-│  │     ├─ integrations/ # ATS, вебхуки
-│  │     └─ notifications/
-│  ├─ sandbox-engine/  # Go: control plane + WebSocket-прокси
-│  ├─ sandbox-agent/   # Go: агент на ноде песочниц
-│  ├─ worker/          # рейтинг, алерты, удаление данных по сроку
-│  └─ mobile/          # этап 4: Expo
+│  ├─ web/             # Next.js 16: экраны игрока; e2e/ — Playwright
+│  ├─ api/             # NestJS 12: модульный монолит (сейчас модули attempts, challenges, health; служебные auth — dev-токен, engine — клиент движка, infra, config)
+│  ├─ sandbox-engine/  # Go: control plane, /attach, /internal, consumer очереди, лог сессий
+│  ├─ sandbox-agent/   # Go: агент ноды, gRPC с mTLS, TTL-reaper; cmd/sandbox-shell
+│  ├─ worker/          # TypeScript: пока только /health; первая задача — 20b
+│  └─ mobile/          # этап 4: Expo (ещё не создан)
 ├─ packages/
-│  ├─ shared/          # типы, zod-схемы, константы, ошибки
-│  ├─ db/              # Drizzle-схема, миграции, сиды
-│  ├─ challenge-spec/  # JSON-схема задания + валидатор
-│  ├─ queue/           # контракты сообщений очереди (JSON Schema для TS и Go)
-│  ├─ ui/              # общие компоненты
-│  └─ config/          # eslint, tsconfig, prettier
-├─ challenges/         # исходники заданий
+│  ├─ shared/          # zod-схемы (API, очередь; манифест задания — на ветке feat/challenge-spec), ошибки, константы
+│  ├─ db/              # Drizzle-схема, миграции, сид
+│  ├─ queue/           # JSON Schema сообщений очереди (источник истины) + типы Go
+│  ├─ agent-api/       # agent.proto и сгенерированный Go-код
+│  ├─ devpki/          # одноразовый CA и сертификаты для локального mTLS
+│  ├─ challenge-spec/  # валидатор и CLI заданий (на ветке feat/challenge-spec)
+│  ├─ ui/              # пустая заготовка; общие компоненты — когда понадобятся
+│  └─ config/          # eslint, tsconfig, prettier с лимитами размера
+├─ challenges/         # исходники заданий; verify-challenge.sh
+├─ scripts/            # play-stack.sh (pnpm play:up / play:down)
 ├─ infra/
-│  ├─ terraform/       # envs/dev, envs/prod, modules/
-│  └─ docker/          # базовые образы песочниц
+│  ├─ docker/          # play-stack.compose.yaml (PostgreSQL и Redis для локального стека)
+│  └─ terraform/       # пустая заготовка; задача 28
 ├─ docs/
-│  ├─ adr/
-│  ├─ legal/           # политика конфиденциальности, DPA, условия
-│  └─ runbooks/
-├─ CLAUDE.md           # правила разработки
+│  ├─ architecture.md  # этот документ (на русском)
+│  ├─ progress.md      # статус задач (на английском)
+│  ├─ adr/             # пусто; задача 38
+│  ├─ legal/           # пусто; тексты — после консультации юриста
+│  └─ runbooks/        # play-locally.md
 └─ .github/workflows/
 ```
 
-Правило зависимостей: `apps` зависят от `packages`, но никогда друг от друга. API и движок общаются только через очередь и HTTP-контракт.
+Целевые модули API (из первоначального плана; создаются задачами, которым они нужны): `auth/` (вход, сессии, возраст), `users/` (профиль, режим видимости), `challenges/` (каталог, задание дня, версии), `attempts/` (старт, проверка, результат), `game/` (XP, рейтинг, стрики, уровни), `leaderboards/`, `anticheat/` (сигналы, флаги, ревью), `consent/` (режимы, запросы, принятие, отзыв), `privacy/` (экспорт, удаление, сроки хранения), `companies/` (аккаунты, команда, верификация), `search/`, `assessments/` (приватные задания), `trust/` (жалобы, санкционный скрининг, репутация), `billing/` (Stripe, кредиты, лимиты), `integrations/` (ATS, вебхуки), `notifications/`.
+
+`CLAUDE.md` с правилами разработки хранится локально и исключён из git (решение владельца); лимиты размера при этом проверяют ESLint, golangci-lint, CI и Husky. Документация пишется на английском, кроме этого файла.
+
+Правила зависимостей: `apps` зависят от `packages`, но никогда друг от друга. API и движок общаются только через очередь и внутренний HTTP-контракт. API никогда не управляет контейнерами — только ставит задания в очередь. Доступ к БД — только через `packages/db`. Общие типы и zod-схемы — только в `packages/shared`.
 
 ## Модель данных
 
 Все ID — UUID v7; все таблицы имеют `created_at` и `updated_at`; мультитенантность через `company_id` и таблицы согласия создаются на этапе 0, даже если кабинет открывается позже.
 
+**Что уже есть (миграции 0000–0002):** `challenges`, `challenge_versions`, `attempts`, `sandbox_sessions`, `attempt_checks`. ID — UUID v7, генерируются в приложении (в PostgreSQL 16 нет `uuidv7()`). Ограничения: сложность 1–10, приватное задание требует компании, seed ≤ 2^53−1, не больше 10 проверок на попытку (`ATTEMPT_MAX_CHECKS`); частичный уникальный индекс `attempts_one_active_per_user` (статусы starting и ready). У `attempts.user_id` пока нет внешнего ключа (задача 29b). Остальные таблицы этого раздела ещё не созданы: `users` — задача 29a, согласие — 31a, компании — 31b.
+
 ### Пользователи и доступ
 
 | Таблица | Ключевые поля | Примечание |
 | --- | --- | --- |
-| users | id, handle, display\_name, email, avatar\_url, country, timezone, timezone\_changed\_at, locale, role (player/admin), status, age\_confirmed\_18\_at, deleted\_at | timezone\_changed\_at — для правила смены раз в 30 дней |
+| users | id, handle, display\_name, email, avatar\_url, country, timezone, timezone\_changed\_at, locale, role (player/admin), status, age\_confirmed\_16\_at, age\_confirmed\_18\_at, deleted\_at | timezone\_changed\_at — для правила смены раз в 30 дней; age\_confirmed\_16\_at — чекбокс 16+ при регистрации (дата рождения не собирается) |
 | auth\_accounts | user\_id, provider (github/google/email), provider\_user\_id | Несколько способов входа |
 | user\_settings | user\_id, discovery\_mode (hidden/passive/open, по умолчанию hidden), game\_profile\_public (по умолчанию true), revealed\_fields (набор: name, email, github, linkedin, website), notify\_email, notify\_push | Режим поиска отделён от публичности игрового профиля |
 | user\_skills | user\_id, skill\_id, rating, rating\_deviation, volatility, attempts\_count, updated\_at | Glicko-2 по навыку |
@@ -167,7 +185,7 @@ greenbuild/
 | --- | --- | --- |
 | skills | id, slug, name, parent\_id | Дерево навыков |
 | challenges | id, slug, title, difficulty, status (draft/review/live/retired), visibility (public/company\_private), company\_id | Карточка задания |
-| challenge\_versions | id, challenge\_id, version, spec\_json, image\_ref, image\_digest, checker\_hash, rating, rating\_deviation, solve\_rate\_baseline, retired\_reason, source (human/ai/community/company) | Рейтинг задания — соперник в Glicko-2 |
+| challenge\_versions | id, challenge\_id, version, spec\_json, image\_ref, image\_digest, checker\_hash, rating, rating\_deviation, solve\_rate\_baseline, retired\_reason, source (human/ai/community/company), hints\_json (задача 35a) | Рейтинг задания — соперник в Glicko-2 |
 | challenge\_skills | challenge\_id, skill\_id, weight | Какие навыки проверяет |
 | daily\_challenges | date, track, challenge\_version\_id | Задание дня по трекам |
 
@@ -176,7 +194,9 @@ greenbuild/
 | Таблица | Ключевые поля | Примечание |
 | --- | --- | --- |
 | attempts | id, user\_id, challenge\_version\_id, seed, context (daily/catalog/assessment/duel), assessment\_invite\_id, started\_at, finished\_at, status, duration\_ms, checks\_used, hints\_used, score, flagged | Партиционирование по месяцу с роста нагрузки |
-| sandbox\_sessions | id, attempt\_id, node, pod\_name, status, created\_at, destroyed\_at, exit\_reason, log\_ref, log\_deleted\_at | Ссылка на лог и отметка его удаления |
+| attempt\_checks | id, attempt\_id, passed, output\_tail, duration\_ms, created\_at | Каждый запуск проверки; создана в задаче 15 |
+| outbox | id, topic, payload, created\_at, published\_at | События для worker (`attempt.finished`); задача 20a |
+| sandbox\_sessions | id, attempt\_id, sandbox\_id (уникальный), node, pod\_name, status, created\_at, destroyed\_at, exit\_reason, log\_ref, log\_deleted\_at | Ссылка на лог и отметка его удаления |
 | streaks | user\_id, current, longest, last\_day, freezes\_available | Одна строка на пользователя |
 | xp\_ledger | id, user\_id, amount, reason, attempt\_id | Журнал начислений |
 | badges / user\_badges | id, slug, name / user\_id, badge\_id, awarded\_at | Достижения |
@@ -222,34 +242,70 @@ challenges/nginx-502-upstream/
 ```
 
 ```yaml
-id: nginx-502-upstream
-version: 3
+id: nginx-502-upstream         # совпадает с именем папки
+version: 1                     # опубликованная версия не меняется; исправление = новая версия
 title: "Сайт отдаёт 502"
 statement: "Пользователи видят 502. Верни сайт в строй."
-difficulty: 4            # 1–10
-skills: [linux: 0.4, nginx: 0.6]
-time_limit_sec: 900
+difficulty: 4                  # 1–10
+skills: { linux: 0.4, nginx: 0.6 }   # веса навыков, сумма = 1
+time_limit_sec: 900            # 60–7200
 resources: { cpu: "500m", memory: "512Mi", disk: "1Gi" }
-network: none            # none | allowlist
-randomize:               # подставляется в setup.sh по seed
-  upstream_port: { range: [3000, 3999] }
+network: none                  # пока принимается только none; allowlist не построен
+capabilities: [CHOWN, SETUID, SETGID]   # возврат только из allowlist агента
+randomize:                     # подставляется в setup.sh по seed
+  app_port: { range: [3000, 3999] }
   app_user: { pick: [svc, webapp, runner] }
 check:
-  command: /opt/hotfix/check.sh
+  command: /opt/greenbuild/check.sh
   timeout_sec: 20
-  run_as: root           # checker не виден пользователю
-hints: 3
-source: human            # human | ai | community
+  run_as: root                 # checker не виден пользователю
+hints: 3                       # число подсказок в hints.md
+source: human                  # human / ai / community / company
 ```
+
+Пример показывает форму, а не точные значения: истина — zod-схема `challengeManifestSchema` в `packages/shared`.
+
+Отличия от первоначального плана:
+- `skills` — словарь весов, сумма которых равна 1.
+- Добавлен ключ `capabilities`. Он возвращает только capabilities из allowlist агента (CHOWN, DAC_OVERRIDE, FOWNER, KILL, NET_BIND_SERVICE, SETGID, SETUID).
+- Ключ рандомизации называется `app_port`, а не `upstream_port`.
+- Путь проверки — `/opt/greenbuild/check.sh`.
+- `network` принимает только `none`.
+- В `source` есть значение `company`.
+- `time_limit_sec` — от 60 до 7200.
+
+### Где живёт схема
+
+- **zod-схема манифеста** — `packages/shared` (правило: общие zod-схемы только там).
+- **Валидатор папки и CLI** (`pnpm challenges:validate`) — `packages/challenge-spec`. Он проверяет обязательные файлы, манифест, совпадение id с папкой и число подсказок. Сейчас он на ветке `feat/challenge-spec`, слияние — задача 23a.
+- **JSON Schema для редакторов** генерируется из zod-схемы и проверяется в CI на расхождение (задача 23b).
+
+Сейчас манифест nginx-502 продублирован в `seed.ts`, а `verify-challenge.sh` читает только плоские строки манифеста. Оба переходят на чтение манифестов задачами 23c и 23d.
 
 ### Жизненный цикл версии
 
-1. Автор или ИИ создаёт папку и открывает PR.
-2. CI валидирует манифест по JSON-схеме из `packages/challenge-spec`.
-3. CI собирает образ, запускает `setup.sh` с тремя разными seed и проверяет, что `check.sh` возвращает **не** 0 (среда реально сломана).
+1. Автор или ИИ создаёт папку по потоку из задачи 24 и открывает PR.
+2. CI валидирует папку и манифест (`challenges:validate`).
+3. CI собирает образ, запускает `setup.sh` с тремя разными seed под gVisor и проверяет, что `check.sh` возвращает **не** 0 (среда реально сломана).
 4. CI запускает `solution.sh` и проверяет, что `check.sh` возвращает 0 (задание решаемо).
-5. Образ пушится в Azure Container Registry, в `challenge_versions` пишется digest.
-6. Модератор переводит статус в `live`.
+5. Ревьюер проходит чек-лист ревью (`docs/runbooks/challenge-review.md`) и одобряет PR.
+6. После слияния образ пушится в Azure Container Registry, сид записывает версию с digest образа (задача 28g).
+7. Модератор переводит статус в `live`.
+
+Сейчас шаги 2–4 выполняются вручную скриптом `verify-challenge.sh` и не входят в CI (задача 23e); шаг 6 работает только локально (`pnpm play:up`).
+
+### Поток создания заданий
+
+Черновик пишет Claude API по короткому брифу (`pnpm challenges:draft`), человек ревьюирует по чек-листу, CI проверяет решаемость. Чек-лист и ревьюер — решение владельца D3; поток собирается задачей 24.
+
+Чек-лист ревью (предложение):
+1. Одна проблема на задание; причина находится в логах или конфигах среды, а не в условии.
+2. Seed реально меняет то, что нужно найти (порты, имена, пути).
+3. Опытный инженер решает за 3–10 минут.
+4. `check.sh` проверяет результат, а не способ решения, и не принимает «обходы» (например, удаление сервиса).
+5. Подсказки идут от общего к конкретному, ни одна не содержит готовой команды.
+6. Разбор (`README.md`) объясняет причину и как её найти.
+7. В образе нет решения, `check.sh` и `solution.sh`.
 
 ### Правила
 
@@ -287,7 +343,7 @@ source: human            # human | ai | community
 5. Браузер открывает WebSocket к control plane; тот проверяет токен и открывает PTY через агента. xterm.js ↔ control plane ↔ агент ↔ контейнер.
 6. Control plane пишет каждый ввод с отметкой времени в буфер сессии.
 7. «Проверить» → control plane через агента копирует checker, запускает, удаляет, возвращает результат. Лимит — 10 проверок.
-8. Решено, время вышло или 5 минут без активности → контейнер уничтожается, лог уходит в Blob Storage, событие `attempt.finished` — в очередь.
+8. Решено, время вышло, 5 минут без активности или пользователь сдался → контейнер уничтожается, лог уходит в Blob Storage, в `sandbox.status` публикуется `destroyed` с причиной. API переводит попытку в конечный статус и публикует `attempt.finished` через outbox. Сейчас из этого шага построено только уничтожение по TTL агентом — см. «Что построено и чего нет».
 
 ### Пул прогретых песочниц
 
@@ -310,13 +366,36 @@ source: human            # human | ai | community
 
 ### Контракты
 
-- Схемы сообщений очереди лежат в `packages/queue` как JSON Schema; из них генерируются типы для TypeScript и структуры для Go.
-- Stream `sandbox.create` → `{attempt_id, image_digest, seed, resources, ttl, network}`
-- Stream `sandbox.status` (control plane → API): `ready`, `failed`, `destroyed` + причина
-- Stream `attempt.finished` → `{attempt_id, status, duration_ms, checks_used, log_ref}`
+- Схемы сообщений очереди лежат в `packages/queue` как JSON Schema — это источник истины. Go-типы и zod-копии в `packages/shared` написаны вручную; тест на расхождение сверяет их со схемами.
+- Stream `sandbox.create` → `{version, attempt_id, image, seed, cpu_millis, memory_bytes, ttl_seconds, network, capabilities}`; сейчас `image` — ссылка на образ, digest — задача 28g
+- Stream `sandbox.status` (control plane → API): `ready`, `failed`, `destroyed` + причина (сейчас публикуются только `ready` и `failed`; `destroyed` — задача 17a)
+- Stream `attempt.finished` (публикует API через outbox и worker, задача 20) → `{attempt_id, user_id, challenge_version_id, status, duration_ms, checks_used, finished_at}`
+- Stream `sandbox.destroy` (API → control plane, задача 19a) → `{attempt_id, sandbox_id, reason}`
 - HTTP (внутренний) `POST /internal/attempts/{id}/check` → `{passed, output_tail, duration_ms}`
-- gRPC control plane → агент по mTLS: `CreateSandbox`, `Exec`, `CopyIn`, `Destroy`, `Health`
+- gRPC control plane → агент по mTLS: `CreateSandbox`, `Exec`, `CopyIn`, `Run`, `Destroy`, `Health`
 - WebSocket `wss://sbx.greenbuild.dev/attach?token=…`
+
+### Что построено и чего нет
+
+| Часть | Статус | Задача |
+| --- | --- | --- |
+| Агент: Docker через `github.com/moby/moby`; рантайм runsc по умолчанию, runc локально | Есть | — |
+| Агент: лимиты CPU, памяти и PID; сеть none; все capabilities сброшены, возврат по allowlist; no-new-privileges | Есть | — |
+| Агент: `setup.sh` с seed и его удаление, TTL-reaper (срок в метке контейнера, переживает перезапуск агента) | Есть | — |
+| Агент: gRPC (`CreateSandbox`, `Destroy`, `Exec`, `CopyIn`, `Run`, `Health`) с mTLS 1.3; dev-сертификаты из `packages/devpki` | Есть | — |
+| Движок: consumer `sandbox.create`, публикация `ready` / `failed`, повторная доставка получает ту же песочницу | Есть | — |
+| Движок: `/attach` (JWT HS256 на 60 с, аудитория `sandbox-attach`), внутренняя проверка решения, лог сессии в Blob | Есть | — |
+| Публикация `destroyed`, когда песочница истекла или удалена reaper'ом | **Нет — ошибка:** попытка навсегда остаётся `ready`, и индекс «одна активная попытка» не даёт пользователю начать снова | 17 |
+| Таймаут бездействия 5 минут | Нет | 18 |
+| Уничтожение по запросу (сдаться / выйти) | Нет | 19a |
+| Событие `attempt.finished` | Нет; будет публиковать API, а не движок | 20 |
+| Выбор ноды | Нет: движок работает ровно с одним агентом | Отложено на этап 2 (57) |
+| Пул прогретых песочниц | Нет | Отложено на этап 2 (57) |
+| Таймаут для `GracefulStop` в агенте и движке | Нет: остановка ждёт открытые Exec-потоки | 27 |
+| Лимит открытых файлов, лимит диска, корень только для чтения, seccomp, user namespaces, убийство при 100% CPU > 60 с | Нет | 33a–33f |
+| Одноразовые токены `/attach` | Нет: токен можно использовать повторно до истечения (≤ 60 с) | Отложено до второй реплики движка (рост нагрузки) |
+| Сохранение лога сессии при падении движка | Нет: лог открытой сессии живёт в памяти до её конца | Этап 2 (49a) |
+| Доступ к Blob по managed identity | Нет: сейчас строка подключения | 28f |
 
 ## Игровая механика
 
@@ -398,53 +477,65 @@ source: human            # human | ai | community
 
 ## API-контракт
 
-REST под `/v1`, JSON, схемы в zod из `packages/shared`, OpenAPI генерируется из NestJS. Авторизация: httpOnly-cookie сессии для веба, Bearer-токены для мобильного (этап 4) и API-ключи компаний на плане Scale. Все списки — курсорная пагинация (`cursor`, `limit` ≤ 100).
+REST под `/v1`, JSON, схемы в zod из `packages/shared`; OpenAPI из NestJS запланирован, но ещё не подключён (задачи нет — добавить, когда понадобится внешний API). Авторизация: httpOnly-cookie сессии для веба (сейчас — временный dev-токен, см. «Временная авторизация»), Bearer-токены для мобильного (этап 4) и API-ключи компаний на плане Scale. Все списки — курсорная пагинация (`cursor`, `limit` ≤ 100). Столбец «Есть» показывает, построен ли эндпоинт (на 4 октября 2026).
 
 ### Игрок
 
-| Метод | Путь | Что делает | Этап |
-| --- | --- | --- | --- |
-| GET / PATCH | /v1/me | Профиль, timezone, режим поиска, раскрываемые поля | 1 |
-| GET | /v1/daily?track= | Задание дня и статус | 2 |
-| GET | /v1/challenges | Каталог с фильтрами | 1 |
-| GET | /v1/challenges/{slug} | Карточка задания | 1 |
-| POST | /v1/attempts | Начать попытку | 1 |
-| GET | /v1/attempts/{id} | Статус и токен подключения | 1 |
-| POST | /v1/attempts/{id}/check | Проверка | 1 |
-| POST | /v1/attempts/{id}/hint | Подсказка | 1 |
-| POST | /v1/attempts/{id}/abandon | Сдаться | 1 |
-| GET | /v1/attempts/{id}/result | XP, рейтинг, разбор | 1 |
-| POST | /v1/attempts/{id}/share | Создать токен карточки | 2 |
-| GET | /v1/share/{token}.png | Карточка по токену | 2 |
-| GET | /v1/users/{handle} | Публичный игровой профиль (если включён) | 2 |
-| GET | /v1/leaderboards/{kind} | Лидерборды | 2 |
-| POST | /v1/follows/{handle}, /v1/duels | Друзья и дуэли | 4 |
+| Метод | Путь | Что делает | Этап | Есть |
+| --- | --- | --- | --- | --- |
+| GET / PATCH | /v1/me | Профиль, timezone, режим поиска, раскрываемые поля | 1 | Нет — задача 32 |
+| GET | /v1/daily?track= | Задание дня и статус | 2 | Нет — задача 41b |
+| GET | /v1/challenges | Каталог с фильтрами | 1 | Нет — задача 36a |
+| GET | /v1/challenges/{slug} | Карточка задания (название, условие, сложность, навыки, лимит времени живой версии) | 1 | Да; требует сессию |
+| POST | /v1/attempts | Начать попытку: `{challenge_slug}` → живая версия → seed → `sandbox.create`; вторая активная попытка — 409 | 1 | Да |
+| GET | /v1/attempts/{id} | Статус и токен подключения, когда песочница готова; только владелец, остальным 404 | 1 | Да |
+| GET | /v1/attempts?status=active | Активная попытка пользователя (для возобновления) | 1 | Нет — задача 21a |
+| POST | /v1/attempts/{id}/check | Проверка: попытка атомарно расходуется до запуска, максимум 10 (11-я — 429), сбой движка возвращает проверку и отвечает 503 | 1 | Да |
+| POST | /v1/attempts/{id}/hint | Подсказка | 1 | Нет — задача 35b |
+| POST | /v1/attempts/{id}/abandon | Сдаться или выйти | 1 | Нет — задача 19b |
+| GET | /v1/attempts/{id}/result | Статус, использованные проверки, длительность, все запуски проверки; XP и рейтинг — с этапа 2 | 1 | Да (без XP и рейтинга) |
+| POST | /v1/attempts/{id}/share | Создать токен карточки | 2 | Нет — задача 51a |
+| GET | /v1/share/{token}.png | Карточка по токену | 2 | Нет — задача 51 |
+| GET | /v1/users/{handle} | Публичный игровой профиль (если включён) | 2 | Нет — задача 46a |
+| GET | /v1/leaderboards/{kind} | Лидерборды | 2 | Нет — задача 45b |
+| POST | /v1/follows/{handle}, /v1/duels | Друзья и дуэли | 4 | Нет |
 
 ### Кандидат: согласие и приватность
 
-| Метод | Путь | Что делает | Этап |
-| --- | --- | --- | --- |
-| PUT | /v1/me/discovery | Режим hidden / passive / open, подтверждение 18+ | 2 |
-| GET | /v1/me/contact-requests | Входящие запросы | 3 |
-| POST | /v1/me/contact-requests/{id}/accept | Принять, выбрать раскрываемые поля | 3 |
-| POST | /v1/me/contact-requests/{id}/decline | Отклонить с причиной | 3 |
-| POST | /v1/me/contact-requests/{id}/revoke | Отозвать согласие | 3 |
-| GET / POST | /v1/me/contact-requests/{id}/messages | Переписка | 3 |
-| GET | /v1/me/viewers | Какие компании открывали карточку | 3 |
-| POST / DELETE | /v1/me/blocks/companies/{id} | Заблокировать компанию | 3 |
-| POST | /v1/me/hires | Отметить найм | 3 |
-| POST | /v1/reports | Жалоба на компанию или сообщение | 3 |
-| POST | /v1/me/export | Экспорт всех данных (JSON, ссылка по почте) | 2 |
-| DELETE | /v1/me | Удаление аккаунта | 2 |
-| GET | /v1/me/consents | История согласий | 2 |
+| Метод | Путь | Что делает | Этап | Есть |
+| --- | --- | --- | --- | --- |
+| PUT | /v1/me/discovery | Режим hidden / passive / open, подтверждение 18+ | 2 | Нет — задача 47a |
+| GET | /v1/me/contact-requests | Входящие запросы | 3 | Нет |
+| POST | /v1/me/contact-requests/{id}/accept | Принять, выбрать раскрываемые поля | 3 | Нет |
+| POST | /v1/me/contact-requests/{id}/decline | Отклонить с причиной | 3 | Нет |
+| POST | /v1/me/contact-requests/{id}/revoke | Отозвать согласие | 3 | Нет |
+| GET / POST | /v1/me/contact-requests/{id}/messages | Переписка | 3 | Нет |
+| GET | /v1/me/viewers | Какие компании открывали карточку | 3 | Нет |
+| POST / DELETE | /v1/me/blocks/companies/{id} | Заблокировать компанию | 3 | Нет |
+| POST | /v1/me/hires | Отметить найм | 3 | Нет |
+| POST | /v1/reports | Жалоба на компанию или сообщение | 3 | Нет |
+| POST | /v1/me/export | Экспорт всех данных (JSON, ссылка по почте) | 2 | Нет — задача 50a |
+| DELETE | /v1/me | Удаление аккаунта | 2 | Нет — задача 50b |
+| GET | /v1/me/consents | История согласий | 2 | Нет — задача 50c |
+
+### Служебные и внутренние
+
+| Метод | Путь | Где | Доступ | Есть |
+| --- | --- | --- | --- | --- |
+| GET | /health | Все сервисы | Публичный | Да |
+| GET | /attach?token= | Движок | Токен подключения (JWT HS256, 60 с, аудитория `sandbox-attach`) | Да |
+| POST | /internal/attempts/{id}/check | Движок | Внутренний токен `SANDBOX_ENGINE_INTERNAL_TOKEN` | Да |
+| — | /api/* | Веб (серверные обработчики) | Пересылают запросы в API с токеном сессии; изменяющие запросы требуют `x-greenbuild-request: 1` | Да |
 
 Кабинет компании на этапе 1.5 требует только регистрации, верификации домена, команды, приглашений на оценку, результатов и Stripe Checkout. Полный список эндпоинтов для этапа 3 и лимиты по планам — в приложении.
 
 ### Правила
 
-- Одна активная попытка на пользователя.
-- Статусы попытки меняет только сервер; клиент опрашивает до `ready` (Server-Sent Events с этапа 4).
-- Ошибки в едином формате: `{code, message, details}`.
+- **Каждый эндпоинт явно объявляет доступ.** По умолчанию нужна сессия; публичный эндпоинт помечается `@Public()`. Тест обходит все маршруты API и сверяет список публичных с этим документом (задача 30c). Сейчас публичны только `/health`. Запланированы как публичные: `GET /v1/users/{handle}` (этап 2) и `GET /v1/share/{token}.png` (этап 2). `GET /v1/challenges/{slug}` сейчас требует сессию.
+- Одна активная попытка на пользователя (частичный уникальный индекс `attempts_one_active_per_user`).
+- Статусы попытки меняет только сервер и только вперёд: повтор события ничего не меняет. Клиент опрашивает до `ready` (Server-Sent Events с этапа 4).
+- Ошибки в едином формате: `{code, message, details}`; соответствие HTTP-статусам живёт в API.
+- Защита от CSRF — обязательный заголовок `x-greenbuild-request: 1` на изменяющих запросах `/api/*` плюс cookie SameSite=Lax. Решение пересматривается вместе с Auth.js (задача 30e).
 - Поиск никогда не возвращает личные поля кандидата до принятия запроса — проверяется контрактными тестами.
 - Административные эндпоинты — под `/v1/admin`, только role=admin, все действия в `audit_log`.
 
@@ -503,8 +594,8 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`, OpenAPI ге�
 
 ### Окружения
 
-- **dev** — локально: docker compose (PostgreSQL, Redis, движок с Docker без gVisor).
-- **staging** — копия prod в минимальных размерах, данные — сиды.
+- **dev** — локально: `pnpm play:up` (`scripts/play-stack.sh`) поднимает PostgreSQL и Redis в Docker Compose, применяет миграции и сид, собирает и запускает агента (runc), движок, API и web; `pnpm dev` — разработка без песочниц.
+- **staging** — копия prod в минимальных размерах, данные — сиды. Ещё не создан (задачи 28a–28h).
 - **prod** — отдельная подписка Azure; песочницы — в своей VNet с разрешённым только входящим трафиком от прокси движка.
 
 ### Сети
@@ -535,7 +626,7 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`, OpenAPI ге�
 ### Безопасность приложения
 
 - Секреты только в Key Vault, доступ через Managed Identity, никаких ключей в коде.
-- Сессии: httpOnly, Secure, SameSite=Lax cookie; CSRF-токены для изменяющих запросов.
+- Сессии: httpOnly, Secure, SameSite=Lax cookie; для изменяющих запросов — обязательный заголовок `x-greenbuild-request: 1` (пересмотр вместе с Auth.js, задача 30e).
 - Rate limiting на входе, регистрации и старте попыток (Redis).
 - Зависимости: Dependabot и `pnpm audit`, образы сканируются Trivy в CI.
 - Бэкапы PostgreSQL: автоматические, хранение 14 дней, проверка восстановления раз в месяц.
@@ -548,6 +639,8 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`, OpenAPI ге�
 3. **Merge в main**: сборка образов, пуш в ACR, миграции БД, деплой в staging, e2e-тесты (Playwright: вход → старт задания → решение → результат).
 4. **Ручное подтверждение**: деплой в prod через ревизии Container Apps (откат одним действием).
 5. **Terraform**: `plan` в PR, `apply` только после merge и ручного подтверждения.
+
+**Сейчас:** на PR выполняются lint, typecheck, unit-тесты, build, проверка размера PR, «Sandbox integration (gVisor)» и «Slice e2e (Playwright)». CI-задач для заданий (23e), Terraform (28a) и деплоя в staging (28g) ещё нет.
 
 ## Холодный старт
 
