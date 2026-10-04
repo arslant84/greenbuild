@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@greenbuild/config": "workspace:*",
+    "@greenbuild/testkit": "workspace:*",
     "@nestjs/testing": "^12.1.2",
     "@swc/core": "^1.16.13",
     "@types/node": "^22.20.4",

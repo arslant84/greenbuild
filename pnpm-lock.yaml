@@ -51,6 +51,9 @@ importers:
       '@greenbuild/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@greenbuild/testkit':
+        specifier: workspace:*
+        version: link:../../packages/testkit
       '@nestjs/testing':
         specifier: ^12.1.2
         version: 12.1.2(@nestjs/common@12.1.2(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@12.1.2)(@nestjs/platform-express@12.1.2)
@@ -149,9 +152,15 @@ importers:
 
   apps/worker:
     dependencies:
+      '@greenbuild/db':
+        specifier: workspace:*
+        version: link:../../packages/db
       '@greenbuild/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      redis:
+        specifier: ^6.3.0
+        version: 6.3.0
       zod:
         specifier: ^4.6.5
         version: 4.6.5
@@ -159,6 +168,9 @@ importers:
       '@greenbuild/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@greenbuild/testkit':
+        specifier: workspace:*
+        version: link:../../packages/testkit
       '@types/node':
         specifier: ^22.20.4
         version: 22.20.4
@@ -255,6 +267,21 @@ importers:
       vitest:
         specifier: ^5.0.2
         version: 5.0.2(@types/node@22.20.4)(vite@8.3.1(@types/node@22.20.4)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+
+  packages/testkit:
+    devDependencies:
+      '@greenbuild/config':
+        specifier: workspace:*
+        version: link:../config
+      '@types/node':
+        specifier: ^22.20.4
+        version: 22.20.4
+      eslint:
+        specifier: ^10.11.0
+        version: 10.11.0(jiti@2.7.0)
+      typescript:
+        specifier: ~6.0.3
+        version: 6.0.3
 
 packages:
 

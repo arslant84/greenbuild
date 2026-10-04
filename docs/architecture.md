@@ -131,7 +131,7 @@ greenbuild/
 │  ├─ api/             # NestJS 12: модульный монолит (сейчас модули attempts, challenges, health; служебные auth — dev-токен, engine — клиент движка, infra, config)
 │  ├─ sandbox-engine/  # Go: control plane, /attach, /internal, consumer очереди, лог сессий
 │  ├─ sandbox-agent/   # Go: агент ноды, gRPC с mTLS, TTL-reaper; cmd/sandbox-shell
-│  ├─ worker/          # TypeScript: пока только /health; первая задача — 20b
+│  ├─ worker/          # TypeScript: /health и публикация outbox в Redis Streams (задача 20b)
 │  └─ mobile/          # этап 4: Expo (ещё не создан)
 ├─ packages/
 │  ├─ shared/          # zod-схемы (API, очередь; манифест задания — на ветке feat/challenge-spec), ошибки, константы
@@ -141,6 +141,7 @@ greenbuild/
 │  ├─ devpki/          # одноразовый CA и сертификаты для локального mTLS
 │  ├─ challenge-spec/  # валидатор и CLI заданий (на ветке feat/challenge-spec)
 │  ├─ ui/              # пустая заготовка; общие компоненты — когда понадобятся
+│  ├─ testkit/         # тестовые помощники: одноразовые контейнеры Docker для тестов API и worker
 │  └─ config/          # eslint, tsconfig, prettier с лимитами размера
 ├─ challenges/         # исходники заданий; verify-challenge.sh
 ├─ scripts/            # play-stack.sh (pnpm play:up / play:down)
@@ -388,7 +389,7 @@ source: human                  # human / ai / community / company
 | Публикация `destroyed`, когда песочница истекла или удалена reaper'ом | **Нет — ошибка:** попытка навсегда остаётся `ready`, и индекс «одна активная попытка» не даёт пользователю начать снова | 17 |
 | Таймаут бездействия 5 минут | Нет | 18 |
 | Уничтожение по запросу (сдаться / выйти) | Нет | 19a |
-| Событие `attempt.finished` | Частично: API пишет его в `outbox` в той же транзакции, что и конечный статус (solved, failed, expired, abandoned); публикацию в Redis Streams делает worker — задача 20b | 20b |
+| Событие `attempt.finished` | Есть: API пишет его в `outbox` в той же транзакции, что и конечный статус (solved, failed, expired, abandoned); worker публикует в Redis Stream `attempt.finished` («как минимум один раз», ключ идемпотентности — `attempt_id`) | 20a, 20b |
 | Выбор ноды | Нет: движок работает ровно с одним агентом | Отложено на этап 2 (57) |
 | Пул прогретых песочниц | Нет | Отложено на этап 2 (57) |
 | Таймаут для `GracefulStop` в агенте и движке | Нет: остановка ждёт открытые Exec-потоки | 27 |
