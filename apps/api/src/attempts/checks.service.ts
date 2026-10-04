@@ -3,6 +3,7 @@ import { ATTEMPT_MAX_CHECKS, type AttemptResult, type CheckResponse, ConflictErr
 import { Injectable } from "@nestjs/common";
 import { EngineClient, type EngineCheck } from "../engine/engine-client.js";
 import { DatabaseClient } from "../infra/services.js";
+import { finishAttempt } from "./finished-events.js";
 
 interface CheckTarget {
   sandboxId: string;
@@ -92,10 +93,7 @@ export class ChecksService {
       }
       const finishedAt = new Date();
       const durationMs = target.startedAt ? finishedAt.getTime() - target.startedAt.getTime() : null;
-      await tx
-        .update(attempts)
-        .set({ status: "solved", finishedAt, durationMs })
-        .where(and(eq(attempts.id, attemptId), eq(attempts.status, "ready")));
+      await finishAttempt(tx, { attemptId, from: ["ready"], to: "solved", finishedAt, durationMs });
     });
   }
 }

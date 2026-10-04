@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SEED_MAX } from "../constants/index.js";
+import { ATTEMPT_MAX_CHECKS, SEED_MAX } from "../constants/index.js";
 
 // TypeScript side of the queue contracts. The JSON Schemas in packages/queue/schemas are the
 // source of truth; queue.test.ts fails when these drift from them.
@@ -7,6 +7,7 @@ import { SEED_MAX } from "../constants/index.js";
 export const STREAM_SANDBOX_CREATE = "sandbox.create";
 export const STREAM_SANDBOX_STATUS = "sandbox.status";
 export const STREAM_SANDBOX_DESTROY = "sandbox.destroy";
+export const STREAM_ATTEMPT_FINISHED = "attempt.finished";
 export const QUEUE_PAYLOAD_FIELD = "payload";
 export const QUEUE_VERSION = 1;
 
@@ -60,3 +61,19 @@ export const sandboxDestroySchema = z.strictObject({
 });
 
 export type SandboxDestroy = z.infer<typeof sandboxDestroySchema>;
+
+export const FINISHED_ATTEMPT_STATUSES = ["solved", "failed", "expired", "abandoned"] as const;
+
+// The API records it through the outbox when an attempt reaches a final status; worker jobs start from it.
+export const attemptFinishedSchema = z.strictObject({
+  version: z.literal(QUEUE_VERSION),
+  attempt_id: z.uuid(),
+  user_id: z.uuid(),
+  challenge_version_id: z.uuid(),
+  status: z.enum(FINISHED_ATTEMPT_STATUSES),
+  duration_ms: z.number().int().min(0).optional(),
+  checks_used: z.number().int().min(0).max(ATTEMPT_MAX_CHECKS),
+  finished_at: z.iso.datetime(),
+});
+
+export type AttemptFinished = z.infer<typeof attemptFinishedSchema>;

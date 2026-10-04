@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
-import { sandboxCreateSchema, sandboxDestroySchema, sandboxStatusSchema } from "./index.js";
+import { attemptFinishedSchema, sandboxCreateSchema, sandboxDestroySchema, sandboxStatusSchema } from "./index.js";
 
 const SCHEMAS = new URL("../../../queue/schemas/", import.meta.url);
 // Keywords that constrain values; descriptions and $id are documentation.
@@ -47,6 +47,10 @@ describe("queue contracts match packages/queue/schemas", () => {
 
   it("sandbox.destroy", async () => {
     expectSameContract(await sourceOfTruth("sandbox.destroy.v1.json"), sandboxDestroySchema);
+  });
+
+  it("attempt.finished", async () => {
+    expectSameContract(await sourceOfTruth("attempt.finished.v1.json"), attemptFinishedSchema);
   });
 });
 
