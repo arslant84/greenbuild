@@ -4,6 +4,7 @@ import { type AttemptResponse, ConflictError, SEED_MAX } from "@greenbuild/share
 import { Injectable } from "@nestjs/common";
 import { LiveVersions } from "../challenges/live-versions.js";
 import { DatabaseClient } from "../infra/services.js";
+import { activeAttemptId } from "./attempt-reader.js";
 import { type AttemptRow, toResponse } from "./attempt-response.js";
 import { finishAttempt } from "./finished-events.js";
 import { SandboxRequests } from "./sandbox-requests.js";
@@ -56,7 +57,9 @@ export class AttemptsService {
       return attempt;
     } catch (error) {
       if (violates(error, ONE_ACTIVE_ATTEMPT)) {
-        throw new ConflictError("Another attempt is still active");
+        // The active attempt may end in between; then the 409 carries no id.
+        const activeId = await activeAttemptId(this.database.db, userId);
+        throw new ConflictError("Another attempt is still active", activeId ? { active_attempt_id: activeId } : undefined);
       }
       throw error;
     }

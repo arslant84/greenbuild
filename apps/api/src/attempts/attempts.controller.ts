@@ -1,5 +1,12 @@
-import { type AttemptResponse, type AttemptResult, type CheckResponse, startAttemptRequestSchema } from "@greenbuild/shared";
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, UseGuards } from "@nestjs/common";
+import {
+  type AttemptListResponse,
+  type AttemptResponse,
+  type AttemptResult,
+  type CheckResponse,
+  listAttemptsQuerySchema,
+  startAttemptRequestSchema,
+} from "@greenbuild/shared";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards } from "@nestjs/common";
 import { z } from "zod";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
 import { CurrentUser, DevUserGuard } from "../auth/dev-user.guard.js";
@@ -22,6 +29,12 @@ export class AttemptsController {
   start(@CurrentUser() user: AuthenticatedUser, @Body() body: unknown): Promise<AttemptResponse> {
     const request = parseInput(startAttemptRequestSchema, body);
     return this.attempts.start(user.id, request.challenge_slug);
+  }
+
+  @Get()
+  list(@CurrentUser() user: AuthenticatedUser, @Query() query: unknown): Promise<AttemptListResponse> {
+    parseInput(listAttemptsQuerySchema, query);
+    return this.reader.listActive(user.id);
   }
 
   @Get(":id")
