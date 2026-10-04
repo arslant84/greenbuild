@@ -42,7 +42,7 @@ func (c *Consumer) handle(ctx context.Context, message redis.XMessage) error {
 	if err != nil {
 		return c.handleFailure(ctx, current, err)
 	}
-	if err := c.scheduleExpiry(ctx, create); err != nil {
+	if err := c.scheduleDeadlines(ctx, create); err != nil {
 		return err
 	}
 	return c.finish(ctx, message.ID, queue.SandboxStatus{

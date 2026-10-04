@@ -32,12 +32,14 @@ type Agent interface {
 }
 
 // Options configures a Consumer. Name must be unique per engine instance. Now defaults to time.Now.
+// IdleTimeout destroys a sandbox that long after its last Touch; zero turns idle expiry off.
 type Options struct {
-	Redis redis.Cmdable
-	Agent Agent
-	Codec *queue.Codec
-	Name  string
-	Now   func() time.Time
+	Redis       redis.Cmdable
+	Agent       Agent
+	Codec       *queue.Codec
+	Name        string
+	Now         func() time.Time
+	IdleTimeout time.Duration
 }
 
 // Consumer handles sandbox.create messages one at a time.
@@ -47,6 +49,8 @@ type Consumer struct {
 	codec *queue.Codec
 	name  string
 	now   func() time.Time
+	// idleTimeout is zero when idle expiry is off.
+	idleTimeout time.Duration
 }
 
 // New returns a Consumer; call Run to start it.
@@ -55,7 +59,7 @@ func New(opts Options) *Consumer {
 	if now == nil {
 		now = time.Now
 	}
-	return &Consumer{redis: opts.Redis, agent: opts.Agent, codec: opts.Codec, name: opts.Name, now: now}
+	return &Consumer{redis: opts.Redis, agent: opts.Agent, codec: opts.Codec, name: opts.Name, now: now, idleTimeout: opts.IdleTimeout}
 }
 
 // Run consumes until ctx is cancelled, and destroys sandboxes whose time ran out meanwhile.
