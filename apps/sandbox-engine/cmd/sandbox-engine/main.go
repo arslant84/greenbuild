@@ -40,19 +40,24 @@ func run() error {
 		return err
 	}
 	defer release()
-	attachHandler, err := buildAttach(cfg, client)
-	if err != nil {
-		return err
-	}
-	internalHandler, err := buildInternal(cfg, client)
-	if err != nil {
-		return err
-	}
 	queueConsumer, releaseRedis, err := buildConsumer(cfg, client)
 	if err != nil {
 		return err
 	}
 	defer releaseRedis()
+	// Activity is tracked in the consumer's Redis; without a consumer there is no idle timeout.
+	var activity toucher
+	if queueConsumer != nil {
+		activity = queueConsumer
+	}
+	attachHandler, err := buildAttach(cfg, client, activity)
+	if err != nil {
+		return err
+	}
+	internalHandler, err := buildInternal(cfg, client, activity)
+	if err != nil {
+		return err
+	}
 
 	server := newServer(cfg.HTTPAddr, routes{attach: attachHandler, internal: internalHandler})
 	return runWithConsumer(ctx, queueConsumer, func(ctx context.Context) error {

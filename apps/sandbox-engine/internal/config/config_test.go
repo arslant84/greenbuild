@@ -22,12 +22,16 @@ func TestLoadDefaults(t *testing.T) {
 	if cfg.ShutdownTimeout != defaultShutdownTimeout {
 		t.Errorf("ShutdownTimeout = %v, want %v", cfg.ShutdownTimeout, defaultShutdownTimeout)
 	}
+	if cfg.IdleTimeout != 5*time.Minute {
+		t.Errorf("IdleTimeout = %v, want 5m", cfg.IdleTimeout)
+	}
 }
 
 func TestLoadOverrides(t *testing.T) {
 	cfg, err := Load(envFrom(map[string]string{
 		envHTTPAddr:        "0.0.0.0:9000",
 		envShutdownTimeout: "3s",
+		envIdleTimeout:     "90s",
 	}))
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
@@ -38,6 +42,9 @@ func TestLoadOverrides(t *testing.T) {
 	if cfg.ShutdownTimeout != 3*time.Second {
 		t.Errorf("ShutdownTimeout = %v, want 3s", cfg.ShutdownTimeout)
 	}
+	if cfg.IdleTimeout != 90*time.Second {
+		t.Errorf("IdleTimeout = %v, want 90s", cfg.IdleTimeout)
+	}
 }
 
 func TestLoadRejectsInvalidValues(t *testing.T) {
@@ -46,6 +53,7 @@ func TestLoadRejectsInvalidValues(t *testing.T) {
 		"unparsable timeout":   {envShutdownTimeout: "soon"},
 		"zero timeout":         {envShutdownTimeout: "0s"},
 		"negative timeout":     {envShutdownTimeout: "-1s"},
+		"zero idle timeout":    {envIdleTimeout: "0s"},
 	}
 	for name, env := range cases {
 		t.Run(name, func(t *testing.T) {
