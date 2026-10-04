@@ -95,6 +95,7 @@ export interface Player {
   start: (body: unknown) => Promise<Response>;
   find: (id: string) => Promise<Response>;
   check: (id: string) => Promise<Response>;
+  abandon: (id: string) => Promise<Response>;
   result: (id: string) => Promise<Response>;
   card: (slug: string) => Promise<Response>;
 }
@@ -108,6 +109,7 @@ export async function player(app: () => AttemptsApp, userId: string): Promise<Pl
     start: (body) => fetch(`${app().baseUrl}/v1/attempts`, { method: "POST", headers, body: JSON.stringify(body) }),
     find: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}`, { headers }),
     check: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/check`, { method: "POST", headers }),
+    abandon: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/abandon`, { method: "POST", headers }),
     result: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/result`, { headers }),
     card: (slug) => fetch(`${app().baseUrl}/v1/challenges/${slug}`, { headers }),
   };
