@@ -8,15 +8,18 @@ Last updated: 2026-10-04
 
 | Item from architecture.md | Status | Notes |
 |---|---|---|
-| Monorepo, `CLAUDE.md`, linters with size limits, CI | Done | CI green on #7; broken on `main` since #8 by parallel golangci-lint runs, fixed in `fix/golangci-parallel` |
-| Terraform: core and sandbox networks, Container Apps, PostgreSQL, Redis, ACR, Key Vault, Blob | Not started | Approved; Terraform 1.16 installed. Without it there is no staging, so Stage 0's gate (a commit to `main` reaches staging automatically) is not met; Stage 1 started without it |
+| Monorepo, `CLAUDE.md`, linters with size limits, CI | Done | The golangci-lint parallel-run fix merged as #10; `main` is green |
+| Terraform: core and sandbox networks, Container Apps, PostgreSQL, Redis, ACR, Key Vault, Blob | Not started | Approved; Terraform 1.16 installed. Without it there is no staging, so Stage 0's gate (a commit to `main` reaches staging automatically) is not met; Stage 1 started without it (owner's decision). Planned as tasks 28a–28h; 28g closes the technical half of the gate |
 | Skeletons with health check: `web` | Done | Next.js 16, `GET /health`, port 3001 |
 | Skeletons with health check: `api` | Done | NestJS 12 (ESM), `GET /health`, port 3000, shared error format |
 | Skeletons with health check: `sandbox-agent` | Done | Go, `GET /health` on 127.0.0.1:8081 |
 | Skeletons with health check: `sandbox-engine` | Done | Go, `GET /health` on 127.0.0.1:8080; gRPC client to the agent comes with task 7 |
-| Skeletons with health check: `worker` | Done | TypeScript, plain `node:http` `GET /health`, port 3002; jobs come with the queue (task 10) |
-| DB schema incl. consent and company tables | Partly done | `challenges`, `challenge_versions`, `attempts`, `sandbox_sessions` (task 13) and `attempt_checks` (task 15) exist; users, consent and company tables not started |
-| Mockups, design-partner calls, lawyer, ADR-001…007 | Not started | Non-code items for the founder; ADRs can be drafted on request |
+| Skeletons with health check: `worker` | Done | TypeScript, plain `node:http` `GET /health`, port 3002; no jobs yet; the first job is the outbox relay (task 20b) |
+| DB schema incl. consent and company tables | Partly done | `challenges`, `challenge_versions`, `attempts`, `sandbox_sessions` (task 13) and `attempt_checks` (task 15) exist; users → tasks 29a–29b, consent tables → 31a, company tables → 31b |
+| Mockups of the public profile and the anonymous company card | Owner to confirm | Frames exist in Figma: Verifiable Credential Profile (3:2750), Candidate Search (3:5158), Candidate Detail Modal (3:7963). Confirm the card shows no personal fields before consent |
+| 30 hiring-manager calls, 10 design partners | Not started | Owner |
+| Lawyer consultation | Not started | Owner |
+| ADR-001…007 | Not started | Task 38 (also ADR-008…012 for decisions already taken) |
 
 ## Stage 1 — vertical slice (tasks from architecture.md)
 
@@ -45,16 +48,128 @@ The vertical slice above covers part of Stage 1. Status of each Stage 1 item:
 
 | Item from architecture.md | Status | Notes |
 |---|---|---|
-| Challenge JSON schema and challenge CI pipeline | In progress | Manifest schema (`challengeManifestSchema` in `packages/shared`) and folder validator (`packages/challenge-spec`, `pnpm challenges:validate`) on branch `feat/challenge-spec`. Still to do: CI job that validates and runs setup → check fails → solution → check passes for changed challenges under gVisor; JSON Schema file for editors; seed and verify script reading manifests instead of the hardcoded nginx-502 values |
-| Control plane: Redis Streams, node selection, TTL; node agent: gVisor, limits, mTLS | Mostly done | Streams (task 10), TTL (4), limits (2), mTLS (6), gVisor verified in CI. Node selection not built: the engine talks to one agent |
+| Challenge JSON schema and challenge CI pipeline | In progress | Manifest schema (`challengeManifestSchema` in `packages/shared`) and folder validator (`packages/challenge-spec`, `pnpm challenges:validate`) on branch `feat/challenge-spec`. Remaining: tasks 23a–23f |
+| Control plane: Redis Streams, node selection, TTL; node agent: gVisor, limits, mTLS | Mostly done | Streams (task 10), TTL (4), limits (2), mTLS (6), gVisor verified in CI. Node selection not built (the engine talks to one agent): deferred to Stage 2, task 57a. `destroyed` is never published: task 17 |
 | WebSocket proxy with JWT, xterm.js | Done | Tasks 8, 12, 16 |
-| Check, session log in Blob Storage, deleted after 90 days | Mostly done | Check (tasks 9, 15), session log (11). The 90-day deletion is a lifecycle rule that comes with Terraform |
-| Login with GitHub and email, sign-up from 16 | Not started | Dev user sessions stand in (off in production) |
-| Challenge page: statement, terminal, timer, check, hint | Mostly done | All but hints: the hint button is shown disabled |
-| 15 challenges, 1–2 private per design partner | 1 of 15 | nginx-502 |
-| Sandbox escape and mining test against a checklist | Not started | |
+| Check, session log in Blob Storage, deleted after 90 days | Mostly done | Check (tasks 9, 15), session log (11). The 90-day deletion rule: task 28c; managed identity: 28f |
+| Login with GitHub and email, sign-up from 16 | Not started | Dev user sessions stand in (off in production). Tasks 29a–32 |
+| Challenge page: statement, terminal, timer, check, hint | Mostly done | All but hints (button shown disabled): tasks 35a–35c |
+| 15 public challenges | 1 of 15 | nginx-502; the rest: tasks 25a–25n (track depends on decision D1) |
+| 1–2 private challenges per design partner | Blocked | Needs signed design partners |
+| Sandbox escape and mining test against a checklist | Not started | Hardening 33a–33f, probes 34a, staging run 34b |
+| Attempt lifecycle: expiry, idle timeout, give up, `attempt.finished`, resume | Not started | Added in the 2026-10-04 revision: tasks 17a–21b |
+| Staging, and the task 16 journey passing there | Not started | Added from Stage 0: tasks 28a–28h |
 
-Stage 1 gate (20 engineers solve challenges; p95 start < 20 s; < 3% failed starts; no sandbox escape): not measured yet; needs staging.
+Stage 1 gate (20 engineers solve challenges; p95 start < 20 s; < 3% failed starts; no sandbox escape): not measured yet; needs staging, login and tasks 39a–39b.
+
+## Stage 1 — remaining tasks (from architecture.md, 2026-10-04 revision)
+
+Order follows the recommendation for decision D2. "Blocked" means the task waits for the owner (a Figma frame, a decision, or design partners).
+
+| # | Task | Status | Notes |
+|---|---|---|---|
+| 17a | Bug: expired sandbox never frees the attempt | Not started | Failing test first; engine deadlines in Redis, publishes `destroyed` (`expired`) |
+| 17b | Expiry end to end | Not started | Engine e2e under gVisor; API e2e: user can start again |
+| 18 | Idle timeout | Not started | `SANDBOX_ENGINE_IDLE_TIMEOUT`, default 5m |
+| 19a | `sandbox.destroy` contract and engine consumer | Not started | |
+| 19b | `POST /v1/attempts/{id}/abandon` | Not started | `abandoned` is already in the status enum; no migration |
+| 19c | Wire "Exit Attempt" and "Give up" | Not started | |
+| 20a | `attempt.finished` contract and outbox | Not started | |
+| 20b | Worker: outbox relay | Not started | Worker's first job |
+| 21a | Resume attempt: API | Not started | 409 returns the active attempt id; `GET /v1/attempts?status=active` |
+| 21b | Resume attempt: UI | Blocked | Needs a Figma frame (decision D5) |
+| 22 | Wide windows | Not started | Min width 1280, centered, no clipping |
+| 23a | Merge the challenge validator | Not started | Branch `feat/challenge-spec` |
+| 23b | JSON Schema for editors | Not started | |
+| 23c | `verify-challenge.sh` reads manifests | Not started | |
+| 23d | Seed reads every manifest | Not started | Removes the hardcoded manifest from `seed.ts` |
+| 23e | CI job "Challenges (gVisor)" | Not started | |
+| 23f | Play stack builds every challenge image | Not started | |
+| 24 | Challenge authoring flow | Blocked | Decision D3 |
+| 25a–25e | Challenges, batch 1 (5) | Blocked | Decision D1; needs 23 and 24 |
+| 25f–25j | Challenges, batch 2 (5) | Blocked | Decision D1 |
+| 25k–25n | Challenges, batch 3 (4) | Blocked | Decision D1 |
+| 26a | Structured logs with redaction (TypeScript) | Not started | |
+| 26b | Structured logs with redaction (Go) | Not started | |
+| 27 | gRPC shutdown timeout | Not started | |
+| 28a | Terraform skeleton | Not started | |
+| 28b | Networks | Not started | |
+| 28c | Data services and the Blob lifecycle rule | Not started | |
+| 28d | Container Apps | Not started | Staging ingress limited to the owner's IPs |
+| 28e | Sandbox node VM | Not started | |
+| 28f | Blob via managed identity | Not started | |
+| 28g | Deploy on merge to main | Not started | Closes the technical half of the Stage 0 gate |
+| 28h | Task 16 journey in staging | Not started | |
+| 29a | `users` table | Not started | Includes `age_confirmed_16_at` |
+| 29b | Foreign key `attempts.user_id` | Not started | Backfill dev orphans, `NOT VALID`, then validate |
+| 29c | Auth.js adapter decision | Not started | Plan only, recorded as an ADR |
+| 30a | Auth.js: GitHub and email | Blocked | Decision D6 (email provider) |
+| 30b | Sign-in screens and 16+ | Not started | Frame 7:9957; blocked if it has no 16+ checkbox |
+| 30c | API session check and explicit access | Not started | `@Public()` and the route test |
+| 30d | Test sign-in provider for e2e | Not started | |
+| 30e | Remove the dev path | Not started | Also revisits CSRF |
+| 31a | Consent tables | Not started | |
+| 31b | Minimum company tables | Not started | |
+| 32 | `GET` / `PATCH /v1/me` | Not started | |
+| 33a | Open-file limit | Not started | |
+| 33b | Disk limit | Not started | |
+| 33c | Read-only root | Not started | Optional manifest key, default false |
+| 33d | Seccomp profile | Not started | |
+| 33e | User namespaces | Not started | |
+| 33f | Kill at 100% CPU for over 60 s | Not started | |
+| 34a | Automated escape and mining probes | Not started | |
+| 34b | Manual run in staging | Not started | Owner |
+| 35a | Hint storage | Not started | |
+| 35b | `POST /v1/attempts/{id}/hint` | Not started | |
+| 35c | Hint reveal UI | Blocked | Needs a Figma frame |
+| 36a | `GET /v1/challenges` | Not started | |
+| 36b | Catalog screen | Not started | Frame 7:10962 |
+| 37a | CI check for generated `*.pb.go` | Not started | |
+| 37b | `eslint-config-next` | Not started | |
+| 37c | `play:up` on Windows | Not started | Also documents resetting a rejected dev cookie |
+| 37d | Go processes after `pnpm dev` on Windows | Not started | |
+| 38 | ADRs | Not started | |
+| 39a | Gate report | Not started | |
+| 39b | Stage 1 gate run | Not started | Owner, with 20 engineers |
+
+## Stage 2 — tasks (from architecture.md)
+
+All not started; each row is split into sub-tasks when work begins.
+
+| # | Task | Status |
+|---|---|---|
+| 40 | Production environment | Not started |
+| 41a–41c | Daily challenge (data, API, Daily without the hardcode) | Not started |
+| 42a–42b | XP and levels | Not started |
+| 43a–43b | Glicko-2 | Not started |
+| 44 | Streaks | Not started |
+| 45a–45b | Leaderboards | Not started |
+| 46a–46b | Public profile | Not started |
+| 47a–47b | Discovery modes and settings console | Not started |
+| 48 | Anonymous card and early search | Blocked: needs design partners |
+| 49a–49d | Anti-cheat (log flushing, signals, review, leak rotation) | Not started |
+| 50a–50c | Export, deletion, consent history | Not started (50c may need a Figma frame) |
+| 51 | Share cards | Not started (image blocked: needs a Figma frame) |
+| 52 | Emails and reminders | Not started |
+| 53 | Catalog of 60 challenges | Not started |
+| 54 | Google sign-in | Not started |
+| 55 | Onboarding, landing, error screens | Not started |
+| 56 | Responsive layout and PWA | Blocked: needs Figma frames (decision D5) |
+| 57a–57b | Node selection and warm pool | Not started |
+| 58 | Monitoring and analytics | Not started |
+| 59 | External pentest | Not started |
+| 60 | Public launch | Not started |
+
+## Decisions pending from the owner
+
+| # | Question | Recommendation |
+|---|---|---|
+| D1 | First track | General Linux/DevOps |
+| D2 | Order of the remaining Stage 1 work | Lifecycle fixes → challenge pipeline → logs and staging → login → hardening → hints and catalog; challenges in parallel after 23–24 |
+| D3 | Challenge authoring and review | Claude API draft → owner review against the checklist → CI |
+| D4 | shadcn/ui and Framer Motion | Drop shadcn/ui; defer Framer Motion to Stage 2, add only if CSS can't do the reward animation |
+| D5 | Resume UX, wide screens, responsive | One resume frame now; keep the 1280 rule; responsive frames before the public launch |
+| D6 | Email provider | Resend |
 
 ## Setup steps done
 
@@ -73,7 +188,7 @@ Stage 1 gate (20 engineers solve challenges; p95 start < 20 s; < 3% failed start
 | — | `apps/sandbox-engine` skeleton | #8 (merged as part of the worker stack) |
 | S7 | `apps/worker` skeleton | #8 |
 | — | `pnpm dev` runs all services (TS reload via `tsc --watch` + `node --watch`) | #9 |
-| — | Let both Go linters run in parallel (`--allow-parallel-runners`) | `fix/golangci-parallel` |
+| — | Let both Go linters run in parallel (`--allow-parallel-runners`) | #10 |
 
 Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package is created by the task that first needs it.
 
@@ -93,25 +208,38 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 - No branch protection (private repo on the free plan); Claude merges PRs with `gh` only when every check is green. Merged branches are deleted automatically.
 - Local development runs sandboxes with `runc` (architecture.md: dev uses Docker without gVisor); gVisor is verified in CI. The agent defaults to `runsc` and warns at startup otherwise.
 - Docker access through `github.com/moby/moby/api` and `client` (the maintained successor of `github.com/docker/docker`).
+- Queue contracts: the JSON Schemas in `packages/queue` are the source of truth; Go types and zod copies in `packages/shared` are hand-written and checked by a drift test (2026-10-04).
+- CSRF: writes through `/api/*` need the `x-greenbuild-request: 1` header; revisit with Auth.js (task 30e).
+- Every endpoint declares its access explicitly; public ones carry `@Public()`, are listed in architecture.md, and a route test enforces it (task 30c). Today `GET /v1/challenges/{slug}` requires the dev session.
+- Auth.js runs in `apps/web`; the API verifies a short-lived signed token behind `@CurrentUser()`. Sign-in: GitHub and email in Stage 1, Google in Stage 2. 16+ is a self-attested checkbox stored as `age_confirmed_16_at`; no date of birth.
+- Until decision D5: screens have a minimum width of 1280 px, are centered on wider windows, and nothing is clipped.
+- Private challenges for design partners are split from the 15 public Stage 1 challenges and blocked on signed partners.
 - UI follows the owner's Figma file "HotFix" exactly (layout, spacing, colors, type, states); blocks without data yet show neutral empty values, never the mock numbers; brand text is "greenbuild" (owner, 2026-10-02; also CLAUDE.md section 13).
 
 ## Open items
 
-- Found in local testing (owner, 2026-10-02): a dev session cookie the API rejects is never replaced, so the Daily page stays on its error card; the sandbox screen overflows windows wider than the 1280 px frame; `pnpm play:up` from PowerShell runs WSL's bash on Windows (Git Bash works); the Daily screen cannot reopen a running attempt (needs a design decision).
-- Task 16 runs end to end locally and in CI; the same journey still has to pass in staging once Terraform creates it.
-- Sandbox limits still to add from architecture.md: open-file limit, disk limit, read-only root where the challenge allows, seccomp profile, user namespaces.
-- `verify-challenge.sh` reads only flat manifest lines; proper parsing and a JSON schema belong to `packages/challenge-spec` with the challenge CI pipeline.
-- On Windows, stopping `pnpm dev` can leave the `go run` child binaries running (seen: an old `sandbox-agent.exe` holding port 8081). Prefer building Go apps once and running the binary in `dev`.
-- The agent's reaper is the only TTL enforcement; architecture.md also wants the agent to kill sandboxes at 100% CPU for over 60 s (not started).
-- `internal/console` implements raw mode with `golang.org/x/sys` (already a dependency) because `golang.org/x/term` could not be downloaded (golang.org blocked on this network); switch to `x/term` when it is reachable. Raw mode exists for Linux and Windows only.
-- CI does not yet check that generated `*.pb.go` match `agent.proto`; add a step that runs `generate.sh` and fails on a diff.
-- wrapcheck flags `status.Error`, which must stay unwrapped for gRPC; handled with one documented `nolint` in `agentserver.grpcError`. Adding `status.Error` to wrapcheck's ignore list would be cleaner but changes lint config (needs approval).
-- gRPC stop uses `GracefulStop`, which waits for open streams; once Exec streams exist, add a timeout and fall back to `Stop`.
-- Attach tokens are reusable until they expire (≤ 60 s); single use needs a shared jti store (Redis) once the engine runs more than one replica.
-- gVisor is pinned in CI (`GVISOR_RELEASE` in `ci.yml`); bump it deliberately in its own PR.
+Each item points to the task that resolves it, or says why it's deferred or dropped.
+
+- Found in local testing (owner, 2026-10-02):
+  - A dev session cookie the API rejects is never replaced. Dropped as a fix: the dev path goes in task 30e; until then the runbook explains how to reset the cookie (37c).
+  - The sandbox screen overflows windows wider than 1280 px: task 22.
+  - `pnpm play:up` from PowerShell runs WSL's bash: task 37c.
+  - The Daily screen cannot reopen a running attempt: 21a (API) and 21b (UI, blocked on a Figma frame).
+- Nothing publishes `sandbox.status = destroyed`, so an expired attempt stays `ready` and blocks the user with 409: task 17 (first). No idle timeout (18), no abandon (19a–19c), no `attempt.finished` (20a–20b); "Exit Attempt" is only a link to /play (19c).
+- Task 16 journey in staging: task 28h.
+- Sandbox limits still to add (open files, disk, read-only root, seccomp, user namespaces, kill at 100% CPU for over 60 s): tasks 33a–33f.
+- `verify-challenge.sh` reads only flat manifest lines: task 23c. Seed hardcodes the nginx-502 manifest: task 23d.
+- On Windows, stopping `pnpm dev` can leave `go run` child binaries running: task 37d.
+- `internal/console` uses `golang.org/x/sys` instead of `x/term`: dropped (works; revisit only if raw mode breaks).
+- CI does not check generated `*.pb.go` against `agent.proto`: task 37a.
+- wrapcheck `nolint` for `status.Error`: dropped (one documented exception is cheaper than a lint config change).
+- `GracefulStop` waits for open Exec streams: task 27.
+- Attach tokens are reusable until they expire (≤ 60 s): deferred until the engine runs a second replica (growth stage); then a jti store in Redis.
+- gVisor is pinned in CI (`GVISOR_RELEASE` in `ci.yml`): rule — bump it in its own PR; nodes use the same version (28e).
 - Run the agent integration test locally with `pnpm --filter @greenbuild/sandbox-agent test:integration` (needs Docker running).
-- Network: GitHub, npm and the Go proxy are blocked on some networks (filtered upstream, not by Windows); check connectivity before tasks that download dependencies.
-- Add `eslint-config-next` once the web app has real UI.
-- Strip tokens and passwords from logs before request or DB logging is added.
-- Agent and engine duplicate ~60 lines (config loading, health, graceful shutdown); apps cannot import each other. Revisit if a shared Go package under `packages/` becomes worthwhile.
-- Session logs: production should reach Blob Storage with managed identity instead of a connection string; the 90-day deletion (and Hot → Cool after 30 days) is a lifecycle rule for Terraform; a session's log lives in engine memory until it ends, so an engine crash loses the open sessions' logs.
+- Network: GitHub, npm and the Go proxy are blocked on some networks; check connectivity before tasks that download dependencies.
+- `eslint-config-next`: task 37b.
+- Strip tokens and passwords from logs before request or DB logging is added: tasks 26a–26b.
+- Agent and engine duplicate ~60 lines: deferred until a third Go service exists or the shared code changes twice.
+- Session logs: managed identity → 28f; 90-day deletion and Hot → Cool → 28c; logs lost on an engine crash → Stage 2 task 49a.
+- Interactive check of `cmd/sandbox-shell`: owner, 5 minutes at the next run (dev-only tool; the player journey is covered by Playwright).
