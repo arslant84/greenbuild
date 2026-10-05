@@ -134,12 +134,12 @@ greenbuild/
 │  ├─ worker/          # TypeScript: /health и публикация outbox в Redis Streams (задача 20b)
 │  └─ mobile/          # этап 4: Expo (ещё не создан)
 ├─ packages/
-│  ├─ shared/          # zod-схемы (API, очередь; манифест задания — на ветке feat/challenge-spec), ошибки, константы
+│  ├─ shared/          # zod-схемы (API, очередь, манифест задания), ошибки, константы
 │  ├─ db/              # Drizzle-схема, миграции, сид
 │  ├─ queue/           # JSON Schema сообщений очереди (источник истины) + типы Go
 │  ├─ agent-api/       # agent.proto и сгенерированный Go-код
 │  ├─ devpki/          # одноразовый CA и сертификаты для локального mTLS
-│  ├─ challenge-spec/  # валидатор и CLI заданий (на ветке feat/challenge-spec)
+│  ├─ challenge-spec/  # валидатор и CLI заданий (`pnpm challenges:validate`)
 │  ├─ ui/              # пустая заготовка; общие компоненты — когда понадобятся
 │  ├─ testkit/         # тестовые помощники: одноразовые контейнеры Docker для тестов API и worker
 │  └─ config/          # eslint, tsconfig, prettier с лимитами размера
@@ -278,7 +278,7 @@ source: human                  # human / ai / community / company
 ### Где живёт схема
 
 - **zod-схема манифеста** — `packages/shared` (правило: общие zod-схемы только там).
-- **Валидатор папки и CLI** (`pnpm challenges:validate`) — `packages/challenge-spec`. Он проверяет обязательные файлы, манифест, совпадение id с папкой и число подсказок. Сейчас он на ветке `feat/challenge-spec`, слияние — задача 23a.
+- **Валидатор папки и CLI** (`pnpm challenges:validate`) — `packages/challenge-spec`. Он проверяет обязательные файлы, манифест, совпадение id с папкой и число подсказок. Запускается в CI в задаче «Lint, typecheck, test, build» (задача 23a).
 - **JSON Schema для редакторов** генерируется из zod-схемы и проверяется в CI на расхождение (задача 23b).
 
 Сейчас манифест nginx-502 продублирован в `seed.ts`, а `verify-challenge.sh` читает только плоские строки манифеста. Оба переходят на чтение манифестов задачами 23c и 23d.

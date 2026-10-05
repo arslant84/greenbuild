@@ -13,7 +13,8 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test",
     "play:up": "bash scripts/play-stack.sh up",
-    "play:down": "bash scripts/play-stack.sh down"
+    "play:down": "bash scripts/play-stack.sh down",
+    "challenges:validate": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:validate"
   },
   "devDependencies": {
     "husky": "^9.1.7",
