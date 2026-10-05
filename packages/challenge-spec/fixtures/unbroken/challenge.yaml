@@ -1,0 +1,21 @@
+# yaml-language-server: $schema=../../challenge.schema.json
+# A deliberately bad challenge: setup.sh breaks nothing, so check.sh passes before any fix.
+# CI's "Challenges (gVisor)" job expects verify-challenge.sh to reject it.
+id: unbroken
+version: 1
+title: "Nothing is broken"
+statement: "A fixture for CI, never shown to players."
+difficulty: 1
+skills: { linux: 1 }
+time_limit_sec: 60
+resources:
+  cpu: 250m
+  memory: 128Mi
+  disk: 1Gi
+network: none
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root
+hints: 0
+source: human
