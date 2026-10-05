@@ -57,6 +57,9 @@ jobs:
 
       - run: pnpm lint
 
+      # Every challenge folder: required files, a manifest the schema accepts, id = folder, hint count.
+      - run: pnpm challenges:validate
+
       - run: pnpm typecheck
 
       - run: pnpm test
