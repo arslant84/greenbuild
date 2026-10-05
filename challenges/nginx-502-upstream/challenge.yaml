@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
 id: nginx-502-upstream
 version: 1
 title: "The site returns 502"

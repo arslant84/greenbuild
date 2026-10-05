@@ -279,7 +279,7 @@ source: human                  # human / ai / community / company
 
 - **zod-схема манифеста** — `packages/shared` (правило: общие zod-схемы только там).
 - **Валидатор папки и CLI** (`pnpm challenges:validate`) — `packages/challenge-spec`. Он проверяет обязательные файлы, манифест, совпадение id с папкой и число подсказок. Запускается в CI в задаче «Lint, typecheck, test, build» (задача 23a).
-- **JSON Schema для редакторов** генерируется из zod-схемы и проверяется в CI на расхождение (задача 23b).
+- **JSON Schema для редакторов** — `packages/challenge-spec/challenge.schema.json`, генерируется из zod-схемы командой `pnpm challenges:schema`; тест падает, если файл не перегенерирован. Первая строка `challenge.yaml` подключает её: `# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json`. Правила между полями (сумма весов навыков, порядок в `range`) проверяет только `challenges:validate`.
 
 Сейчас манифест nginx-502 продублирован в `seed.ts`, а `verify-challenge.sh` читает только плоские строки манифеста. Оба переходят на чтение манифестов задачами 23c и 23d.
 
