@@ -18,7 +18,7 @@ const NAV: NavItem[] = [
 // Figma "Hotfix — Daily Challenge" › Aside: 240 px, brand and nav on top, streak and player at the bottom.
 export function Sidebar() {
   return (
-    <aside className="fixed inset-y-0 left-0 flex w-60 flex-col justify-between border-r border-[#3c494c4d] bg-canvas p-3">
+    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col justify-between border-r border-[#3c494c4d] bg-canvas p-3">
       <div className="flex flex-col gap-5">
         <div className="flex h-[22px] items-center justify-between px-1 pt-1">
           <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] text-accent-soft">&gt;_ greenbuild</span>

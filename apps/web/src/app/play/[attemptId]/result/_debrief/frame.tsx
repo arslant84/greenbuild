@@ -12,7 +12,7 @@ interface DebriefFrameProps {
 export function DebriefFrame({ incident, outcome, children }: DebriefFrameProps) {
   return (
     <div className="min-h-screen bg-canvas">
-      <header className="sticky top-0 z-10 bg-[#131314cc] px-[280px] shadow-[0_1px_2px_rgba(0,0,0,0.05)] backdrop-blur-md">
+      <header className="sticky top-0 z-10 bg-[#131314cc] px-[max(280px,calc(50%-360px))] shadow-[0_1px_2px_rgba(0,0,0,0.05)] backdrop-blur-md">
         <div className="flex h-14 items-center justify-between px-4">
           <span className="flex items-center gap-3">
             <a href="/play" className="font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] text-accent-soft">
@@ -37,7 +37,7 @@ export function DebriefFrame({ incident, outcome, children }: DebriefFrameProps)
         </div>
       </header>
       <main className="mx-auto w-[688px] pt-8 pb-8">{children}</main>
-      <footer className="px-[280px] py-5">
+      <footer className="px-[max(280px,calc(50%-360px))] py-5">
         <div className="flex justify-between px-4">
           <span className="type-label text-ink-muted">&gt;_ GREENBUILD RECOVERY ENGINE // VERIFIED PROTOCOL</span>
           <span className="type-label text-ink-muted">NODE ID: —</span>
