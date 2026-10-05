@@ -8,6 +8,7 @@ set -euo pipefail
 # Git Bash on Windows would otherwise rewrite container paths such as /opt/greenbuild.
 export MSYS_NO_PATHCONV=1
 
+readonly ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 readonly PIDS_LIMIT=256
 # Different remainders mod 3, so seed-dependent picks (e.g. nginx-502-upstream's app_user) all get exercised.
 readonly DEFAULT_SEEDS=(1 4242 98765)
@@ -17,7 +18,6 @@ shift
 seeds=("$@")
 [ ${#seeds[@]} -gt 0 ] || seeds=("${DEFAULT_SEEDS[@]}")
 
-manifest="${challenge_dir}/challenge.yaml"
 image="greenbuild-challenge/$(basename "${challenge_dir}"):verify"
 runtime="${SANDBOX_TEST_RUNTIME:-runc}"
 container_id=""
@@ -32,16 +32,22 @@ cleanup() {
 }
 trap cleanup EXIT
 
-# Flat lines only (`  cpu: 500m`, `capabilities: [A, B]`); full parsing belongs to packages/challenge-spec.
+# The manifest as JSON from packages/challenge-spec, which refuses an invalid folder first.
+(cd "${ROOT}" && pnpm -s turbo run build --filter=@greenbuild/challenge-spec... > /dev/null)
+# node is a Windows program under Git Bash and needs its path converted, unlike docker's container paths.
+manifest_json=$(env -u MSYS_NO_PATHCONV node "${ROOT}/packages/challenge-spec/dist/inspect.js" "${challenge_dir}") || fail "${challenge_dir} is not a valid challenge"
+
+# manifest_value prints one field by dotted path; arrays come out space-separated.
 manifest_value() {
-  sed -n "s/^ *$1: *\([^ #]*\).*/\1/p" "${manifest}" | head -1
+  node -e 'const value = process.argv[2].split(".").reduce((node, key) => node[key], JSON.parse(process.argv[1]));
+console.log(Array.isArray(value) ? value.join(" ") : value);' "${manifest_json}" "$1"
 }
 
-cpu_millis=$(manifest_value cpu)
-memory=$(manifest_value memory)
+cpu_millis=$(manifest_value resources.cpu)
+memory=$(manifest_value resources.memory)
 cpus=$(awk -v m="${cpu_millis%m}" 'BEGIN { printf "%.3f", m / 1000 }')
 docker_memory="${memory%Mi}m"
-read -r -a capabilities <<< "$(sed -n 's/^capabilities: *\[\(.*\)\].*/\1/p' "${manifest}" | tr ',' ' ')"
+read -r -a capabilities <<< "$(manifest_value capabilities)"
 cap_add_flags=()
 for capability in "${capabilities[@]}"; do
   cap_add_flags+=(--cap-add "${capability}")

@@ -10,6 +10,8 @@ const HINT_HEADING = /^## Hint \d+[ \t]*$/gm;
 export interface ChallengeReport {
   id: string;
   errors: string[];
+  // Set once challenge.yaml parsed and passed the schema, with defaults filled in.
+  manifest?: ChallengeManifest;
 }
 
 type ManifestResult = { manifest: ChallengeManifest } | { errors: string[] };
@@ -26,7 +28,7 @@ export async function validateChallenge(dir: string): Promise<ChallengeReport> {
     return { id, errors: result.errors };
   }
   const errors = [...idErrors(id, result.manifest), ...(await hintErrors(dir, result.manifest))];
-  return { id, errors };
+  return { id, errors, manifest: result.manifest };
 }
 
 // validateAll checks every folder directly under root, in name order.

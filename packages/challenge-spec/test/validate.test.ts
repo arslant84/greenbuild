@@ -40,7 +40,7 @@ afterEach(async () => {
 
 describe("validateChallenge", () => {
   it("accepts a complete challenge folder", async () => {
-    expect(await validateChallenge(await challengeDir("disk-full"))).toEqual({ id: "disk-full", errors: [] });
+    expect(await validateChallenge(await challengeDir("disk-full"))).toMatchObject({ id: "disk-full", errors: [] });
   });
 
   it("names every missing file", async () => {
@@ -76,5 +76,12 @@ describe("validateAll", () => {
     const reports = await validateAll(REPO_CHALLENGES);
     expect(reports.length).toBeGreaterThan(0);
     expect(reports.filter((report) => report.errors.length > 0)).toEqual([]);
+  });
+});
+
+describe("the report of a valid folder", () => {
+  it("carries the manifest with defaults filled in", async () => {
+    const { manifest } = await validateChallenge(await challengeDir("disk-full"));
+    expect(manifest).toMatchObject({ id: "disk-full", resources: { cpu: "250m", memory: "256Mi" }, capabilities: [], randomize: {} });
   });
 });
