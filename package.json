@@ -14,7 +14,8 @@
     "test": "turbo run test",
     "play:up": "bash scripts/play-stack.sh up",
     "play:down": "bash scripts/play-stack.sh down",
-    "challenges:validate": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:validate"
+    "challenges:validate": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:validate",
+    "challenges:schema": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:schema"
   },
   "devDependencies": {
     "husky": "^9.1.7",

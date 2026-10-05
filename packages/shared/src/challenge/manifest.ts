@@ -10,7 +10,8 @@ const SKILL = /^[a-z0-9]+(_[a-z0-9]+)*$/;
 const RANDOMIZE_KEY = /^[a-z][a-z0-9_]*$/;
 const CPU = /^(\d+m|\d+(\.\d+)?)$/;
 const QUANTITY = /^\d+(Mi|Gi)$/;
-const CHECK_DIR = "/opt/greenbuild/";
+// A pattern rather than startsWith, so the JSON Schema for editors gets a standard keyword.
+const CHECK_COMMAND = /^\/opt\/greenbuild\//;
 const TITLE_MAX_LENGTH = 80;
 const STATEMENT_MAX_LENGTH = 500;
 const TIME_LIMIT_MIN_SEC = 60;
@@ -48,7 +49,7 @@ export const challengeManifestSchema = z.strictObject({
     .default([]),
   randomize: z.record(z.string().regex(RANDOMIZE_KEY), randomizeValueSchema).default({}),
   check: z.strictObject({
-    command: z.string().startsWith(CHECK_DIR),
+    command: z.string().regex(CHECK_COMMAND),
     timeout_sec: z.number().int().min(1).max(CHECK_TIMEOUT_MAX_SEC),
     run_as: z.literal("root"),
   }),

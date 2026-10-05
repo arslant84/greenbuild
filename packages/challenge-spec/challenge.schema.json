@@ -1,0 +1,200 @@
+{
+  "title": "greenbuild challenge.yaml",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$"
+    },
+    "version": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80
+    },
+    "statement": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 500
+    },
+    "difficulty": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 10
+    },
+    "skills": {
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(_[a-z0-9]+)*$"
+      },
+      "additionalProperties": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 1
+      }
+    },
+    "time_limit_sec": {
+      "type": "integer",
+      "minimum": 60,
+      "maximum": 7200
+    },
+    "resources": {
+      "type": "object",
+      "properties": {
+        "cpu": {
+          "type": "string",
+          "pattern": "^(\\d+m|\\d+(\\.\\d+)?)$"
+        },
+        "memory": {
+          "type": "string",
+          "pattern": "^\\d+(Mi|Gi)$"
+        },
+        "disk": {
+          "type": "string",
+          "pattern": "^\\d+(Mi|Gi)$"
+        }
+      },
+      "required": [
+        "cpu",
+        "memory",
+        "disk"
+      ],
+      "additionalProperties": false
+    },
+    "network": {
+      "type": "string",
+      "const": "none"
+    },
+    "capabilities": {
+      "default": [],
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "CHOWN",
+          "DAC_OVERRIDE",
+          "FOWNER",
+          "KILL",
+          "NET_BIND_SERVICE",
+          "SETGID",
+          "SETUID"
+        ]
+      }
+    },
+    "randomize": {
+      "default": {},
+      "type": "object",
+      "propertyNames": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "range": {
+                "type": "array",
+                "prefixItems": [
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                  }
+                ],
+                "items": false,
+                "minItems": 2,
+                "maxItems": 2
+              }
+            },
+            "required": [
+              "range"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "pick": {
+                "minItems": 2,
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            },
+            "required": [
+              "pick"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      }
+    },
+    "check": {
+      "type": "object",
+      "properties": {
+        "command": {
+          "type": "string",
+          "pattern": "^\\/opt\\/greenbuild\\/"
+        },
+        "timeout_sec": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60
+        },
+        "run_as": {
+          "type": "string",
+          "const": "root"
+        }
+      },
+      "required": [
+        "command",
+        "timeout_sec",
+        "run_as"
+      ],
+      "additionalProperties": false
+    },
+    "hints": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 3
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "human",
+        "ai",
+        "community",
+        "company"
+      ]
+    }
+  },
+  "required": [
+    "id",
+    "version",
+    "title",
+    "statement",
+    "difficulty",
+    "skills",
+    "time_limit_sec",
+    "resources",
+    "network",
+    "check",
+    "hints",
+    "source"
+  ],
+  "additionalProperties": false
+}
