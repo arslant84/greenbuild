@@ -16,15 +16,18 @@ export const dynamic = "force-dynamic";
 export default async function DailyPage() {
   const card = await apiGet(`/v1/challenges/${TODAYS_CHALLENGE}`, challengeCardSchema);
   return (
-    <div className="min-h-screen bg-canvas pl-60">
-      <Sidebar />
-      <div className="flex w-[1040px] justify-between pb-8">
-        <main className="flex w-[760px] flex-col gap-5 px-3 pt-5">
-          <StatusBar />
-          {card ? <ChallengeCard card={card} /> : <ServiceError />}
-          <RecentAttempts />
-        </main>
-        <RightAside />
+    <div className="min-h-screen bg-canvas">
+      {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
+      <div className="mx-auto flex w-[1280px]">
+        <Sidebar />
+        <div className="flex w-[1040px] justify-between pb-8">
+          <main className="flex w-[760px] flex-col gap-5 px-3 pt-5">
+            <StatusBar />
+            {card ? <ChallengeCard card={card} /> : <ServiceError />}
+            <RecentAttempts />
+          </main>
+          <RightAside />
+        </div>
       </div>
     </div>
   );
