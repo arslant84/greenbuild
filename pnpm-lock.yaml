@@ -238,6 +238,9 @@ importers:
 
   packages/db:
     dependencies:
+      '@greenbuild/challenge-spec':
+        specifier: workspace:*
+        version: link:../challenge-spec
       '@greenbuild/shared':
         specifier: workspace:*
         version: link:../shared
