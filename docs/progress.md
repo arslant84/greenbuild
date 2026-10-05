@@ -85,10 +85,10 @@ Order follows the recommendation for decision D2. "Blocked" means the task waits
 | 23d | Seed reads every manifest | Done | `seedChallenges(db, challengesDir = challenges/)` validates every folder with `packages/challenge-spec` (an invalid one stops the seed before anything is written) and adds each challenge and each version it does not have yet: the parsed manifest as `spec_json`, `greenbuild-challenge/<id>:dev` as the image, the SHA-256 of `check.sh`. A version already in the database whose `check.sh` or manifest differs stops the seed: "<id> version N is published and its <file> changed; create version N+1". The hardcoded nginx-502 manifest, hash and image constants are gone; the API's two manifest unit tests use their own fixture (`apps/api/src/testing/manifest-fixture.ts`). A fresh CI database has nothing to compare against, so a test still pins nginx-502 v1's checker hash. Hints are not compared yet (they are stored from task 35a). Tests: seeding twice adds one version; a changed checker and a changed manifest are refused (both fail without the guard); an invalid folder writes nothing; db 21/21, API 82/82 |
 | 23e | CI job "Challenges (gVisor)" | Done | New job (pre-approved as a plan task): installs the pinned gVisor, then runs `verify-challenge.sh` under runsc (setup breaks it, check fails, solution fixes it, check passes; 3 seeds) for the folders `.github/scripts/changed-challenges.sh` lists: on a PR the changed `challenges/*` folders, or all of them when `verify-challenge.sh` or `packages/challenge-spec` changed; on main all of them. It first runs the fixture `packages/challenge-spec/fixtures/unbroken` (valid, but setup breaks nothing) and requires the rejection "check passes before the fix", so the job is proven able to fail. The fixture sits outside `challenges/`, so it is never validated as a real challenge, seeded or verified as one. Locally (runc): the fixture is rejected with that message; the selection script picks nginx-502 for commits touching its folder or the verify script, and nothing for unrelated commits |
 | 23f | Play stack builds every challenge image | Not started | |
-| 24 | Challenge authoring flow | Blocked | Decision D3 |
-| 25a–25e | Challenges, batch 1 (5) | Blocked | Decision D1; needs 23 and 24 |
-| 25f–25j | Challenges, batch 2 (5) | Blocked | Decision D1 |
-| 25k–25n | Challenges, batch 3 (4) | Blocked | Decision D1 |
+| 24 | Challenge authoring flow | Not started | D3 decided: automatic |
+| 25a–25e | Challenges, batch 1 (5) | Not started | D1 decided: Linux/DevOps; needs 23 and 24 |
+| 25f–25j | Challenges, batch 2 (5) | Not started | D1 decided: Linux/DevOps; needs 23 and 24 |
+| 25k–25n | Challenges, batch 3 (4) | Not started | D1 decided: Linux/DevOps; needs 23 and 24 |
 | 26a | Structured logs with redaction (TypeScript) | Not started | |
 | 26b | Structured logs with redaction (Go) | Not started | |
 | 27 | gRPC shutdown timeout | Not started | |
@@ -164,9 +164,9 @@ All not started; each row is split into sub-tasks when work begins.
 
 | # | Question | Recommendation |
 |---|---|---|
-| D1 | First track | General Linux/DevOps |
+| D1 | First track | **Decided (owner, 2026-10-05): general Linux/DevOps** |
 | D2 | Order of the remaining Stage 1 work | Lifecycle fixes → challenge pipeline → logs and staging → login → hardening → hints and catalog; challenges in parallel after 23–24 |
-| D3 | Challenge authoring and review | Claude API draft → owner review against the checklist → CI |
+| D3 | Challenge authoring and review | **Decided (owner, 2026-10-05): automatic, no human review.** A challenge is accepted when the automated checks pass (validator, gVisor solvability, the checklist items task 24 can automate); the rest relies on the author, with the Stage 1 gate as the first real feedback |
 | D4 | shadcn/ui and Framer Motion | Drop shadcn/ui; defer Framer Motion to Stage 2, add only if CSS can't do the reward animation |
 | D5 | Resume UX, wide screens, responsive | Wide screens decided (2026-10-05, task 22). Still open: one resume frame now; responsive frames before the public launch |
 | D6 | Email provider | Resend |
