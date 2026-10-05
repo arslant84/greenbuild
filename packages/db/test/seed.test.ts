@@ -1,16 +1,37 @@
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
-import { describe, expect, it } from "vitest";
+import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { afterAll, describe, expect, it } from "vitest";
 import { challenges, challengeVersions } from "../src/schema/index.js";
-import { NGINX_502_CHECKER_HASH, NGINX_502_SPEC, seedChallenges } from "../src/seed.js";
+import { seedChallenges } from "../src/seed.js";
 import { useMigratedDatabase } from "./migrated.js";
 
-const CHALLENGE_DIR = new URL("../../../challenges/nginx-502-upstream/", import.meta.url);
+const NGINX_502 = fileURLToPath(new URL("../../../challenges/nginx-502-upstream/", import.meta.url));
+// nginx-502 version 1 is published: its checker must never change (a fix is a new version).
+const NGINX_502_V1_CHECKER = "sha256:576ad185af44d968dd2b52e6cba69a1a427e78b07fd3010f4d12d3c82ee95061";
+
+const roots: string[] = [];
+afterAll(async () => {
+  await Promise.all(roots.map((root) => rm(root, { recursive: true, force: true })));
+});
+
+// challengesWith copies nginx-502 into a fresh challenges folder under another id.
+async function challengesWith(id: string): Promise<{ root: string; dir: string }> {
+  const root = await mkdtemp(join(tmpdir(), "seed-"));
+  roots.push(root);
+  const dir = join(root, id);
+  await cp(NGINX_502, dir, { recursive: true });
+  const manifest = await readFile(join(dir, "challenge.yaml"), "utf8");
+  await writeFile(join(dir, "challenge.yaml"), manifest.replace(/^id: .*$/m, `id: ${id}`));
+  return { root, dir };
+}
 
 describe("seedChallenges on a migrated database", () => {
   const database = useMigratedDatabase();
 
-  it("adds nginx-502 version 1 once, however often it runs", async () => {
+  it("adds every challenge in challenges/ once, however often it runs", async () => {
     const { db } = database();
     await seedChallenges(db);
     await seedChallenges(db);
@@ -19,24 +40,43 @@ describe("seedChallenges on a migrated database", () => {
     const versions = await db.select().from(challengeVersions);
     expect(rows.map((row) => [row.slug, row.status, row.difficulty])).toEqual([["nginx-502-upstream", "live", 4]]);
     expect(versions).toHaveLength(1);
-    expect(versions[0]).toMatchObject({ challengeId: rows[0]?.id, version: 1, checkerHash: NGINX_502_CHECKER_HASH, source: "human" });
-    expect(versions[0]?.specJson).toEqual(NGINX_502_SPEC);
+    expect(versions[0]).toMatchObject({ version: 1, checkerHash: NGINX_502_V1_CHECKER, imageRef: "greenbuild-challenge/nginx-502-upstream:dev", source: "human" });
+    expect(versions[0]?.specJson).toMatchObject({ id: "nginx-502-upstream", time_limit_sec: 900, capabilities: ["CHOWN", "SETUID", "SETGID"] });
+  });
+
+  it("refuses a published version whose checker changed", async () => {
+    const { db } = database();
+    const { root, dir } = await challengesWith("checker-changed");
+    await seedChallenges(db, root);
+    await writeFile(join(dir, "check.sh"), "#!/bin/sh\nexit 0\n");
+
+    await expect(seedChallenges(db, root)).rejects.toThrow("checker-changed version 1 is published and its check.sh changed; create version 2");
+  });
+
+  it("refuses a published version whose manifest changed", async () => {
+    const { db } = database();
+    const { root, dir } = await challengesWith("manifest-changed");
+    await seedChallenges(db, root);
+    const manifest = await readFile(join(dir, "challenge.yaml"), "utf8");
+    await writeFile(join(dir, "challenge.yaml"), manifest.replace("time_limit_sec: 900", "time_limit_sec: 600"));
+
+    await expect(seedChallenges(db, root)).rejects.toThrow("manifest-changed version 1 is published and its challenge.yaml changed; create version 2");
+  });
+
+  it("refuses an invalid challenge folder before writing anything", async () => {
+    const { db } = database();
+    const { root, dir } = await challengesWith("broken");
+    await rm(join(dir, "check.sh"));
+
+    await expect(seedChallenges(db, root)).rejects.toThrow("broken: check.sh is missing");
+    expect((await db.select().from(challenges)).map((row) => row.slug)).not.toContain("broken");
   });
 });
 
-describe("the nginx-502 seed matches the challenge folder", () => {
-  it("has the hash of the published check.sh", async () => {
-    const checker = await readFile(new URL("check.sh", CHALLENGE_DIR));
+describe("published nginx-502 version 1", () => {
+  it("keeps its checker", async () => {
+    const checker = await readFile(join(NGINX_502, "check.sh"));
 
-    expect(`sha256:${createHash("sha256").update(checker).digest("hex")}`).toBe(NGINX_502_CHECKER_HASH);
-  });
-
-  it("has the manifest's id, version, difficulty and time limit", async () => {
-    const manifest = await readFile(new URL("challenge.yaml", CHALLENGE_DIR), "utf8");
-
-    expect(manifest).toMatch(new RegExp(`^id: ${NGINX_502_SPEC.id}$`, "m"));
-    expect(manifest).toMatch(new RegExp(`^version: ${NGINX_502_SPEC.version}$`, "m"));
-    expect(manifest).toMatch(new RegExp(`^difficulty: ${NGINX_502_SPEC.difficulty}\\b`, "m"));
-    expect(manifest).toMatch(new RegExp(`^time_limit_sec: ${NGINX_502_SPEC.time_limit_sec}$`, "m"));
+    expect(`sha256:${createHash("sha256").update(checker).digest("hex")}`).toBe(NGINX_502_V1_CHECKER);
   });
 });

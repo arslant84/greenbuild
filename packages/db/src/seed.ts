@@ -1,59 +1,86 @@
+import { createHash } from "node:crypto";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { isDeepStrictEqual } from "node:util";
+import { validateAll } from "@greenbuild/challenge-spec";
+import type { ChallengeManifest } from "@greenbuild/shared";
 import { and, eq } from "drizzle-orm";
 import { connect, type Database } from "./client.js";
 import { loadDatabaseUrl } from "./config.js";
 import { challenges, challengeVersions } from "./schema/index.js";
 
-// From challenges/nginx-502-upstream/challenge.yaml until packages/challenge-spec parses manifests.
-export const NGINX_502_SPEC = {
-  id: "nginx-502-upstream",
-  version: 1,
-  title: "The site returns 502",
-  statement: "Users see 502 Bad Gateway. Bring the site back.",
-  difficulty: 4,
-  skills: { linux: 0.4, nginx: 0.6 },
-  time_limit_sec: 900,
-  resources: { cpu: "500m", memory: "512Mi", disk: "1Gi" },
-  network: "none",
-  capabilities: ["CHOWN", "SETUID", "SETGID"],
-  randomize: { app_port: { range: [3000, 3999] }, app_user: { pick: ["svc", "webapp", "runner"] } },
-  check: { command: "/opt/greenbuild/check.sh", timeout_sec: 20, run_as: "root" },
-  hints: 3,
-  source: "human",
-} as const;
+const CHALLENGES_DIR = fileURLToPath(new URL("../../../challenges", import.meta.url));
 
-// SHA-256 of check.sh as published in version 1; a test fails if the file changes without a new version.
-export const NGINX_502_CHECKER_HASH = "sha256:576ad185af44d968dd2b52e6cba69a1a427e78b07fd3010f4d12d3c82ee95061";
-// The image cmd/dev-attempt starts locally; the challenge pipeline will write registry digests.
-export const NGINX_502_DEV_IMAGE = "greenbuild-challenge/nginx-502-upstream:dev";
+interface SeedChallenge {
+  manifest: ChallengeManifest;
+  checkerHash: string;
+}
 
-// seedChallenges adds nginx-502 and its version 1; running it again changes nothing.
-export async function seedChallenges(db: Database): Promise<void> {
+// seedChallenges adds every challenge folder in challengesDir and each version it does not have yet;
+// running it again changes nothing. A published version is never changed: if its manifest or
+// checker differs from the folder, the seed stops and asks for a new version.
+export async function seedChallenges(db: Database, challengesDir = CHALLENGES_DIR): Promise<void> {
+  const reports = await validateAll(challengesDir);
+  const problems = reports.flatMap((report) => report.errors.map((error) => `${report.id}: ${error}`));
+  if (problems.length > 0) {
+    throw new Error(`seed: invalid challenges:\n${problems.join("\n")}`);
+  }
+  for (const report of reports) {
+    if (report.manifest) {
+      await seedChallenge(db, { manifest: report.manifest, checkerHash: await checkerHash(join(challengesDir, report.id)) });
+    }
+  }
+}
+
+async function seedChallenge(db: Database, { manifest, checkerHash }: SeedChallenge): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
       .insert(challenges)
-      .values({ slug: NGINX_502_SPEC.id, title: NGINX_502_SPEC.title, difficulty: NGINX_502_SPEC.difficulty, status: "live" })
+      .values({ slug: manifest.id, title: manifest.title, difficulty: manifest.difficulty, status: "live" })
       .onConflictDoNothing({ target: challenges.slug });
-    const [challenge] = await tx.select({ id: challenges.id }).from(challenges).where(eq(challenges.slug, NGINX_502_SPEC.id));
+    const [challenge] = await tx.select({ id: challenges.id }).from(challenges).where(eq(challenges.slug, manifest.id));
     if (!challenge) {
-      throw new Error(`seed: challenge ${NGINX_502_SPEC.id} is missing after insert`);
+      throw new Error(`seed: challenge ${manifest.id} is missing after insert`);
     }
-    const existing = await tx
-      .select({ id: challengeVersions.id })
+    const [published] = await tx
+      .select({ specJson: challengeVersions.specJson, checkerHash: challengeVersions.checkerHash })
       .from(challengeVersions)
-      .where(and(eq(challengeVersions.challengeId, challenge.id), eq(challengeVersions.version, NGINX_502_SPEC.version)));
-    if (existing.length > 0) {
+      .where(and(eq(challengeVersions.challengeId, challenge.id), eq(challengeVersions.version, manifest.version)));
+    if (published) {
+      refuseChanges(manifest, checkerHash, published);
       return;
     }
     await tx.insert(challengeVersions).values({
       challengeId: challenge.id,
-      version: NGINX_502_SPEC.version,
-      specJson: NGINX_502_SPEC,
-      imageRef: NGINX_502_DEV_IMAGE,
-      checkerHash: NGINX_502_CHECKER_HASH,
-      source: NGINX_502_SPEC.source,
+      version: manifest.version,
+      specJson: manifest,
+      imageRef: `greenbuild-challenge/${manifest.id}:dev`,
+      checkerHash,
+      source: manifest.source,
     });
   });
+}
+
+function refuseChanges(manifest: ChallengeManifest, checkerHash: string, published: { specJson: unknown; checkerHash: string }): void {
+  const changed = changedFile(manifest, checkerHash, published);
+  if (changed) {
+    throw new Error(`seed: ${manifest.id} version ${manifest.version} is published and its ${changed} changed; create version ${manifest.version + 1}`);
+  }
+}
+
+function changedFile(manifest: ChallengeManifest, checkerHash: string, published: { specJson: unknown; checkerHash: string }): string | null {
+  if (published.checkerHash !== checkerHash) {
+    return "check.sh";
+  }
+  if (!isDeepStrictEqual(published.specJson, manifest)) {
+    return "challenge.yaml";
+  }
+  return null;
+}
+
+async function checkerHash(dir: string): Promise<string> {
+  return `sha256:${createHash("sha256").update(await readFile(join(dir, "check.sh"))).digest("hex")}`;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

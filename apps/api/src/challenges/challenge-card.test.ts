@@ -1,8 +1,8 @@
-import { NGINX_502_SPEC } from "@greenbuild/db";
+import { MANIFEST_FIXTURE } from "../testing/manifest-fixture.js";
 import { describe, expect, it } from "vitest";
 import { challengeCard } from "./challenge-card.js";
 
-const version = { id: "v", version: 1, imageRef: "img", specJson: NGINX_502_SPEC };
+const version = { id: "v", version: 1, imageRef: "img", specJson: MANIFEST_FIXTURE };
 
 describe("challengeCard", () => {
   it("shows what the player needs from the nginx-502 manifest", () => {
@@ -18,6 +18,6 @@ describe("challengeCard", () => {
   });
 
   it("refuses a manifest without a statement", () => {
-    expect(() => challengeCard("x", { ...version, specJson: { ...NGINX_502_SPEC, statement: undefined } })).toThrow();
+    expect(() => challengeCard("x", { ...version, specJson: { ...MANIFEST_FIXTURE, statement: undefined } })).toThrow();
   });
 });
