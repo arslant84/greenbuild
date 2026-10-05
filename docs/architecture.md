@@ -293,7 +293,7 @@ source: human                  # human / ai / community / company
 6. После слияния образ пушится в Azure Container Registry, сид записывает версию с digest образа (задача 28g).
 7. Модератор переводит статус в `live`.
 
-Сейчас шаги 2–4 выполняются вручную скриптом `verify-challenge.sh` и не входят в CI (задача 23e); шаг 6 работает только локально (`pnpm play:up`).
+Шаги 2–4 выполняет CI: `challenges:validate` в основной задаче и `verify-challenge.sh` под gVisor в задаче «Challenges (gVisor)» — для папок, изменённых в PR (для всех — на main или если изменились сам скрипт или валидатор). Та же задача проверяет, что намеренно несломанная фикстура `packages/challenge-spec/fixtures/unbroken` отклоняется. Шаг 6 работает только локально (`pnpm play:up`).
 
 ### Поток создания заданий
 
@@ -641,7 +641,7 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`; OpenAPI из 
 4. **Ручное подтверждение**: деплой в prod через ревизии Container Apps (откат одним действием).
 5. **Terraform**: `plan` в PR, `apply` только после merge и ручного подтверждения.
 
-**Сейчас:** на PR выполняются lint, typecheck, unit-тесты, build, проверка размера PR, «Sandbox integration (gVisor)» и «Slice e2e (Playwright)». CI-задач для заданий (23e), Terraform (28a) и деплоя в staging (28g) ещё нет.
+**Сейчас:** на PR выполняются lint, typecheck, unit-тесты, build, проверка размера PR, «Sandbox integration (gVisor)», «Challenges (gVisor)» и «Slice e2e (Playwright)»; `challenges:validate` — в основной задаче. CI-задач для Terraform (28a) и деплоя в staging (28g) ещё нет.
 
 ## Холодный старт
 

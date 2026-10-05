@@ -95,6 +95,50 @@ jobs:
         env:
           SANDBOX_TEST_RUNTIME: runsc
 
+  challenges:
+    name: Challenges (gVisor)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      # Same pinned release as the sandbox integration job.
+      GVISOR_RELEASE: "20260928"
+      SANDBOX_TEST_RUNTIME: runsc
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: bash .github/scripts/install-gvisor.sh "$GVISOR_RELEASE"
+
+      # A challenge whose setup breaks nothing must be rejected, so this job can fail at all.
+      - name: Reject the unbroken fixture
+        run: |
+          if bash challenges/verify-challenge.sh packages/challenge-spec/fixtures/unbroken 1 > fixture.log 2>&1; then
+            cat fixture.log
+            echo "::error::the unbroken fixture passed verification"
+            exit 1
+          fi
+          grep "check passes before the fix" fixture.log
+
+      # setup.sh breaks the environment, check.sh fails, solution.sh fixes it, check.sh passes; three seeds each.
+      - name: Verify changed challenges
+        run: |
+          for dir in $(bash .github/scripts/changed-challenges.sh "$BASE_SHA"); do
+            bash challenges/verify-challenge.sh "$dir"
+          done
+        env:
+          # Empty on pushes to main, which verifies every challenge.
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
   slice-e2e:
     name: Slice e2e (Playwright)
     runs-on: ubuntu-latest
