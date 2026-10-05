@@ -55,7 +55,8 @@ async function seedChallenge(db: Database, { manifest, checkerHash }: SeedChalle
       challengeId: challenge.id,
       version: manifest.version,
       specJson: manifest,
-      imageRef: `greenbuild-challenge/${manifest.id}:dev`,
+      // The tag pnpm play:up builds; task 28g switches to registry digests.
+      imageRef: `greenbuild-challenge/${manifest.id}:${manifest.version}`,
       checkerHash,
       source: manifest.source,
     });
