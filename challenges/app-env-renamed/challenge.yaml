@@ -11,8 +11,9 @@ resources:
   memory: 512Mi
   disk: 1Gi
 network: none            # none | allowlist
-# nginx chowns its cache at start; nginx workers and the app switch users; root writes the app's log, as on a server.
-capabilities: [CHOWN, DAC_OVERRIDE, SETUID, SETGID]
+# nginx chowns its cache at start; nginx workers and the app switch users; root writes the app's log and
+# signals the app's process (appctl status and stop), as on a server.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
 randomize:               # applied by setup.sh from the attempt seed
   app: { pick: [orders, billing, catalog] }
   app_user: { pick: [svc, appsvc, runner] }
