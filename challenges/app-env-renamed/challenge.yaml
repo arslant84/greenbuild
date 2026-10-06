@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
 id: app-env-renamed
-version: 1
+version: 2
 title: "The app will not start after the upgrade"
 statement: "After last night's upgrade to version 2.0 the app does not start and the site answers 502. Bring it back."
 difficulty: 3            # 1–10
