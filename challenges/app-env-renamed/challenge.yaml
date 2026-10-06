@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
 id: app-env-renamed
-version: 1
+version: 2
 title: "The app will not start after the upgrade"
 statement: "After last night's upgrade to version 2.0 the app does not start and the site answers 502. Bring it back."
 difficulty: 3            # 1–10
@@ -11,8 +11,9 @@ resources:
   memory: 512Mi
   disk: 1Gi
 network: none            # none | allowlist
-# nginx chowns its cache at start; nginx workers and the app switch users; root writes the app's log, as on a server.
-capabilities: [CHOWN, DAC_OVERRIDE, SETUID, SETGID]
+# nginx chowns its cache at start; nginx workers and the app switch users; root writes the app's log and
+# signals the app's process (appctl status and stop), as on a server.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
 randomize:               # applied by setup.sh from the attempt seed
   app: { pick: [orders, billing, catalog] }
   app_user: { pick: [svc, appsvc, runner] }

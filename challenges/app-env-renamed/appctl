@@ -8,8 +8,10 @@ env_file="/etc/$APP/$APP.env"
 log="/var/log/$APP/$APP.log"
 pidfile="/run/$APP.pid"
 
+# A process that exited but was never reaped shows state Z (PID 1 here is not an init): not running.
 running() {
-  [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2> /dev/null
+  [ -f "$pidfile" ] || return 1
+  ps -o pid,stat | awk -v pid="$(cat "$pidfile")" '$1 == pid && $2 !~ /^Z/ { found = 1 } END { exit !found }'
 }
 
 start() {
