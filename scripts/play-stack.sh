@@ -10,7 +10,6 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 PLAY="$ROOT/.play"
 COMPOSE=(docker compose -f "$ROOT/infra/docker/play-stack.compose.yaml")
-CHALLENGE_IMAGE="greenbuild-challenge/nginx-502-upstream:dev"
 READY_TIMEOUT_S=120
 # Defaults match each service's own defaults; override them to run next to another local stack.
 WEB_PORT="${PLAY_WEB_PORT:-3001}"
@@ -35,12 +34,24 @@ secrets() {
 }
 
 build() {
-  log "building agent, engine, certificates and the nginx-502 image"
+  log "building agent, engine and certificates"
   (cd "$ROOT/apps/sandbox-agent" && go build -o "$PLAY/bin/sandbox-agent" ./cmd/sandbox-agent && go run ./cmd/devcerts -out "$PLAY/certs" >/dev/null)
   (cd "$ROOT/apps/sandbox-engine" && go build -o "$PLAY/bin/sandbox-engine" ./cmd/sandbox-engine)
-  docker build -q -t "$CHALLENGE_IMAGE" "$ROOT/challenges/nginx-502-upstream" >/dev/null
   log "building the API and the database package"
   (cd "$ROOT" && pnpm --filter "@greenbuild/api..." build >/dev/null)
+  challenge_images
+}
+
+# challenge_images builds every challenge as greenbuild-challenge/<id>:<version>, the image the
+# seed records for that version; the version comes from the validated manifest.
+challenge_images() {
+  local dir id version
+  for dir in "$ROOT"/challenges/*/; do
+    id="$(basename "$dir")"
+    version="$(node "$ROOT/packages/challenge-spec/dist/inspect.js" "$dir" | node -e 'console.log(JSON.parse(require("fs").readFileSync(0, "utf8")).version)')"
+    log "building challenge $id version $version"
+    docker build -q -t "greenbuild-challenge/$id:$version" "$dir" >/dev/null
+  done
 }
 
 database() {

@@ -40,7 +40,7 @@ describe("seedChallenges on a migrated database", () => {
     const versions = await db.select().from(challengeVersions);
     expect(rows.map((row) => [row.slug, row.status, row.difficulty])).toEqual([["nginx-502-upstream", "live", 4]]);
     expect(versions).toHaveLength(1);
-    expect(versions[0]).toMatchObject({ version: 1, checkerHash: NGINX_502_V1_CHECKER, imageRef: "greenbuild-challenge/nginx-502-upstream:dev", source: "human" });
+    expect(versions[0]).toMatchObject({ version: 1, checkerHash: NGINX_502_V1_CHECKER, imageRef: "greenbuild-challenge/nginx-502-upstream:1", source: "human" });
     expect(versions[0]?.specJson).toMatchObject({ id: "nginx-502-upstream", time_limit_sec: 900, capabilities: ["CHOWN", "SETUID", "SETGID"] });
   });
 

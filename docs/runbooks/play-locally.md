@@ -15,7 +15,7 @@ pnpm play:down    # stops everything
 
 Then open <http://localhost:3001>. A dev session starts on the first visit. Press **Start Challenge**, wait for the sandbox, fix the site in the terminal and press **Check Solution** (or Cmd/Ctrl+Enter). The result opens from the scorecard's link.
 
-The first `play:up` builds the Go binaries, the dev certificates, the nginx-502 image and the API, which takes a few minutes; later runs are faster.
+The first `play:up` builds the Go binaries, the dev certificates, the API and one image per challenge (`greenbuild-challenge/<id>:<version>`), which takes a few minutes; later runs are faster.
 
 ## What it sets up
 
