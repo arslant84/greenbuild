@@ -1,0 +1,48 @@
+#!/bin/sh
+# appctl start|stop|restart|status: runs the company app named in /etc/appctl.conf as its own user,
+# with the settings from its environment file.
+set -u
+
+. /etc/appctl.conf
+env_file="/etc/$APP/$APP.env"
+log="/var/log/$APP/$APP.log"
+pidfile="/run/$APP.pid"
+
+running() {
+  [ -f "$pidfile" ] && kill -0 "$(cat "$pidfile")" 2> /dev/null
+}
+
+start() {
+  if running; then
+    echo "$APP is already running"
+    return 0
+  fi
+  set -a
+  . "$env_file"
+  set +a
+  if [ -z "${LISTEN_PORT:-}" ]; then
+    echo "$(date -Iseconds) fatal: LISTEN_PORT is not set; refusing to start" >> "$log"
+    echo "$APP failed to start; see $log" >&2
+    return 1
+  fi
+  su -s /bin/sh "$APP_USER" -c "exec httpd -f -v -p 127.0.0.1:$LISTEN_PORT -h /srv/$APP/www" >> "$log" 2>&1 &
+  echo $! > "$pidfile"
+  echo "$(date -Iseconds) $APP $VERSION listening on 127.0.0.1:$LISTEN_PORT" >> "$log"
+  echo "$APP started"
+}
+
+stop() {
+  if running; then
+    kill "$(cat "$pidfile")"
+  fi
+  rm -f "$pidfile"
+  echo "$APP stopped"
+}
+
+case "${1:-}" in
+  start) start ;;
+  stop) stop ;;
+  restart) stop && start ;;
+  status) if running; then echo "$APP is running"; else echo "$APP is stopped"; exit 3; fi ;;
+  *) echo "usage: appctl start|stop|restart|status" >&2; exit 2 ;;
+esac
