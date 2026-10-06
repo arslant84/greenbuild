@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { cp, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -8,7 +8,8 @@ import { challenges, challengeVersions } from "../src/schema/index.js";
 import { seedChallenges } from "../src/seed.js";
 import { useMigratedDatabase } from "./migrated.js";
 
-const NGINX_502 = fileURLToPath(new URL("../../../challenges/nginx-502-upstream/", import.meta.url));
+const CHALLENGES = fileURLToPath(new URL("../../../challenges/", import.meta.url));
+const NGINX_502 = join(CHALLENGES, "nginx-502-upstream");
 // nginx-502 version 1 is published: its checker must never change (a fix is a new version).
 const NGINX_502_V1_CHECKER = "sha256:576ad185af44d968dd2b52e6cba69a1a427e78b07fd3010f4d12d3c82ee95061";
 
@@ -36,12 +37,16 @@ describe("seedChallenges on a migrated database", () => {
     await seedChallenges(db);
     await seedChallenges(db);
 
+    const folders = (await readdir(CHALLENGES, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name);
     const rows = await db.select().from(challenges);
     const versions = await db.select().from(challengeVersions);
-    expect(rows.map((row) => [row.slug, row.status, row.difficulty])).toEqual([["nginx-502-upstream", "live", 4]]);
-    expect(versions).toHaveLength(1);
-    expect(versions[0]).toMatchObject({ version: 1, checkerHash: NGINX_502_V1_CHECKER, imageRef: "greenbuild-challenge/nginx-502-upstream:1", source: "human" });
-    expect(versions[0]?.specJson).toMatchObject({ id: "nginx-502-upstream", time_limit_sec: 900, capabilities: ["CHOWN", "SETUID", "SETGID"] });
+    expect(rows.map((row) => row.slug).sort()).toEqual(folders.sort());
+    expect(versions).toHaveLength(folders.length);
+    const nginx = rows.find((row) => row.slug === "nginx-502-upstream");
+    expect(nginx).toMatchObject({ status: "live", difficulty: 4 });
+    const nginxVersion = versions.find((version) => version.challengeId === nginx?.id);
+    expect(nginxVersion).toMatchObject({ version: 1, checkerHash: NGINX_502_V1_CHECKER, imageRef: "greenbuild-challenge/nginx-502-upstream:1", source: "human" });
+    expect(nginxVersion?.specJson).toMatchObject({ id: "nginx-502-upstream", time_limit_sec: 900, capabilities: ["CHOWN", "SETUID", "SETGID"] });
   });
 
   it("refuses a published version whose checker changed", async () => {
