@@ -48,6 +48,7 @@ memory=$(manifest_value resources.memory)
 cpus=$(awk -v m="${cpu_millis%m}" 'BEGIN { printf "%.3f", m / 1000 }')
 docker_memory="${memory%Mi}m"
 read -r -a capabilities <<< "$(manifest_value capabilities)"
+randomized=$(node -e 'console.log(Object.keys(JSON.parse(process.argv[1]).randomize).length)' "${manifest_json}")
 cap_add_flags=()
 for capability in "${capabilities[@]}"; do
   cap_add_flags+=(--cap-add "${capability}")
@@ -59,6 +60,21 @@ start_sandbox() {
     --cpus "${cpus}" --memory "${docker_memory}" --memory-swap "${docker_memory}" "${image}"
 }
 
+# no_answers_in_image fails when the image ships a checker or a solution: the checker is copied in
+# only for a check, and players must never find either.
+no_answers_in_image() {
+  local found
+  found=$(docker exec "${container_id}" find / -xdev \( -name check.sh -o -name solution.sh \) -print 2> /dev/null || true)
+  [ -z "${found}" ] || fail "the image contains ${found//$'\n'/, }; check.sh and solution.sh must never ship in it"
+}
+
+# environment_fingerprint hashes every file setup may have changed. Volatile paths, and the files
+# Docker writes for each container, would differ between any two runs, so they are left out.
+environment_fingerprint() {
+  docker exec "${container_id}" sh -c 'find / -xdev \( -path /tmp -o -path /run -o -path /var/run -o -path /var/log -o -path /var/cache \
+    -o -path /etc/hostname -o -path /etc/hosts -o -path /etc/resolv.conf \) -prune -o -type f -exec sha256sum {} + | sort | sha256sum'
+}
+
 run_script() {
   docker cp "${challenge_dir}/$1" "${container_id}:/opt/greenbuild/$1"
   docker exec "${container_id}" sh "/opt/greenbuild/$1"
@@ -67,7 +83,9 @@ run_script() {
 verify_seed() {
   local seed="$1"
   container_id=$(start_sandbox)
+  no_answers_in_image
   docker exec "${container_id}" /opt/greenbuild/setup.sh "${seed}"
+  fingerprints+=("$(environment_fingerprint)")
 
   if docker exec "${container_id}" test -e /opt/greenbuild/setup.sh; then
     fail "seed ${seed}: setup.sh is still in the container"
@@ -85,7 +103,12 @@ verify_seed() {
 
 docker build -q -t "${image}" "${challenge_dir}" > /dev/null
 echo "verifying ${image} with runtime ${runtime} (cpus ${cpus}, memory ${docker_memory}, caps: ${capabilities[*]})"
+fingerprints=()
 for seed in "${seeds[@]}"; do
   verify_seed "${seed}"
 done
+# A challenge that randomizes values must leave a different environment for different seeds.
+if [ "${randomized}" -gt 0 ] && [ "${#seeds[@]}" -gt 1 ] && [ "$(printf '%s\n' "${fingerprints[@]}" | sort -u | wc -l)" -eq 1 ]; then
+  fail "challenge.yaml randomizes values, but every seed left the same environment"
+fi
 echo "PASS: ${#seeds[@]} seeds"
