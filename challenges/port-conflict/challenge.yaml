@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: port-conflict
+version: 1
+title: "Maintenance never ended"
+statement: "The site still shows the maintenance page although maintenance ended yesterday, and the app will not start. Bring the app back."
+difficulty: 4            # 1–10
+skills: { linux: 0.8, nginx: 0.2 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache at start; nginx workers and the app switch users; root writes the app's log and
+# signals the app's process (appctl status and stop), as on a server.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [orders, billing, catalog] }
+  app_user: { pick: [svc, appsvc, runner] }
+  app_port: { range: [5000, 5999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
