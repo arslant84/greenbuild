@@ -12,6 +12,9 @@ import { CurrentUser, DevUserGuard } from "./dev-user.guard.js";
 
 const SECRET = "dev-auth-secret-dev-auth-secret-32";
 const USER_ID = "0199a5c4-7b2e-7c3a-9f10-2b3c4d5e6f70";
+// Each test boots a NestJS app; the first one pays the cold start, which can pass vitest's 5 s
+// default while other suites start their containers in a full run.
+const NEST_BOOT_TIMEOUT_MS = 20_000;
 
 @Controller("whoami")
 @UseGuards(DevUserGuard)
@@ -49,7 +52,7 @@ afterEach(async () => {
   await app?.close();
 });
 
-describe("DevUserGuard", () => {
+describe("DevUserGuard", { timeout: NEST_BOOT_TIMEOUT_MS }, () => {
   it("admits a dev user token and passes the user on", async () => {
     const url = await serve({ NODE_ENV: "development", DEV_AUTH_SECRET: SECRET });
     const response = await call(url, await signDevUserToken(SECRET, USER_ID));
