@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: nginx-tls-expired
+version: 1
+title: "HTTPS is broken"
+statement: "Clients refuse the company site over HTTPS. Make HTTPS work again."
+difficulty: 4            # 1–10
+skills: { tls: 0.6, nginx: 0.4 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache directories at start and its workers switch users.
+capabilities: [CHOWN, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  site: { pick: [shop, api, portal] }
+  expired_days_ago: { range: [1, 30] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
