@@ -31,11 +31,13 @@ const (
 )
 
 // Reasons on a destroyed status: the challenge time limit ran out, the player was inactive too
-// long, or the player gave up (the only reason the API sends on sandbox.destroy).
+// long, the player gave up (the only reason the API sends on sandbox.destroy), or the agent
+// destroyed the sandbox for keeping its whole CPU busy.
 const (
 	ReasonExpired   = "expired"
 	ReasonIdle      = "idle"
 	ReasonAbandoned = "abandoned"
+	ReasonAbuse     = "abuse"
 )
 
 const (

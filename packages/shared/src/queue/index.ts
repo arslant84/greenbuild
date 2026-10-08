@@ -13,6 +13,9 @@ export const QUEUE_VERSION = 1;
 
 export const SANDBOX_CAPABILITIES = ["CHOWN", "DAC_OVERRIDE", "FOWNER", "KILL", "NET_BIND_SERVICE", "SETGID", "SETUID"] as const;
 export const SANDBOX_STATUSES = ["ready", "failed", "destroyed"] as const;
+// The destroyed reason the engine reports when the agent killed a sandbox for using all of its CPU
+// (queue.ReasonAbuse in packages/queue).
+export const SANDBOX_REASON_ABUSE = "abuse";
 
 const ATTEMPT_ID_MAX_LENGTH = 64;
 const IMAGE_MAX_LENGTH = 512;

@@ -18,6 +18,9 @@ service SandboxAgent {
   rpc Health(HealthRequest) returns (HealthResponse);
   // Runs a command without a terminal and returns its exit code, e.g. the checker during a check.
   rpc Run(RunRequest) returns (RunResponse);
+  // Returns, once, the sandboxes the agent destroyed on its own and why, e.g. for using all their CPU.
+  // The control plane polls it to tell the API; the list is lost if the agent restarts.
+  rpc TakeDestroyed(TakeDestroyedRequest) returns (TakeDestroyedResponse);
 }
 
 message CreateSandboxRequest {
@@ -101,4 +104,16 @@ message RunResponse {
   bytes output_tail = 2;
   // True when the command was killed for exceeding timeout_seconds.
   bool timed_out = 3;
+}
+
+message TakeDestroyedRequest {}
+
+message DestroyedSandbox {
+  string sandbox_id = 1;
+  // Why the agent destroyed it, e.g. "abuse".
+  string reason = 2;
+}
+
+message TakeDestroyedResponse {
+  repeated DestroyedSandbox sandboxes = 1;
 }

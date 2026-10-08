@@ -94,6 +94,25 @@ func (c *Client) Destroy(ctx context.Context, sandboxID string) error {
 	return nil
 }
 
+// Destroyed is a sandbox the agent destroyed on its own, and why.
+type Destroyed struct {
+	SandboxID string
+	Reason    string
+}
+
+// TakeDestroyed returns, once, the sandboxes the agent destroyed on its own since the last call.
+func (c *Client) TakeDestroyed(ctx context.Context) ([]Destroyed, error) {
+	resp, err := c.agent.TakeDestroyed(ctx, &agentv1.TakeDestroyedRequest{})
+	if err != nil {
+		return nil, fmt.Errorf("take destroyed sandboxes from agent: %w", err)
+	}
+	taken := make([]Destroyed, 0, len(resp.GetSandboxes()))
+	for _, sandbox := range resp.GetSandboxes() {
+		taken = append(taken, Destroyed{SandboxID: sandbox.GetSandboxId(), Reason: sandbox.GetReason()})
+	}
+	return taken, nil
+}
+
 // Close releases the connection.
 func (c *Client) Close() error {
 	if err := c.conn.Close(); err != nil {

@@ -65,6 +65,27 @@ func TestCPUWatchDestroysASandboxBusyForLongerThanTheWindow(t *testing.T) {
 	}
 }
 
+func TestCPUWatchRecordsWhatItDestroyedForTheControlPlane(t *testing.T) {
+	docker := &fakeDocker{sandboxes: []container.Summary{halfCPUSandbox("busy")}, cpuUsage: map[string]uint64{}}
+	manager := NewManager(docker, "runsc")
+	now := fixedNow
+	manager.now = func() time.Time { return now }
+	watch := NewCPUWatch(manager)
+	for range int(DefaultAbuseWindow/sweepInterval) + 2 {
+		if _, err := watch.Sweep(t.Context()); err != nil {
+			t.Fatalf("Sweep() error = %v", err)
+		}
+		now = now.Add(sweepInterval)
+		docker.cpuUsage["busy"] += uint64(sweepInterval.Nanoseconds() / 2)
+	}
+	if taken := manager.TakeDestroyed(); !slices.Equal(taken, []Destroyed{{SandboxID: "busy", Reason: ReasonAbuse}}) {
+		t.Errorf("TakeDestroyed() = %v, want busy destroyed for abuse", taken)
+	}
+	if again := manager.TakeDestroyed(); len(again) != 0 {
+		t.Errorf("second TakeDestroyed() = %v, want nothing", again)
+	}
+}
+
 func TestCPUWatchSparesASandboxBusyForLessThanTheWindow(t *testing.T) {
 	sweepsInsideWindow := int(DefaultAbuseWindow / sweepInterval)
 	if destroyed, _ := sweeps(t, sweepsInsideWindow, "busy"); len(destroyed) != 0 {

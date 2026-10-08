@@ -24,6 +24,14 @@ type fakeSandboxes struct {
 	// terminal is what OpenTerminal returns; nil makes it fail.
 	terminal     Terminal
 	terminalSize sandbox.TerminalSize
+	// destroyed is what TakeDestroyed returns.
+	destroyed []sandbox.Destroyed
+}
+
+func (f *fakeSandboxes) TakeDestroyed() []sandbox.Destroyed {
+	taken := f.destroyed
+	f.destroyed = nil
+	return taken
 }
 
 func (f *fakeSandboxes) CreateSandbox(_ context.Context, spec sandbox.Spec) (string, error) {

@@ -73,6 +73,7 @@ func (w *CPUWatch) Sweep(ctx context.Context) ([]string, error) {
 			continue
 		}
 		slog.Warn("destroyed a sandbox that used all of its CPU", "sandbox", sandbox.ID, "for", w.window)
+		w.manager.destroyed.record(Destroyed{SandboxID: sandbox.ID, Reason: ReasonAbuse})
 		destroyed = append(destroyed, sandbox.ID)
 	}
 	w.samples = seen
