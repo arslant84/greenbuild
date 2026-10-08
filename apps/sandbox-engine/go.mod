@@ -19,6 +19,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/storage/internal v0.1.0 // indirect
 	github.com/apache/arrow-go/v18 v18.7.0 // indirect
+	github.com/arslant84/greenbuild/packages/redactlog v0.0.0
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/google/flatbuffers v25.12.19+incompatible // indirect
@@ -42,3 +43,5 @@ replace github.com/arslant84/greenbuild/packages/agent-api => ../../packages/age
 replace github.com/arslant84/greenbuild/packages/devpki => ../../packages/devpki
 
 replace github.com/arslant84/greenbuild/packages/queue => ../../packages/queue
+
+replace github.com/arslant84/greenbuild/packages/redactlog => ../../packages/redactlog
