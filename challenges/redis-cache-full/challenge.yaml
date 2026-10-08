@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: redis-cache-full
+version: 1
+title: "The cache that never forgets"
+statement: "Product pages got slow after the new cache server went live, and the cache warmer's log is full of errors. Make the cache work as a cache."
+difficulty: 4            # 1–10
+skills: { linux: 0.4, redis: 0.6 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# Redis and the warmer switch users; root writes their logs and stops Redis's process, as on a server.
+capabilities: [DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  cache_port: { range: [6300, 6399] }
+  key_prefix: { pick: [product, price, catalog] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
