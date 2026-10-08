@@ -1,0 +1,11 @@
+{
+  "name": "@greenbuild/redactlog",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "go build ./...",
+    "lint": "golangci-lint run --allow-parallel-runners ./...",
+    "typecheck": "go vet ./...",
+    "test": "go test ./..."
+  }
+}

@@ -14,12 +14,15 @@ import (
 
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/config"
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/health"
+	"github.com/arslant84/greenbuild/packages/redactlog"
 )
 
 // Bounds how long a client may take to send headers, so idle connections cannot pile up.
 const readHeaderTimeout = 5 * time.Second
 
 func main() {
+	// JSON lines with credentials masked (packages/redactlog); every slog call goes through it.
+	slog.SetDefault(redactlog.New(os.Stderr, "sandbox-engine"))
 	if err := run(); err != nil {
 		slog.Error("sandbox-engine stopped", "error", err)
 		os.Exit(1)

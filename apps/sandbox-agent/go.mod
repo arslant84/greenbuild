@@ -15,6 +15,7 @@ require (
 
 require (
 	github.com/Microsoft/go-winio v0.6.2 // indirect
+	github.com/arslant84/greenbuild/packages/redactlog v0.0.0
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/containerd/errdefs/pkg v0.3.0 // indirect
 	github.com/distribution/reference v0.6.0 // indirect
@@ -39,3 +40,5 @@ require (
 replace github.com/arslant84/greenbuild/packages/agent-api => ../../packages/agent-api
 
 replace github.com/arslant84/greenbuild/packages/devpki => ../../packages/devpki
+
+replace github.com/arslant84/greenbuild/packages/redactlog => ../../packages/redactlog

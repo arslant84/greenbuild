@@ -16,6 +16,7 @@ import (
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/config"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/health"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/sandbox"
+	"github.com/arslant84/greenbuild/packages/redactlog"
 	"github.com/moby/moby/client"
 )
 
@@ -23,6 +24,8 @@ import (
 const reapInterval = 10 * time.Second
 
 func main() {
+	// JSON lines with credentials masked (packages/redactlog); every slog call goes through it.
+	slog.SetDefault(redactlog.New(os.Stderr, "sandbox-agent"))
 	if err := run(); err != nil {
 		slog.Error("sandbox-agent stopped", "error", err)
 		os.Exit(1)
