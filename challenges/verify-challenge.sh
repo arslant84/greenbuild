@@ -10,6 +10,8 @@ export MSYS_NO_PATHCONV=1
 
 readonly ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 readonly PIDS_LIMIT=256
+# The agent's NofileLimit (apps/sandbox-agent/internal/sandbox/spec.go), soft and hard.
+readonly NOFILE_LIMIT=8192
 # Different remainders mod 3, so seed-dependent picks (e.g. nginx-502-upstream's app_user) all get exercised.
 readonly DEFAULT_SEEDS=(1 4242 98765)
 
@@ -56,7 +58,7 @@ done
 
 start_sandbox() {
   docker run -d --runtime "${runtime}" --network none --cap-drop ALL "${cap_add_flags[@]}" \
-    --security-opt no-new-privileges --pids-limit "${PIDS_LIMIT}" \
+    --security-opt no-new-privileges --pids-limit "${PIDS_LIMIT}" --ulimit "nofile=${NOFILE_LIMIT}:${NOFILE_LIMIT}" \
     --cpus "${cpus}" --memory "${docker_memory}" --memory-swap "${docker_memory}" "${image}"
 }
 

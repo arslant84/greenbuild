@@ -14,6 +14,10 @@ const (
 	// PidsLimit caps processes per sandbox (architecture.md: PID limit 256) so a fork bomb cannot exhaust the node.
 	PidsLimit int64 = 256
 
+	// NofileLimit caps open files per sandbox (soft and hard), so one sandbox cannot exhaust the node's
+	// file descriptors; challenges stay well inside it (app-open-files gives its app 4096).
+	NofileLimit int64 = 8192
+
 	// LabelSandbox marks every container the agent creates, so orphans can be found and removed.
 	LabelSandbox = "greenbuild.sandbox"
 
@@ -95,6 +99,7 @@ func ContainerConfig(spec Spec, runtime string) (*container.Config, *container.H
 			// Equal to Memory: no swap, so the memory limit cannot be bypassed.
 			MemorySwap: spec.MemoryBytes,
 			PidsLimit:  &pidsLimit,
+			Ulimits:    []*container.Ulimit{{Name: "nofile", Soft: NofileLimit, Hard: NofileLimit}},
 		},
 	}
 	return config, hostConfig

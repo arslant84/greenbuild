@@ -111,7 +111,7 @@ Order follows the recommendation for decision D2. "Blocked" means the task waits
 | 31a | Consent tables | Not started | |
 | 31b | Minimum company tables | Not started | |
 | 32 | `GET` / `PATCH /v1/me` | Not started | |
-| 33a | Open-file limit | Not started | |
+| 33a | Open-file limit | Done | The agent gives every sandbox `nofile` 8192 (soft and hard, `NofileLimit` in `internal/sandbox/spec.go`); challenges stay well inside it (app-open-files gives its app 4096). `verify-challenge.sh` applies the same limit. Verified: unit test on the container config; integration test on real Docker (runc locally; runsc in CI once Actions run): the sandbox sees 8192/8192 and `ulimit -n 8193` fails; all 7 merged challenges still pass verification with the limit |
 | 33b | Disk limit | Not started | |
 | 33c | Read-only root | Not started | Optional manifest key, default false |
 | 33d | Seccomp profile | Not started | |
