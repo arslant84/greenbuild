@@ -38,7 +38,9 @@ describe("GET /v1/challenges: the player's own progress", () => {
     const id = await readyAttempt(app, user);
     await user.abandon(id);
     await waitForStatus(user, id, "abandoned");
-    expect((await nginx502(user)).entry?.progress).toMatchObject({ status: "failed", finished_attempts: 1, last_finished_attempt_id: id });
+    const { list, entry } = await nginx502(user);
+    expect(entry?.progress).toMatchObject({ status: "failed", finished_attempts: 1, last_finished_attempt_id: id });
+    expect(list.catalog).toMatchObject({ failed: 1, solved: 0, flagged: 0 });
     expect((await nginx502(user, "&status=failed")).entry).toBeDefined();
     expect((await nginx502(await player(app, randomUUID()))).entry?.progress.status).toBeNull();
   });

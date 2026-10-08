@@ -1,5 +1,5 @@
 import { and, challenges, type Database, desc, eq, sql } from "@greenbuild/db";
-import type { CatalogEntry, ChallengeList, ChallengeListQuery } from "@greenbuild/shared";
+import { CATALOG_SLA_WINDOWS, type CatalogEntry, type CatalogSlaWindow, type ChallengeList, type ChallengeListQuery } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { DatabaseClient } from "../infra/services.js";
 import { catalogFilters } from "./catalog-filters.js";
@@ -52,6 +52,7 @@ function entries(db: Database, latest: LatestVersions, progress: PlayerProgress)
       bestSolveMs: progress.bestSolveMs,
       activeAttemptId: progress.activeAttemptId,
       lastFinishedAttemptId: progress.lastFinishedAttemptId,
+      flagged: progress.flagged,
     })
     .from(challenges)
     .innerJoin(latest, eq(latest.challengeId, challenges.id))
@@ -81,13 +82,22 @@ function toEntry(row: EntryRow): CatalogEntry {
   };
 }
 
-// summarize counts the whole catalog: challenges, the ones the player solved, and challenges per skill.
+// summarize counts the whole catalog: challenges, the player's solved, failed and flagged ones, and
+// challenges per skill and per time-limit window.
 function summarize(rows: EntryRow[]): ChallengeList["catalog"] {
+  const cards = rows.map((row) => challengeCard(row.slug, row));
   const skills: Record<string, number> = {};
-  for (const row of rows) {
-    for (const skill of challengeCard(row.slug, row).skills) {
-      skills[skill] = (skills[skill] ?? 0) + 1;
-    }
+  for (const skill of cards.flatMap((card) => card.skills)) {
+    skills[skill] = (skills[skill] ?? 0) + 1;
   }
-  return { challenges: rows.length, solved: rows.filter((row) => row.solved).length, skills };
+  const windows = Object.entries(CATALOG_SLA_WINDOWS) as [CatalogSlaWindow, readonly [number, number]][];
+  const sla = Object.fromEntries(windows.map(([window, [from, to]]) => [window, cards.filter((card) => card.time_limit_sec >= from && card.time_limit_sec <= to).length]));
+  return {
+    challenges: rows.length,
+    solved: rows.filter((row) => row.solved).length,
+    failed: rows.filter((row) => row.status === "failed").length,
+    flagged: rows.filter((row) => row.flagged).length,
+    skills,
+    sla: sla as ChallengeList["catalog"]["sla"],
+  };
 }

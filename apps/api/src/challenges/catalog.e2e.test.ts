@@ -44,6 +44,7 @@ async function listsPublicOnly(app: () => AttemptsApp): Promise<void> {
   expect(list.total).toBe(list.challenges.length);
   expect(list.catalog.challenges).toBe(list.total);
   expect(list.catalog.skills.linux).toBe(list.challenges.filter((card) => card.skills.includes("linux")).length);
+  expect(Object.values(list.catalog.sla).reduce((sum, count) => sum + count, 0)).toBe(list.total);
 }
 
 async function filters(app: () => AttemptsApp): Promise<void> {

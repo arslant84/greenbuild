@@ -60,7 +60,10 @@ export const challengeListSchema = z.object({
   catalog: z.object({
     challenges: z.number().int().nonnegative(),
     solved: z.number().int().nonnegative(),
+    failed: z.number().int().nonnegative(),
+    flagged: z.number().int().nonnegative(),
     skills: z.record(z.string(), z.number().int().nonnegative()),
+    sla: z.record(z.enum(Object.keys(CATALOG_SLA_WINDOWS) as [CatalogSlaWindow, ...CatalogSlaWindow[]]), z.number().int().nonnegative()),
   }),
 });
 
