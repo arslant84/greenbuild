@@ -5,6 +5,8 @@ import (
 	"slices"
 	"testing"
 	"time"
+
+	"github.com/moby/moby/api/types/container"
 )
 
 const mebibyte = 1 << 20
@@ -56,6 +58,9 @@ func TestContainerConfigAppliesLimits(t *testing.T) {
 	}
 	if host.PidsLimit == nil || *host.PidsLimit != PidsLimit {
 		t.Errorf("PidsLimit = %v, want %d", host.PidsLimit, PidsLimit)
+	}
+	if len(host.Ulimits) != 1 || *host.Ulimits[0] != (container.Ulimit{Name: "nofile", Soft: NofileLimit, Hard: NofileLimit}) {
+		t.Errorf("Ulimits = %v, want nofile %d (soft and hard)", host.Ulimits, NofileLimit)
 	}
 }
 
