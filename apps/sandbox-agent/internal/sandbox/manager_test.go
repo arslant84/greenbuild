@@ -31,6 +31,8 @@ type fakeDocker struct {
 	sandboxes []container.Summary
 	listed    client.ContainerListOptions
 	// lastExec and resizes record what terminal tests sent.
+	// cpuUsage is the total CPU time, in nanoseconds, ContainerStats reports per sandbox.
+	cpuUsage map[string]uint64
 	lastExec client.ExecCreateOptions
 	resizes  []string
 }

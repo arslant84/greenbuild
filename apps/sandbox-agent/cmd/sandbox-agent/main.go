@@ -23,6 +23,9 @@ import (
 // reapInterval bounds how long past its deadline a sandbox can survive.
 const reapInterval = 10 * time.Second
 
+// cpuWatchInterval is how often sandboxes' CPU usage is sampled; a busy one goes after about a minute.
+const cpuWatchInterval = 10 * time.Second
+
 func main() {
 	// JSON lines with credentials masked (packages/redactlog); every slog call goes through it.
 	slog.SetDefault(redactlog.New(os.Stderr, "sandbox-agent"))
@@ -51,6 +54,7 @@ func run() error {
 	defer closeDocker(docker)
 	manager := sandbox.NewManager(docker, cfg.Runtime)
 	go manager.RunReaper(ctx, reapInterval)
+	go sandbox.NewCPUWatch(manager).Run(ctx, cpuWatchInterval)
 
 	stopGRPC, _, err := startGRPC(cfg, agentserver.FromManager(manager))
 	if err != nil {
