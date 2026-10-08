@@ -97,6 +97,7 @@ export interface Player {
   list: (query: string) => Promise<Response>;
   check: (id: string) => Promise<Response>;
   abandon: (id: string) => Promise<Response>;
+  hint: (id: string) => Promise<Response>;
   result: (id: string) => Promise<Response>;
   card: (slug: string) => Promise<Response>;
 }
@@ -112,6 +113,7 @@ export async function player(app: () => AttemptsApp, userId: string): Promise<Pl
     list: (query) => fetch(`${app().baseUrl}/v1/attempts${query}`, { headers }),
     check: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/check`, { method: "POST", headers }),
     abandon: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/abandon`, { method: "POST", headers }),
+    hint: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/hint`, { method: "POST", headers }),
     result: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/result`, { headers }),
     card: (slug) => fetch(`${app().baseUrl}/v1/challenges/${slug}`, { headers }),
   };

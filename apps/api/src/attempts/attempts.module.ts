@@ -10,18 +10,21 @@ import { AttemptStatusUpdates } from "./attempt-status.js";
 import { AttemptsController } from "./attempts.controller.js";
 import { AttemptsService } from "./attempts.service.js";
 import { ChecksService } from "./checks.service.js";
+import { HintsController } from "./hints.controller.js";
+import { HintsService } from "./hints.service.js";
 import { SandboxRequests } from "./sandbox-requests.js";
 import { StatusConsumer } from "./status-consumer.js";
 
 @Module({
   imports: [ChallengesModule],
-  controllers: [AttemptsController, AbandonController],
+  controllers: [AttemptsController, AbandonController, HintsController],
   providers: [
     AttemptsService,
     AttemptReader,
     SandboxRequests,
     ChecksService,
     AbandonService,
+    HintsService,
     EngineClient,
     AttachTokens,
     AttemptStatusUpdates,
