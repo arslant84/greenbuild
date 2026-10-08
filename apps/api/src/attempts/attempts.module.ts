@@ -1,5 +1,4 @@
 import { Module } from "@nestjs/common";
-import { DevUserGuard } from "../auth/dev-user.guard.js";
 import { ChallengesModule } from "../challenges/challenges.module.js";
 import { EngineClient } from "../engine/engine-client.js";
 import { AbandonController } from "./abandon.controller.js";
@@ -29,7 +28,6 @@ import { StatusConsumer } from "./status-consumer.js";
     AttachTokens,
     AttemptStatusUpdates,
     StatusConsumer,
-    DevUserGuard,
   ],
 })
 export class AttemptsModule {}

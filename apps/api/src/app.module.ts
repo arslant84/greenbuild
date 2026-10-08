@@ -1,5 +1,6 @@
 import { type DynamicModule, Module } from "@nestjs/common";
-import { APP_FILTER } from "@nestjs/core";
+import { APP_FILTER, APP_GUARD } from "@nestjs/core";
+import { DevUserGuard } from "./auth/dev-user.guard.js";
 import type { ServicesEnv } from "./config/services-env.js";
 import { AppErrorFilter } from "./errors/app-error.filter.js";
 import { HealthController } from "./health/health.controller.js";
@@ -8,7 +9,11 @@ import { InfraModule } from "./infra/infra.module.js";
 
 @Module({
   controllers: [HealthController],
-  providers: [{ provide: APP_FILTER, useClass: AppErrorFilter }],
+  // Every route needs a session unless it is @Public().
+  providers: [
+    { provide: APP_FILTER, useClass: AppErrorFilter },
+    { provide: APP_GUARD, useClass: DevUserGuard },
+  ],
 })
 export class AppModule {
   // forRoot adds the features that need PostgreSQL, Redis and the secrets.

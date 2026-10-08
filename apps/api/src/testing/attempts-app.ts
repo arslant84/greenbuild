@@ -20,6 +20,7 @@ export interface AttemptsApp {
   baseUrl: string;
   env: ServicesEnv;
   engine: FakeEngine;
+  nest: INestApplication;
 }
 
 async function startPostgres(): Promise<Container> {
@@ -75,7 +76,7 @@ export function useAttemptsApp(): () => AttemptsApp {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule.forRoot(env)] }).compile();
     started.app = moduleRef.createNestApplication({ logger: false });
     await started.app.listen(0);
-    started.ready = { baseUrl: await started.app.getUrl(), env, engine };
+    started.ready = { baseUrl: await started.app.getUrl(), env, engine, nest: started.app };
   }, STARTUP_TIMEOUT_MS);
   afterAll(async () => {
     await started.app?.close();

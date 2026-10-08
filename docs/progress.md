@@ -105,7 +105,7 @@ Order follows the recommendation for decision D2. "Blocked" means the task waits
 | 29c | Auth.js adapter decision | Not started | Plan only, recorded as an ADR |
 | 30a | Auth.js: GitHub and email | Blocked | Decision D6 (email provider) |
 | 30b | Sign-in screens and 16+ | Not started | Frame 7:9957; blocked if it has no 16+ checkbox |
-| 30c | API session check and explicit access | Not started | `@Public()` and the route test |
+| 30c | API session check and explicit access | In progress | **Explicit access done**: the session guard is global (`APP_GUARD` in `AppModule`) instead of on each controller, `@Public()` exempts a route, and only `GET /health` carries it. Without its services or `DEV_AUTH_SECRET` the API admits nobody but `/health`. `routes.e2e.test.ts` reads every route from Nest's route metadata, calls each without a token, and requires 401 everywhere except the public list, which must also be named in architecture.md's API rules. **Still open**: the web-issued ES256 token (5 minutes) that replaces the dev token; it needs the web session from Auth.js (30a, blocked on D6) |
 | 30d | Test sign-in provider for e2e | Not started | |
 | 30e | Remove the dev path | Not started | Also revisits CSRF |
 | 31a | Consent tables | Not started | |
