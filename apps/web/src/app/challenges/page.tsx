@@ -28,7 +28,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
             <div className="flex min-w-0 flex-1 flex-col gap-3">
               <ActiveFilters params={params} />
               {/* A new key per filter set restarts "Load more" from the first page. */}
-              {list ? <CardGrid key={apiQuery(params)} params={params} first={list} /> : <ServiceError />}
+              {list ? <CardGrid key={apiQuery(params)} params={params} first={list} /> : <ServiceError retryHref="/challenges" />}
             </div>
           </div>
         </main>
