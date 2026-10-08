@@ -1,0 +1,4 @@
+#!/bin/sh
+# render-region <region>: renders one region's report.
+sleep 2
+echo "region $1 rendered"

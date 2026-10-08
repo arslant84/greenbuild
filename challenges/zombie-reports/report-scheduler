@@ -1,0 +1,11 @@
+#!/bin/sh
+# report-scheduler v1 (legacy): dispatches one render per queued job, then follows the queue log.
+# Replaced by nightly-report (REP-77); scheduled for removal.
+. /etc/report-scheduler.conf
+job=0
+while [ "$job" -lt "$DISPATCHED_JOBS" ]; do
+  render-region "legacy-$job" > /dev/null &
+  job=$((job + 1))
+done
+# Follows the queue from here on; the dispatched renders are never collected.
+exec tail -f /var/log/reports/queue.log
