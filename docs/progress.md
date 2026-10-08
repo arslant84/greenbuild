@@ -119,7 +119,7 @@ Order follows the recommendation for decision D2. "Blocked" means the task waits
 | 33f | Kill at 100% CPU for over 60 s | Not started | |
 | 34a | Automated escape and mining probes | Not started | |
 | 34b | Manual run in staging | Not started | Owner |
-| 35a | Hint storage | Not started | |
+| 35a | Hint storage | Done | Migration 0004 adds `challenge_versions.hints_json` (nullable; `attempts.hints_used` already existed). `challenge-spec` parses `hints.md` into the hints, weakest first (`parseHints`, also used by the validator, which now also rejects an empty section); the seed stores them with each new version. A published version's hints are immutable like its manifest and checker: a changed `hints.md` stops the seed and asks for a new version. Versions published before this task get their hints once (the column is null for them), so nothing already published needs a new version. Verified: parser unit tests; seed tests on PostgreSQL for stored hints, the one-time backfill, and the refusal |
 | 35b | `POST /v1/attempts/{id}/hint` | Not started | |
 | 35c | Hint reveal UI | Blocked | Needs a Figma frame |
 | 36a | `GET /v1/challenges` | Not started | |
