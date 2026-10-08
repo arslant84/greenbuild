@@ -1,6 +1,7 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { type Database, inArray, outbox, sql } from "@greenbuild/db";
 import { QUEUE_PAYLOAD_FIELD } from "@greenbuild/shared";
+import { logger } from "../logger.js";
 
 export const RELAY_BATCH_SIZE = 100;
 const IDLE_DELAY_MS = 1_000;
@@ -45,7 +46,7 @@ export async function runRelay(db: Database, publisher: Publisher, signal: Abort
     try {
       relayed = await relayBatch(db, publisher);
     } catch (error) {
-      console.error("relay outbox failed; retrying", error);
+      logger.error("relay outbox failed; retrying", { error });
     }
     if (relayed < RELAY_BATCH_SIZE) {
       await sleep(IDLE_DELAY_MS, undefined, { signal }).catch(() => undefined);

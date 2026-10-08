@@ -2,6 +2,7 @@ import { AppError, ForbiddenError, UnauthorizedError, UnavailableError, Validati
 import type { NextRequest } from "next/server";
 import { loadApiConfig } from "../config/api";
 import { DEV_SESSION_COOKIE } from "./dev-session";
+import { logger } from "./logger";
 
 // Browsers cannot send a custom header cross-site without CORS, so requiring it on writes blocks
 // cross-site request forgery until Auth.js brings CSRF tokens.
@@ -34,7 +35,7 @@ export async function proxyToApi(request: NextRequest, options: ProxyOptions): P
     });
     return new Response(await upstream.text(), { status: upstream.status, headers: { "content-type": "application/json" } });
   } catch (error) {
-    console.error("api unreachable", { path: options.path, error: String(error) });
+    logger.error("api unreachable", { path: options.path, error });
     return failure(new UnavailableError("The service is unavailable"));
   }
 }
