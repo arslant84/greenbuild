@@ -4,7 +4,10 @@ import { Controller, Get, type INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { AppModule } from "../app.module.js";
+import { Public } from "../auth/public.js";
 
+// Public: the global session guard would answer 401 before the filter sees these errors.
+@Public()
 @Controller("test-errors")
 class ThrowingController {
   @Get("not-found")
