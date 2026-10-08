@@ -1,0 +1,26 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: etc-hosts-stale
+version: 1
+title: "The migration that moved nothing"
+statement: "After yesterday's migration the site answers 502, although the backend runs fine on this host. The nginx configuration is managed by config management: fix the cause, not nginx."
+difficulty: 3            # 1–10
+skills: { linux: 0.7, nginx: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache at start; nginx workers and the backend switch users; root edits files it
+# does not own, as on a server.
+capabilities: [CHOWN, DAC_OVERRIDE, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  service: { pick: [backend, orders, catalog] }
+  service_port: { range: [4000, 4999] }
+  stale_ip: { pick: [10.20.0.15, 10.20.3.7, 172.18.4.21] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
