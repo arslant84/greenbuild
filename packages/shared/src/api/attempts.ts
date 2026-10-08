@@ -56,3 +56,12 @@ export const attemptResultSchema = z.object({
 
 export type CheckResponse = z.infer<typeof checkResponseSchema>;
 export type AttemptResult = z.infer<typeof attemptResultSchema>;
+
+// POST /v1/attempts/{id}/hint: the next hint, weakest first; number counts from 1.
+export const hintResponseSchema = z.object({
+  hint: z.string(),
+  number: z.number().int().positive(),
+  hints_left: z.number().int().nonnegative(),
+});
+
+export type HintResponse = z.infer<typeof hintResponseSchema>;
