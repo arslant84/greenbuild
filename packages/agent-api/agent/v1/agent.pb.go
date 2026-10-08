@@ -839,6 +839,139 @@ func (x *RunResponse) GetTimedOut() bool {
 	return false
 }
 
+type TakeDestroyedRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TakeDestroyedRequest) Reset() {
+	*x = TakeDestroyedRequest{}
+	mi := &file_agent_v1_agent_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TakeDestroyedRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TakeDestroyedRequest) ProtoMessage() {}
+
+func (x *TakeDestroyedRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TakeDestroyedRequest.ProtoReflect.Descriptor instead.
+func (*TakeDestroyedRequest) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{14}
+}
+
+type DestroyedSandbox struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	SandboxId string                 `protobuf:"bytes,1,opt,name=sandbox_id,json=sandboxId,proto3" json:"sandbox_id,omitempty"`
+	// Why the agent destroyed it, e.g. "abuse".
+	Reason        string `protobuf:"bytes,2,opt,name=reason,proto3" json:"reason,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DestroyedSandbox) Reset() {
+	*x = DestroyedSandbox{}
+	mi := &file_agent_v1_agent_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DestroyedSandbox) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DestroyedSandbox) ProtoMessage() {}
+
+func (x *DestroyedSandbox) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DestroyedSandbox.ProtoReflect.Descriptor instead.
+func (*DestroyedSandbox) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *DestroyedSandbox) GetSandboxId() string {
+	if x != nil {
+		return x.SandboxId
+	}
+	return ""
+}
+
+func (x *DestroyedSandbox) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+type TakeDestroyedResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Sandboxes     []*DestroyedSandbox    `protobuf:"bytes,1,rep,name=sandboxes,proto3" json:"sandboxes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *TakeDestroyedResponse) Reset() {
+	*x = TakeDestroyedResponse{}
+	mi := &file_agent_v1_agent_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *TakeDestroyedResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*TakeDestroyedResponse) ProtoMessage() {}
+
+func (x *TakeDestroyedResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use TakeDestroyedResponse.ProtoReflect.Descriptor instead.
+func (*TakeDestroyedResponse) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *TakeDestroyedResponse) GetSandboxes() []*DestroyedSandbox {
+	if x != nil {
+		return x.Sandboxes
+	}
+	return nil
+}
+
 var File_agent_v1_agent_proto protoreflect.FileDescriptor
 
 const file_agent_v1_agent_proto_rawDesc = "" +
@@ -899,14 +1032,22 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\texit_code\x18\x01 \x01(\x05R\bexitCode\x12\x1f\n" +
 	"\voutput_tail\x18\x02 \x01(\fR\n" +
 	"outputTail\x12\x1b\n" +
-	"\ttimed_out\x18\x03 \x01(\bR\btimedOut2\x8d\x04\n" +
+	"\ttimed_out\x18\x03 \x01(\bR\btimedOut\"\x16\n" +
+	"\x14TakeDestroyedRequest\"I\n" +
+	"\x10DestroyedSandbox\x12\x1d\n" +
+	"\n" +
+	"sandbox_id\x18\x01 \x01(\tR\tsandboxId\x12\x16\n" +
+	"\x06reason\x18\x02 \x01(\tR\x06reason\"\\\n" +
+	"\x15TakeDestroyedResponse\x12C\n" +
+	"\tsandboxes\x18\x01 \x03(\v2%.greenbuild.agent.v1.DestroyedSandboxR\tsandboxes2\xf5\x04\n" +
 	"\fSandboxAgent\x12f\n" +
 	"\rCreateSandbox\x12).greenbuild.agent.v1.CreateSandboxRequest\x1a*.greenbuild.agent.v1.CreateSandboxResponse\x12T\n" +
 	"\aDestroy\x12#.greenbuild.agent.v1.DestroyRequest\x1a$.greenbuild.agent.v1.DestroyResponse\x12O\n" +
 	"\x04Exec\x12 .greenbuild.agent.v1.ExecRequest\x1a!.greenbuild.agent.v1.ExecResponse(\x010\x01\x12Q\n" +
 	"\x06CopyIn\x12\".greenbuild.agent.v1.CopyInRequest\x1a#.greenbuild.agent.v1.CopyInResponse\x12Q\n" +
 	"\x06Health\x12\".greenbuild.agent.v1.HealthRequest\x1a#.greenbuild.agent.v1.HealthResponse\x12H\n" +
-	"\x03Run\x12\x1f.greenbuild.agent.v1.RunRequest\x1a .greenbuild.agent.v1.RunResponseBEZCgithub.com/arslant84/greenbuild/packages/agent-api/agent/v1;agentv1b\x06proto3"
+	"\x03Run\x12\x1f.greenbuild.agent.v1.RunRequest\x1a .greenbuild.agent.v1.RunResponse\x12f\n" +
+	"\rTakeDestroyed\x12).greenbuild.agent.v1.TakeDestroyedRequest\x1a*.greenbuild.agent.v1.TakeDestroyedResponseBEZCgithub.com/arslant84/greenbuild/packages/agent-api/agent/v1;agentv1b\x06proto3"
 
 var (
 	file_agent_v1_agent_proto_rawDescOnce sync.Once
@@ -920,7 +1061,7 @@ func file_agent_v1_agent_proto_rawDescGZIP() []byte {
 	return file_agent_v1_agent_proto_rawDescData
 }
 
-var file_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 17)
 var file_agent_v1_agent_proto_goTypes = []any{
 	(*CreateSandboxRequest)(nil),  // 0: greenbuild.agent.v1.CreateSandboxRequest
 	(*CreateSandboxResponse)(nil), // 1: greenbuild.agent.v1.CreateSandboxResponse
@@ -936,28 +1077,34 @@ var file_agent_v1_agent_proto_goTypes = []any{
 	(*HealthResponse)(nil),        // 11: greenbuild.agent.v1.HealthResponse
 	(*RunRequest)(nil),            // 12: greenbuild.agent.v1.RunRequest
 	(*RunResponse)(nil),           // 13: greenbuild.agent.v1.RunResponse
+	(*TakeDestroyedRequest)(nil),  // 14: greenbuild.agent.v1.TakeDestroyedRequest
+	(*DestroyedSandbox)(nil),      // 15: greenbuild.agent.v1.DestroyedSandbox
+	(*TakeDestroyedResponse)(nil), // 16: greenbuild.agent.v1.TakeDestroyedResponse
 }
 var file_agent_v1_agent_proto_depIdxs = []int32{
 	4,  // 0: greenbuild.agent.v1.ExecStart.size:type_name -> greenbuild.agent.v1.TerminalSize
 	5,  // 1: greenbuild.agent.v1.ExecRequest.start:type_name -> greenbuild.agent.v1.ExecStart
 	4,  // 2: greenbuild.agent.v1.ExecRequest.resize:type_name -> greenbuild.agent.v1.TerminalSize
-	0,  // 3: greenbuild.agent.v1.SandboxAgent.CreateSandbox:input_type -> greenbuild.agent.v1.CreateSandboxRequest
-	2,  // 4: greenbuild.agent.v1.SandboxAgent.Destroy:input_type -> greenbuild.agent.v1.DestroyRequest
-	6,  // 5: greenbuild.agent.v1.SandboxAgent.Exec:input_type -> greenbuild.agent.v1.ExecRequest
-	8,  // 6: greenbuild.agent.v1.SandboxAgent.CopyIn:input_type -> greenbuild.agent.v1.CopyInRequest
-	10, // 7: greenbuild.agent.v1.SandboxAgent.Health:input_type -> greenbuild.agent.v1.HealthRequest
-	12, // 8: greenbuild.agent.v1.SandboxAgent.Run:input_type -> greenbuild.agent.v1.RunRequest
-	1,  // 9: greenbuild.agent.v1.SandboxAgent.CreateSandbox:output_type -> greenbuild.agent.v1.CreateSandboxResponse
-	3,  // 10: greenbuild.agent.v1.SandboxAgent.Destroy:output_type -> greenbuild.agent.v1.DestroyResponse
-	7,  // 11: greenbuild.agent.v1.SandboxAgent.Exec:output_type -> greenbuild.agent.v1.ExecResponse
-	9,  // 12: greenbuild.agent.v1.SandboxAgent.CopyIn:output_type -> greenbuild.agent.v1.CopyInResponse
-	11, // 13: greenbuild.agent.v1.SandboxAgent.Health:output_type -> greenbuild.agent.v1.HealthResponse
-	13, // 14: greenbuild.agent.v1.SandboxAgent.Run:output_type -> greenbuild.agent.v1.RunResponse
-	9,  // [9:15] is the sub-list for method output_type
-	3,  // [3:9] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	15, // 3: greenbuild.agent.v1.TakeDestroyedResponse.sandboxes:type_name -> greenbuild.agent.v1.DestroyedSandbox
+	0,  // 4: greenbuild.agent.v1.SandboxAgent.CreateSandbox:input_type -> greenbuild.agent.v1.CreateSandboxRequest
+	2,  // 5: greenbuild.agent.v1.SandboxAgent.Destroy:input_type -> greenbuild.agent.v1.DestroyRequest
+	6,  // 6: greenbuild.agent.v1.SandboxAgent.Exec:input_type -> greenbuild.agent.v1.ExecRequest
+	8,  // 7: greenbuild.agent.v1.SandboxAgent.CopyIn:input_type -> greenbuild.agent.v1.CopyInRequest
+	10, // 8: greenbuild.agent.v1.SandboxAgent.Health:input_type -> greenbuild.agent.v1.HealthRequest
+	12, // 9: greenbuild.agent.v1.SandboxAgent.Run:input_type -> greenbuild.agent.v1.RunRequest
+	14, // 10: greenbuild.agent.v1.SandboxAgent.TakeDestroyed:input_type -> greenbuild.agent.v1.TakeDestroyedRequest
+	1,  // 11: greenbuild.agent.v1.SandboxAgent.CreateSandbox:output_type -> greenbuild.agent.v1.CreateSandboxResponse
+	3,  // 12: greenbuild.agent.v1.SandboxAgent.Destroy:output_type -> greenbuild.agent.v1.DestroyResponse
+	7,  // 13: greenbuild.agent.v1.SandboxAgent.Exec:output_type -> greenbuild.agent.v1.ExecResponse
+	9,  // 14: greenbuild.agent.v1.SandboxAgent.CopyIn:output_type -> greenbuild.agent.v1.CopyInResponse
+	11, // 15: greenbuild.agent.v1.SandboxAgent.Health:output_type -> greenbuild.agent.v1.HealthResponse
+	13, // 16: greenbuild.agent.v1.SandboxAgent.Run:output_type -> greenbuild.agent.v1.RunResponse
+	16, // 17: greenbuild.agent.v1.SandboxAgent.TakeDestroyed:output_type -> greenbuild.agent.v1.TakeDestroyedResponse
+	11, // [11:18] is the sub-list for method output_type
+	4,  // [4:11] is the sub-list for method input_type
+	4,  // [4:4] is the sub-list for extension type_name
+	4,  // [4:4] is the sub-list for extension extendee
+	0,  // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_agent_v1_agent_proto_init() }
@@ -981,7 +1128,7 @@ func file_agent_v1_agent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_v1_agent_proto_rawDesc), len(file_agent_v1_agent_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   17,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

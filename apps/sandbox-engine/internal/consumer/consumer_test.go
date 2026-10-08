@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/alicebob/miniredis/v2"
+	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/agentclient"
 	agentv1 "github.com/arslant84/greenbuild/packages/agent-api/agent/v1"
 	"github.com/arslant84/greenbuild/packages/queue"
 	"github.com/redis/go-redis/v9"
@@ -20,6 +21,14 @@ type fakeAgent struct {
 	err        error
 	destroyed  []string
 	destroyErr error
+	// reports is what TakeDestroyed hands over once.
+	reports []agentclient.Destroyed
+}
+
+func (a *fakeAgent) TakeDestroyed(_ context.Context) ([]agentclient.Destroyed, error) {
+	taken := a.reports
+	a.reports = nil
+	return taken, nil
 }
 
 func (a *fakeAgent) CreateSandbox(_ context.Context, req *agentv1.CreateSandboxRequest) (string, error) {

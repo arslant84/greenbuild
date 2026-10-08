@@ -23,6 +23,7 @@ type Sandboxes interface {
 	CopyIn(ctx context.Context, id string, file sandbox.File) error
 	Run(ctx context.Context, id string, command sandbox.Command) (sandbox.RunResult, error)
 	OpenTerminal(ctx context.Context, id string, size sandbox.TerminalSize) (Terminal, error)
+	TakeDestroyed() []sandbox.Destroyed
 }
 
 // FromManager adapts the sandbox manager, whose OpenTerminal returns a concrete type, to Sandboxes.
@@ -129,4 +130,14 @@ func toStatus(action string, err error) error {
 // hide the status code and every error would arrive as Unknown.
 func grpcError(code codes.Code, message string) error {
 	return status.Error(code, message) //nolint:wrapcheck // see above; wrapping breaks status.Code
+}
+
+// TakeDestroyed hands the control plane, once, the sandboxes the agent destroyed on its own.
+func (s *Server) TakeDestroyed(_ context.Context, _ *agentv1.TakeDestroyedRequest) (*agentv1.TakeDestroyedResponse, error) {
+	taken := s.sandboxes.TakeDestroyed()
+	sandboxes := make([]*agentv1.DestroyedSandbox, 0, len(taken))
+	for _, entry := range taken {
+		sandboxes = append(sandboxes, &agentv1.DestroyedSandbox{SandboxId: entry.SandboxID, Reason: entry.Reason})
+	}
+	return &agentv1.TakeDestroyedResponse{Sandboxes: sandboxes}, nil
 }

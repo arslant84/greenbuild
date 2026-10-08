@@ -17,10 +17,12 @@ import (
 // DeadlinesKey and IdleDeadlinesKey are sorted sets of attempt ids, scored by the Unix second
 // their time limit ends and the second they count as idle. AbandonRequestsKey holds attempts the
 // API asked to destroy, due at once, so the same loop destroys and reports them.
+// AbuseReportsKey holds attempts whose sandbox the agent destroyed for using all of its CPU.
 const (
 	DeadlinesKey       = "engine:deadlines"
 	IdleDeadlinesKey   = "engine:idle-deadlines"
 	AbandonRequestsKey = "engine:abandon-requests"
+	AbuseReportsKey    = "engine:abuse-reports"
 )
 
 // deadlineSet is one way a sandbox runs out, and the reason reported when it does.
@@ -31,6 +33,7 @@ type deadlineSet struct {
 
 // The player's own request is reported first when several deadlines are due at once.
 var deadlineSets = []deadlineSet{
+	{AbuseReportsKey, queue.ReasonAbuse},
 	{AbandonRequestsKey, queue.ReasonAbandoned},
 	{DeadlinesKey, queue.ReasonExpired},
 	{IdleDeadlinesKey, queue.ReasonIdle},
@@ -77,6 +80,9 @@ func (c *Consumer) Touch(ctx context.Context, attemptID string) error {
 
 func (c *Consumer) expireLoop(ctx context.Context) {
 	for ctx.Err() == nil {
+		if err := c.collectAgentReports(ctx); err != nil && ctx.Err() == nil {
+			slog.Warn("collect agent reports", "error", err)
+		}
 		if err := c.expireDue(ctx); err != nil && ctx.Err() == nil {
 			slog.Warn("expire sandboxes", "error", err)
 		}
@@ -149,6 +155,33 @@ func (c *Consumer) retryLater(ctx context.Context, set deadlineSet, attemptID st
 	retryAt := c.now().Add(expiryRetryDelay)
 	if err := c.redis.ZAdd(ctx, set.key, redis.Z{Score: float64(retryAt.Unix()), Member: attemptID}).Err(); err != nil {
 		return fmt.Errorf("reschedule %s of attempt %s: %w", set.key, attemptID, err)
+	}
+	return nil
+}
+
+// collectAgentReports turns sandboxes the agent destroyed on its own into due entries of the
+// matching set, so expire reports them with their reason. A sandbox with no known attempt (its
+// mapping expired) has no one to tell.
+func (c *Consumer) collectAgentReports(ctx context.Context) error {
+	taken, err := c.agent.TakeDestroyed(ctx)
+	if err != nil {
+		return fmt.Errorf("take destroyed sandboxes: %w", err)
+	}
+	for _, sandbox := range taken {
+		if sandbox.Reason != queue.ReasonAbuse {
+			continue
+		}
+		attemptID, err := c.redis.Get(ctx, SandboxAttemptKey(sandbox.SandboxID)).Result()
+		if errors.Is(err, redis.Nil) {
+			slog.Warn("agent destroyed a sandbox with no known attempt", "sandbox", sandbox.SandboxID, "reason", sandbox.Reason)
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("read attempt of sandbox %s: %w", sandbox.SandboxID, err)
+		}
+		if err := c.schedule(ctx, AbuseReportsKey, attemptID, c.now()); err != nil {
+			return err
+		}
 	}
 	return nil
 }

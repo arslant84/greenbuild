@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/agentclient"
 	agentv1 "github.com/arslant84/greenbuild/packages/agent-api/agent/v1"
 	"github.com/arslant84/greenbuild/packages/queue"
 	"github.com/redis/go-redis/v9"
@@ -32,6 +33,7 @@ const (
 type Agent interface {
 	CreateSandbox(ctx context.Context, req *agentv1.CreateSandboxRequest) (string, error)
 	Destroy(ctx context.Context, sandboxID string) error
+	TakeDestroyed(ctx context.Context) ([]agentclient.Destroyed, error)
 }
 
 // Options configures a Consumer. Name must be unique per engine instance. Now defaults to time.Now.

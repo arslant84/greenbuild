@@ -28,6 +28,7 @@ const (
 	SandboxAgent_CopyIn_FullMethodName        = "/greenbuild.agent.v1.SandboxAgent/CopyIn"
 	SandboxAgent_Health_FullMethodName        = "/greenbuild.agent.v1.SandboxAgent/Health"
 	SandboxAgent_Run_FullMethodName           = "/greenbuild.agent.v1.SandboxAgent/Run"
+	SandboxAgent_TakeDestroyed_FullMethodName = "/greenbuild.agent.v1.SandboxAgent/TakeDestroyed"
 )
 
 // SandboxAgentClient is the client API for SandboxAgent service.
@@ -45,6 +46,9 @@ type SandboxAgentClient interface {
 	Health(ctx context.Context, in *HealthRequest, opts ...grpc.CallOption) (*HealthResponse, error)
 	// Runs a command without a terminal and returns its exit code, e.g. the checker during a check.
 	Run(ctx context.Context, in *RunRequest, opts ...grpc.CallOption) (*RunResponse, error)
+	// Returns, once, the sandboxes the agent destroyed on its own and why, e.g. for using all their CPU.
+	// The control plane polls it to tell the API; the list is lost if the agent restarts.
+	TakeDestroyed(ctx context.Context, in *TakeDestroyedRequest, opts ...grpc.CallOption) (*TakeDestroyedResponse, error)
 }
 
 type sandboxAgentClient struct {
@@ -118,6 +122,16 @@ func (c *sandboxAgentClient) Run(ctx context.Context, in *RunRequest, opts ...gr
 	return out, nil
 }
 
+func (c *sandboxAgentClient) TakeDestroyed(ctx context.Context, in *TakeDestroyedRequest, opts ...grpc.CallOption) (*TakeDestroyedResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(TakeDestroyedResponse)
+	err := c.cc.Invoke(ctx, SandboxAgent_TakeDestroyed_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // SandboxAgentServer is the server API for SandboxAgent service.
 // All implementations must embed UnimplementedSandboxAgentServer
 // for forward compatibility.
@@ -133,6 +147,9 @@ type SandboxAgentServer interface {
 	Health(context.Context, *HealthRequest) (*HealthResponse, error)
 	// Runs a command without a terminal and returns its exit code, e.g. the checker during a check.
 	Run(context.Context, *RunRequest) (*RunResponse, error)
+	// Returns, once, the sandboxes the agent destroyed on its own and why, e.g. for using all their CPU.
+	// The control plane polls it to tell the API; the list is lost if the agent restarts.
+	TakeDestroyed(context.Context, *TakeDestroyedRequest) (*TakeDestroyedResponse, error)
 	mustEmbedUnimplementedSandboxAgentServer()
 }
 
@@ -160,6 +177,9 @@ func (UnimplementedSandboxAgentServer) Health(context.Context, *HealthRequest) (
 }
 func (UnimplementedSandboxAgentServer) Run(context.Context, *RunRequest) (*RunResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "method Run not implemented")
+}
+func (UnimplementedSandboxAgentServer) TakeDestroyed(context.Context, *TakeDestroyedRequest) (*TakeDestroyedResponse, error) {
+	return nil, status.Error(codes.Unimplemented, "method TakeDestroyed not implemented")
 }
 func (UnimplementedSandboxAgentServer) mustEmbedUnimplementedSandboxAgentServer() {}
 func (UnimplementedSandboxAgentServer) testEmbeddedByValue()                      {}
@@ -279,6 +299,24 @@ func _SandboxAgent_Run_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _SandboxAgent_TakeDestroyed_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(TakeDestroyedRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SandboxAgentServer).TakeDestroyed(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: SandboxAgent_TakeDestroyed_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SandboxAgentServer).TakeDestroyed(ctx, req.(*TakeDestroyedRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // SandboxAgent_ServiceDesc is the grpc.ServiceDesc for SandboxAgent service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -305,6 +343,10 @@ var SandboxAgent_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Run",
 			Handler:    _SandboxAgent_Run_Handler,
+		},
+		{
+			MethodName: "TakeDestroyed",
+			Handler:    _SandboxAgent_TakeDestroyed_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{

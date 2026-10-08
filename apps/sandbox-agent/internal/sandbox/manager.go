@@ -36,6 +36,8 @@ type Manager struct {
 	runtime  string
 	ttlGrace time.Duration
 	now      func() time.Time
+	// destroyed is what the agent destroyed on its own, until the control plane takes it.
+	destroyed destroyedJournal
 }
 
 // NewManager returns a Manager that runs every sandbox under the given OCI runtime.

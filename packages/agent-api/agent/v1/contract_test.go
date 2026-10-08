@@ -19,7 +19,7 @@ func TestServiceHasTheAgreedMethods(t *testing.T) {
 	for i := range service.Methods().Len() {
 		names = append(names, string(service.Methods().Get(i).Name()))
 	}
-	want := []string{"CreateSandbox", "Destroy", "Exec", "CopyIn", "Health", "Run"}
+	want := []string{"CreateSandbox", "Destroy", "Exec", "CopyIn", "Health", "Run", "TakeDestroyed"}
 	if !slices.Equal(names, want) {
 		t.Errorf("methods = %v, want %v", names, want)
 	}

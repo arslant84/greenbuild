@@ -29,6 +29,12 @@ func AttemptSandboxKey(attemptID string) string {
 	return "engine:attempt:" + attemptID + ":sandbox"
 }
 
+// SandboxAttemptKey holds the attempt a sandbox was started for, so what the agent reports about a
+// sandbox reaches the right attempt.
+func SandboxAttemptKey(sandboxID string) string {
+	return "engine:sandbox:" + sandboxID + ":attempt"
+}
+
 // handle returns an error only when Redis fails; agent failures become a failed status or a retry.
 func (c *Consumer) handle(ctx context.Context, message redis.XMessage) error {
 	create, err := c.decode(message)
@@ -80,6 +86,9 @@ func (c *Consumer) sandboxFor(ctx context.Context, create queue.SandboxCreate) (
 	ttl := time.Duration(create.TTLSeconds)*time.Second + mappingGrace
 	if err := c.redis.Set(ctx, key, sandboxID, ttl).Err(); err != nil {
 		return "", fmt.Errorf("save %s: %w", key, err)
+	}
+	if err := c.redis.Set(ctx, SandboxAttemptKey(sandboxID), create.AttemptID, ttl).Err(); err != nil {
+		return "", fmt.Errorf("save %s: %w", SandboxAttemptKey(sandboxID), err)
 	}
 	return sandboxID, nil
 }

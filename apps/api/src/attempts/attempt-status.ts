@@ -1,5 +1,5 @@
 import { and, attempts, eq, sandboxSessions } from "@greenbuild/db";
-import type { SandboxStatus } from "@greenbuild/shared";
+import { SANDBOX_REASON_ABUSE, type SandboxStatus } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { z } from "zod";
 import { DatabaseClient } from "../infra/services.js";
@@ -44,12 +44,17 @@ async function markFailed(tx: Transaction, attemptId: string, reason: string | u
   }
 }
 
-// A sandbox that goes away while the attempt is still open ends it: the TTL ran out.
+// A sandbox that goes away while the attempt is still open ends it: the TTL ran out, or the agent
+// killed it for using all of its CPU, which fails the attempt and flags it for review.
 async function markDestroyed(tx: Transaction, attemptId: string, reason: string | undefined): Promise<void> {
   const now = new Date();
   await tx
     .update(sandboxSessions)
     .set({ status: "destroyed", destroyedAt: now, exitReason: reason ?? null })
     .where(and(eq(sandboxSessions.attemptId, attemptId), eq(sandboxSessions.status, "ready")));
-  await finishAttempt(tx, { attemptId, from: ["ready"], to: "expired", finishedAt: now });
+  const abuse = reason === SANDBOX_REASON_ABUSE;
+  const finished = await finishAttempt(tx, { attemptId, from: ["ready"], to: abuse ? "failed" : "expired", finishedAt: now });
+  if (finished && abuse) {
+    await tx.update(attempts).set({ flagged: true }).where(eq(attempts.id, attemptId));
+  }
 }
