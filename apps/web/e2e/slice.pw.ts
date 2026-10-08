@@ -9,6 +9,8 @@ const CHECK_TIMEOUT_MS = 60_000;
 
 async function startChallenge(page: Page): Promise<void> {
   await page.goto("/");
+  await page.getByRole("link", { name: /Start today's challenge/ }).click();
+  await page.getByRole("link", { name: /Let's go/ }).click();
   await expect(page).toHaveURL(/\/play$/);
   await page.getByRole("button", { name: /Start Challenge/ }).click();
   await expect(page).toHaveURL(/\/play\/[0-9a-f-]{36}$/);
