@@ -1,0 +1,38 @@
+import { ViewAllArrowIcon } from "../../ui/icons-landing";
+
+const COLUMNS = [
+  { label: "Rank", width: "w-[77px]", align: "" },
+  { label: "Engineer", width: "w-[489px]", align: "" },
+  { label: "Today's solve time", width: "w-[196px]", align: "" },
+  { label: "Active streak", width: "w-[151px]", align: "" },
+  { label: "Glicko-2 rating", width: "flex-1", align: "text-right" },
+];
+
+// Figma (Landing) › Section - WEEKLY LEADERBOARD PREVIEW. Rankings and the leaderboard screen do not
+// exist yet, so the table shows its empty state instead of the frame's sample players.
+export function LeaderboardPreview() {
+  return (
+    <section className="flex flex-col gap-5 py-8">
+      <div className="flex items-end justify-between">
+        <div className="flex flex-col gap-[5px] pt-[3px]">
+          <span className="font-mono text-[11px] leading-[14px] font-semibold tracking-[1.1px] text-accent-soft uppercase">Global SRE standings</span>
+          <h2 className="text-2xl leading-[30px] font-bold tracking-[-0.6px] text-ink">Weekly Leaderboard</h2>
+        </div>
+        <span className="flex items-center gap-1 text-[13px] leading-[18px] font-medium text-accent-soft opacity-60" aria-disabled="true">
+          View all ranked engineers
+          <ViewAllArrowIcon />
+        </span>
+      </div>
+      <div className="overflow-hidden rounded-xl bg-canvas shadow-[0_8px_10px_-6px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1)]">
+        <div className="flex bg-surface-raised">
+          {COLUMNS.map((column) => (
+            <span key={column.label} className={`type-label p-3 font-semibold tracking-[0.5px] text-ink-subtle uppercase ${column.width} ${column.align}`}>
+              {column.label}
+            </span>
+          ))}
+        </div>
+        <p className="type-body px-3 py-[14px] text-center text-ink-subtle">No rankings yet</p>
+      </div>
+    </section>
+  );
+}

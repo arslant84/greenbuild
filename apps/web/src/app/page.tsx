@@ -1,6 +1,8 @@
+import { ForCompanies } from "./_landing/for-companies";
 import { Hero } from "./_landing/hero";
 import { LandingFooter, LandingHeader } from "./_landing/landing-chrome";
 import { HowItWorks } from "./_landing/how-it-works";
+import { LeaderboardPreview } from "./_landing/leaderboard-preview";
 import { MetricsStrip } from "./_landing/metrics-strip";
 import { SampleScenario } from "./_landing/sample-scenario";
 
@@ -16,6 +18,8 @@ export default function LandingPage() {
           <MetricsStrip />
           <HowItWorks />
           <SampleScenario />
+          <LeaderboardPreview />
+          <ForCompanies />
         </main>
         <LandingFooter />
       </div>
