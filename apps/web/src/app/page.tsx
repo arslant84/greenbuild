@@ -1,6 +1,8 @@
 import { Hero } from "./_landing/hero";
 import { LandingFooter, LandingHeader } from "./_landing/landing-chrome";
+import { HowItWorks } from "./_landing/how-it-works";
 import { MetricsStrip } from "./_landing/metrics-strip";
+import { SampleScenario } from "./_landing/sample-scenario";
 
 // Figma "Hotfix — Daily DevOps Troubleshooting Game" (3:411): the public landing page.
 export default function LandingPage() {
@@ -12,6 +14,8 @@ export default function LandingPage() {
         <main className="px-8">
           <Hero />
           <MetricsStrip />
+          <HowItWorks />
+          <SampleScenario />
         </main>
         <LandingFooter />
       </div>
