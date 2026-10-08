@@ -101,6 +101,7 @@ export interface Player {
   hint: (id: string) => Promise<Response>;
   result: (id: string) => Promise<Response>;
   card: (slug: string) => Promise<Response>;
+  catalog: (query: string) => Promise<Response>;
 }
 
 // player calls the API as one dev user.
@@ -117,5 +118,6 @@ export async function player(app: () => AttemptsApp, userId: string): Promise<Pl
     hint: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/hint`, { method: "POST", headers }),
     result: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/result`, { headers }),
     card: (slug) => fetch(`${app().baseUrl}/v1/challenges/${slug}`, { headers }),
+    catalog: (query) => fetch(`${app().baseUrl}/v1/challenges${query}`, { headers }),
   };
 }
