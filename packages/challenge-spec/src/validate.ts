@@ -2,16 +2,18 @@ import { access, readdir, readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
 import { type ChallengeManifest, challengeManifestSchema } from "@greenbuild/shared";
 import { parse } from "yaml";
+import { parseHints } from "./hints.js";
 
 // architecture.md "Challenge specification": every challenge folder holds these.
 export const REQUIRED_FILES = ["challenge.yaml", "Dockerfile", "setup.sh", "check.sh", "solution.sh", "hints.md", "README.md"] as const;
-const HINT_HEADING = /^## Hint \d+[ \t]*$/gm;
 
 export interface ChallengeReport {
   id: string;
   errors: string[];
   // Set once challenge.yaml parsed and passed the schema, with defaults filled in.
   manifest?: ChallengeManifest;
+  // The texts of hints.md, weakest first; set with manifest.
+  hints?: string[];
 }
 
 type ManifestResult = { manifest: ChallengeManifest } | { errors: string[] };
@@ -27,8 +29,9 @@ export async function validateChallenge(dir: string): Promise<ChallengeReport> {
   if ("errors" in result) {
     return { id, errors: result.errors };
   }
-  const errors = [...idErrors(id, result.manifest), ...(await hintErrors(dir, result.manifest))];
-  return { id, errors, manifest: result.manifest };
+  const hints = parseHints(await readFile(join(dir, "hints.md"), "utf8"));
+  const errors = [...idErrors(id, result.manifest), ...hintErrors(hints, result.manifest)];
+  return { id, errors, manifest: result.manifest, hints };
 }
 
 // validateAll checks every folder directly under root, in name order.
@@ -58,9 +61,11 @@ function idErrors(folder: string, manifest: ChallengeManifest): string[] {
   return manifest.id === folder ? [] : [`id "${manifest.id}" must match the folder name "${folder}"`];
 }
 
-async function hintErrors(dir: string, manifest: ChallengeManifest): Promise<string[]> {
-  const headings = (await readFile(join(dir, "hints.md"), "utf8")).match(HINT_HEADING)?.length ?? 0;
-  return headings === manifest.hints ? [] : [`hints: ${manifest.hints} in challenge.yaml, but hints.md has ${headings} "## Hint N" sections`];
+function hintErrors(hints: string[], manifest: ChallengeManifest): string[] {
+  if (hints.includes("")) {
+    return ['hints.md has an empty "## Hint N" section'];
+  }
+  return hints.length === manifest.hints ? [] : [`hints: ${manifest.hints} in challenge.yaml, but hints.md has ${hints.length} "## Hint N" sections`];
 }
 
 function formatIssue(issue: { path: PropertyKey[]; message: string }): string {

@@ -15,11 +15,20 @@ const CHALLENGES_DIR = fileURLToPath(new URL("../../../challenges", import.meta.
 interface SeedChallenge {
   manifest: ChallengeManifest;
   checkerHash: string;
+  hints: string[];
+}
+
+interface PublishedVersion {
+  id: string;
+  specJson: unknown;
+  checkerHash: string;
+  hintsJson: string[] | null;
 }
 
 // seedChallenges adds every challenge folder in challengesDir and each version it does not have yet;
-// running it again changes nothing. A published version is never changed: if its manifest or
-// checker differs from the folder, the seed stops and asks for a new version.
+// running it again changes nothing. A published version is never changed: if its manifest, checker
+// or hints differ from the folder, the seed stops and asks for a new version. Versions published
+// before hints were stored get theirs once.
 export async function seedChallenges(db: Database, challengesDir = CHALLENGES_DIR): Promise<void> {
   const reports = await validateAll(challengesDir);
   const problems = reports.flatMap((report) => report.errors.map((error) => `${report.id}: ${error}`));
@@ -27,13 +36,13 @@ export async function seedChallenges(db: Database, challengesDir = CHALLENGES_DI
     throw new Error(`seed: invalid challenges:\n${problems.join("\n")}`);
   }
   for (const report of reports) {
-    if (report.manifest) {
-      await seedChallenge(db, { manifest: report.manifest, checkerHash: await checkerHash(join(challengesDir, report.id)) });
+    if (report.manifest && report.hints) {
+      await seedChallenge(db, { manifest: report.manifest, hints: report.hints, checkerHash: await checkerHash(join(challengesDir, report.id)) });
     }
   }
 }
 
-async function seedChallenge(db: Database, { manifest, checkerHash }: SeedChallenge): Promise<void> {
+async function seedChallenge(db: Database, { manifest, checkerHash, hints }: SeedChallenge): Promise<void> {
   await db.transaction(async (tx) => {
     await tx
       .insert(challenges)
@@ -44,11 +53,14 @@ async function seedChallenge(db: Database, { manifest, checkerHash }: SeedChalle
       throw new Error(`seed: challenge ${manifest.id} is missing after insert`);
     }
     const [published] = await tx
-      .select({ specJson: challengeVersions.specJson, checkerHash: challengeVersions.checkerHash })
+      .select({ id: challengeVersions.id, specJson: challengeVersions.specJson, checkerHash: challengeVersions.checkerHash, hintsJson: challengeVersions.hintsJson })
       .from(challengeVersions)
       .where(and(eq(challengeVersions.challengeId, challenge.id), eq(challengeVersions.version, manifest.version)));
     if (published) {
-      refuseChanges(manifest, checkerHash, published);
+      refuseChanges({ manifest, checkerHash, hints }, published);
+      if (published.hintsJson === null) {
+        await tx.update(challengeVersions).set({ hintsJson: hints }).where(eq(challengeVersions.id, published.id));
+      }
       return;
     }
     await tx.insert(challengeVersions).values({
@@ -58,24 +70,29 @@ async function seedChallenge(db: Database, { manifest, checkerHash }: SeedChalle
       // The tag pnpm play:up builds; task 28g switches to registry digests.
       imageRef: `greenbuild-challenge/${manifest.id}:${manifest.version}`,
       checkerHash,
+      hintsJson: hints,
       source: manifest.source,
     });
   });
 }
 
-function refuseChanges(manifest: ChallengeManifest, checkerHash: string, published: { specJson: unknown; checkerHash: string }): void {
-  const changed = changedFile(manifest, checkerHash, published);
+function refuseChanges(folder: SeedChallenge, published: PublishedVersion): void {
+  const { manifest } = folder;
+  const changed = changedFile(folder, published);
   if (changed) {
     throw new Error(`seed: ${manifest.id} version ${manifest.version} is published and its ${changed} changed; create version ${manifest.version + 1}`);
   }
 }
 
-function changedFile(manifest: ChallengeManifest, checkerHash: string, published: { specJson: unknown; checkerHash: string }): string | null {
-  if (published.checkerHash !== checkerHash) {
+function changedFile(folder: SeedChallenge, published: PublishedVersion): string | null {
+  if (published.checkerHash !== folder.checkerHash) {
     return "check.sh";
   }
-  if (!isDeepStrictEqual(published.specJson, manifest)) {
+  if (!isDeepStrictEqual(published.specJson, folder.manifest)) {
     return "challenge.yaml";
+  }
+  if (published.hintsJson !== null && !isDeepStrictEqual(published.hintsJson, folder.hints)) {
+    return "hints.md";
   }
   return null;
 }

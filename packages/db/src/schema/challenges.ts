@@ -40,6 +40,8 @@ export const challengeVersions = pgTable(
     // Written by the challenge pipeline after the image is pushed to the registry.
     imageDigest: text("image_digest"),
     checkerHash: text("checker_hash").notNull(),
+    // hints.md, weakest first. Null only for versions published before hints were stored; the seed fills them.
+    hintsJson: jsonb("hints_json").$type<string[]>(),
     rating: real("rating").notNull().default(GLICKO_INITIAL_RATING),
     ratingDeviation: real("rating_deviation").notNull().default(GLICKO_INITIAL_RATING_DEVIATION),
     solveRateBaseline: real("solve_rate_baseline"),
