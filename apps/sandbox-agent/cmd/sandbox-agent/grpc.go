@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net"
+	"time"
 
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/agentserver"
 	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/config"
@@ -13,8 +14,8 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-// startGRPC serves the agent API over mTLS and returns a function that stops it and the bound
-// address (useful with port 0). Without TLS files the server stays off: the agent API never
+// startGRPC serves the agent API over mTLS and returns a function that stops it (within
+// cfg.ShutdownTimeout) and the bound address (useful with port 0). Without TLS files the server stays off: the agent API never
 // runs unencrypted or unauthenticated.
 func startGRPC(cfg config.Config, sandboxes agentserver.Sandboxes) (func(), string, error) {
 	if !cfg.TLS.Enabled() {
@@ -38,5 +39,24 @@ func startGRPC(cfg config.Config, sandboxes agentserver.Sandboxes) (func(), stri
 		}
 	}()
 	slog.Info("sandbox-agent gRPC listening", "addr", listener.Addr().String())
-	return server.GracefulStop, listener.Addr().String(), nil
+	return stopWithin(server, cfg.ShutdownTimeout), listener.Addr().String(), nil
+}
+
+// stopWithin stops server gracefully, and forcibly once timeout passes: an open terminal (Exec) stream
+// would otherwise keep GracefulStop waiting for as long as its player stays connected.
+func stopWithin(server *grpc.Server, timeout time.Duration) func() {
+	return func() {
+		stopped := make(chan struct{})
+		go func() {
+			server.GracefulStop()
+			close(stopped)
+		}()
+		select {
+		case <-stopped:
+		case <-time.After(timeout):
+			slog.Warn("gRPC graceful stop timed out; closing open streams", "timeout", timeout)
+			server.Stop()
+			<-stopped
+		}
+	}
 }

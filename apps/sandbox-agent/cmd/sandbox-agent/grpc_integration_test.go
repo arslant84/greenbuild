@@ -41,6 +41,21 @@ func runtimeUnderTest() string {
 // startAgent serves the real agent API over mTLS and returns its address and the certificates.
 func startAgent(t *testing.T) (string, devpki.Bundle) {
 	t.Helper()
+	agent := startAgentWithin(t, 0)
+	t.Cleanup(agent.stop)
+	return agent.addr, agent.bundle
+}
+
+type runningAgent struct {
+	stop    func()
+	addr    string
+	bundle  devpki.Bundle
+	manager *sandbox.Manager
+}
+
+// startAgentWithin starts the agent with the given shutdown timeout; the caller stops it.
+func startAgentWithin(t *testing.T, shutdownTimeout time.Duration) runningAgent {
+	t.Helper()
 	bundle, err := devpki.Generate(devpki.Options{ServerHosts: []string{"localhost"}, ClientName: "sandbox-engine", ValidFor: time.Hour})
 	if err != nil {
 		t.Fatalf("generate certificates: %v", err)
@@ -56,17 +71,17 @@ func startAgent(t *testing.T) (string, devpki.Bundle) {
 	t.Cleanup(func() { _ = docker.Close() })
 	ensureImage(t, docker)
 
-	cfg := config.Config{GRPCAddr: "127.0.0.1:0", TLS: config.TLSFiles{
+	cfg := config.Config{GRPCAddr: "127.0.0.1:0", ShutdownTimeout: shutdownTimeout, TLS: config.TLSFiles{
 		CA:   filepath.Join(dir, devpki.CAFile),
 		Cert: filepath.Join(dir, devpki.ServerCertFile),
 		Key:  filepath.Join(dir, devpki.ServerKeyFile),
 	}}
-	stop, addr, err := startGRPC(cfg, agentserver.FromManager(sandbox.NewManager(docker, runtimeUnderTest())))
+	manager := sandbox.NewManager(docker, runtimeUnderTest())
+	stop, addr, err := startGRPC(cfg, agentserver.FromManager(manager))
 	if err != nil {
 		t.Fatalf("startGRPC() error = %v", err)
 	}
-	t.Cleanup(stop)
-	return addr, bundle
+	return runningAgent{stop: stop, addr: addr, bundle: bundle, manager: manager}
 }
 
 // ensureImage pulls the test image when it is missing. Packages may run in any order on a fresh
