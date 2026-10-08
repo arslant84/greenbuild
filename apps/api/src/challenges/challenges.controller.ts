@@ -1,6 +1,8 @@
 import { challengeListQuerySchema, type ChallengeCard, type ChallengeList } from "@greenbuild/shared";
 import { Controller, Get, Param, Query } from "@nestjs/common";
 import { z } from "zod";
+import type { AuthenticatedUser } from "../auth/dev-user-token.js";
+import { CurrentUser } from "../auth/dev-user.guard.js";
 import { parseInput } from "../validation.js";
 import { Catalog } from "./catalog.js";
 import { challengeCard } from "./challenge-card.js";
@@ -16,8 +18,8 @@ export class ChallengesController {
   ) {}
 
   @Get()
-  async list(@Query() query: unknown): Promise<ChallengeList> {
-    return this.catalog.page(parseInput(challengeListQuerySchema, query));
+  async list(@CurrentUser() user: AuthenticatedUser, @Query() query: unknown): Promise<ChallengeList> {
+    return this.catalog.page(user.id, parseInput(challengeListQuerySchema, query));
   }
 
   @Get(":slug")
