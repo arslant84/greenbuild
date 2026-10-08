@@ -1,0 +1,3 @@
+#!/bin/sh
+# notify <message>: records a deploy event where the team's dashboard reads it.
+printf '%s %s\n' "$(/bin/date -Iseconds)" "$*" >> /var/log/deploy/events.log

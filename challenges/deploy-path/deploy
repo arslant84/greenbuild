@@ -1,0 +1,17 @@
+#!/bin/sh
+# deploy <artifact.tar.gz>: unpacks a release of the site and makes it live.
+set -eu
+
+# Only our vetted deploy tools (OPS-388).
+PATH=/opt/deploy/bin
+export PATH
+
+artifact="${1:?usage: deploy <artifact.tar.gz>}"
+. /etc/deploy.conf
+release="$SITE_ROOT/releases/$(date +%Y%m%d%H%M%S)"
+
+mkdir -p "$release"
+tar -xzf "$artifact" -C "$release"
+ln -sfn "$release" "$SITE_ROOT/current"
+nginx -s reload
+notify "deployed $(basename "$artifact") to $release"
