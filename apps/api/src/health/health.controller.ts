@@ -1,10 +1,12 @@
 import { Controller, Get } from "@nestjs/common";
+import { Public } from "../auth/public.js";
 
 export interface HealthStatus {
   status: "ok";
 }
 
 // Public on purpose: container and load balancer probes call it without credentials.
+@Public()
 @Controller("health")
 export class HealthController {
   @Get()

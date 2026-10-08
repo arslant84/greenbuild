@@ -6,17 +6,16 @@ import {
   listAttemptsQuerySchema,
   startAttemptRequestSchema,
 } from "@greenbuild/shared";
-import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from "@nestjs/common";
 import { z } from "zod";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
-import { CurrentUser, DevUserGuard } from "../auth/dev-user.guard.js";
+import { CurrentUser } from "../auth/dev-user.guard.js";
 import { parseInput } from "../validation.js";
 import { AttemptReader } from "./attempt-reader.js";
 import { AttemptsService } from "./attempts.service.js";
 import { ChecksService } from "./checks.service.js";
 
 @Controller("v1/attempts")
-@UseGuards(DevUserGuard)
 export class AttemptsController {
   constructor(
     private readonly attempts: AttemptsService,
