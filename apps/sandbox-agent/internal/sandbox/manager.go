@@ -21,6 +21,7 @@ type DockerAPI interface {
 	ExecInspect(ctx context.Context, execID string, options client.ExecInspectOptions) (client.ExecInspectResult, error)
 	ContainerList(ctx context.Context, options client.ContainerListOptions) (client.ContainerListResult, error)
 	ExecResize(ctx context.Context, execID string, options client.ExecResizeOptions) (client.ExecResizeResult, error)
+	ContainerStats(ctx context.Context, id string, options client.ContainerStatsOptions) (client.ContainerStatsResult, error)
 }
 
 // SetupScriptPath is where every challenge image keeps the script that breaks its environment.
@@ -51,6 +52,7 @@ func (m *Manager) CreateSandbox(ctx context.Context, spec Spec) (string, error) 
 
 	config, hostConfig := ContainerConfig(spec, m.runtime)
 	config.Labels[LabelDeadline] = strconv.FormatInt(m.deadlineFor(spec).Unix(), 10)
+	config.Labels[LabelCPUMillis] = strconv.FormatInt(spec.CPUMillis, 10)
 	created, err := m.docker.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig})
 	if err != nil {
 		return "", fmt.Errorf("create sandbox from %s: %w", spec.Image, err)
