@@ -4,3 +4,4 @@ export * from "./queue/index.js";
 export * from "./api/attempts.js";
 export * from "./api/challenges.js";
 export * from "./challenge/manifest.js";
+export * from "./logging/index.js";
