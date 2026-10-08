@@ -51,6 +51,7 @@ function entries(db: Database, latest: LatestVersions, progress: PlayerProgress)
       finishedAttempts: progress.finishedAttempts,
       bestSolveMs: progress.bestSolveMs,
       activeAttemptId: progress.activeAttemptId,
+      lastFinishedAttemptId: progress.lastFinishedAttemptId,
     })
     .from(challenges)
     .innerJoin(latest, eq(latest.challengeId, challenges.id))
@@ -75,6 +76,7 @@ function toEntry(row: EntryRow): CatalogEntry {
       finished_attempts: row.finishedAttempts ?? 0,
       best_solve_ms: row.bestSolveMs,
       active_attempt_id: row.activeAttemptId,
+      last_finished_attempt_id: row.lastFinishedAttemptId,
     },
   };
 }

@@ -25,6 +25,7 @@ export function playerProgress(db: Database, userId: string) {
     .select({
       challengeId: challengeVersions.challengeId,
       activeAttemptId: sql<string | null>`(array_agg(${attempts.id}) filter (where ${isActive}))[1]`.as("active_attempt_id"),
+      lastFinishedAttemptId: sql<string | null>`(array_agg(${attempts.id} order by ${attempts.createdAt} desc) filter (where not ${isActive}))[1]`.as("last_finished_attempt_id"),
       solved: sql<boolean>`bool_or(${isSolved})`.as("solved"),
       finishedAttempts: sql<number>`(count(*) filter (where not ${isActive}))::int`.as("finished_attempts"),
       bestSolveMs: sql<number | null>`min(${attempts.durationMs}) filter (where ${isSolved})`.as("best_solve_ms"),

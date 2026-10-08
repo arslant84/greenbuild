@@ -16,7 +16,7 @@ describe("GET /v1/challenges: the player's own progress", () => {
 
   it("shows nothing for a challenge never attempted", async () => {
     const { entry } = await nginx502(await player(app, randomUUID()));
-    expect(entry?.progress).toEqual({ status: null, finished_attempts: 0, best_solve_ms: null, active_attempt_id: null });
+    expect(entry?.progress).toEqual({ status: null, finished_attempts: 0, best_solve_ms: null, active_attempt_id: null, last_finished_attempt_id: null });
   });
 
   it("shows a running attempt as in progress, then a solve with its time", async () => {
@@ -26,7 +26,7 @@ describe("GET /v1/challenges: the player's own progress", () => {
     app().engine.answers.push(PASSED);
     await user.check(id);
     const { list, entry } = await nginx502(user);
-    expect(entry?.progress).toMatchObject({ status: "solved", finished_attempts: 1, active_attempt_id: null });
+    expect(entry?.progress).toMatchObject({ status: "solved", finished_attempts: 1, active_attempt_id: null, last_finished_attempt_id: id });
     expect(entry?.progress.best_solve_ms).toBeGreaterThanOrEqual(0);
     expect(list.catalog.solved).toBe(1);
     expect((await nginx502(user, "&status=solved")).list.challenges.map((card) => card.slug)).toEqual(["nginx-502-upstream"]);
@@ -38,7 +38,7 @@ describe("GET /v1/challenges: the player's own progress", () => {
     const id = await readyAttempt(app, user);
     await user.abandon(id);
     await waitForStatus(user, id, "abandoned");
-    expect((await nginx502(user)).entry?.progress).toMatchObject({ status: "failed", finished_attempts: 1 });
+    expect((await nginx502(user)).entry?.progress).toMatchObject({ status: "failed", finished_attempts: 1, last_finished_attempt_id: id });
     expect((await nginx502(user, "&status=failed")).entry).toBeDefined();
     expect((await nginx502(await player(app, randomUUID()))).entry?.progress.status).toBeNull();
   });

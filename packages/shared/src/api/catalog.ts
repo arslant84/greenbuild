@@ -45,6 +45,8 @@ export const catalogProgressSchema = z.object({
   finished_attempts: z.number().int().nonnegative(),
   best_solve_ms: z.number().int().nonnegative().nullable(),
   active_attempt_id: z.uuid().nullable(),
+  // The newest finished attempt, whose result the card's Review opens.
+  last_finished_attempt_id: z.uuid().nullable(),
 });
 
 export const catalogEntrySchema = challengeCardSchema.extend({ progress: catalogProgressSchema });
