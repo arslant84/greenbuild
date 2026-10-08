@@ -36,24 +36,35 @@ async function everyPage(app: () => AttemptsApp, query: string): Promise<string[
   return slugs;
 }
 
+async function listsPublicOnly(app: () => AttemptsApp): Promise<void> {
+  const list = await catalog(app, "?limit=50");
+  expect(slugsOf(list)).toContain("nginx-502-upstream");
+  expect(slugsOf(list)).not.toContain(PRIVATE_SLUG);
+  expect(list.next_cursor).toBeNull();
+  expect(list.total).toBe(list.challenges.length);
+  expect(list.catalog.challenges).toBe(list.total);
+  expect(list.catalog.skills.linux).toBe(list.challenges.filter((card) => card.skills.includes("linux")).length);
+}
+
+async function filters(app: () => AttemptsApp): Promise<void> {
+  const either = await catalog(app, "?skill=postgresql&skill=redis&limit=50");
+  expect(either.challenges.length).toBeGreaterThan(0);
+  expect(either.challenges.every((card) => card.skills.some((skill) => ["postgresql", "redis"].includes(skill)))).toBe(true);
+  expect((await catalog(app, "?difficulty_max=3&limit=50")).challenges.every((card) => card.difficulty <= 3)).toBe(true);
+  const window = await catalog(app, "?sla=10to15&limit=50");
+  expect(window.challenges.every((card) => card.time_limit_sec > 600 && card.time_limit_sec <= 900)).toBe(true);
+  const search = await catalog(app, "?q=POSTGRESQL&limit=50");
+  expect(slugsOf(search)).toContain("postgres-data-permissions");
+  expect(search.total).toBe(search.challenges.length);
+  expect((await catalog(app, "?q=%25")).total).toBe(0);
+}
+
 describe("GET /v1/challenges", () => {
   const app = useAttemptsApp();
   beforeAll(() => insertPrivateChallenge(app().env.DATABASE_URL));
 
-  it("lists live public challenges as cards and leaves out private ones", async () => {
-    const list = await catalog(app, "?limit=50");
-    expect(slugsOf(list)).toContain("nginx-502-upstream");
-    expect(slugsOf(list)).not.toContain(PRIVATE_SLUG);
-    expect(list.next_cursor).toBeNull();
-  });
-
-  it("filters by skill and by difficulty", async () => {
-    const postgres = await catalog(app, "?skill=postgresql&limit=50");
-    expect(postgres.challenges.length).toBeGreaterThan(0);
-    expect(postgres.challenges.every((card) => card.skills.includes("postgresql"))).toBe(true);
-    const easy = await catalog(app, "?difficulty_max=3&limit=50");
-    expect(easy.challenges.every((card) => card.difficulty <= 3)).toBe(true);
-  });
+  it("lists live public challenges as cards, counts them, and leaves out private ones", () => listsPublicOnly(app));
+  it("filters by any of several skills, difficulty, time limit and text", () => filters(app));
 
   it("pages through everything once, newest first", async () => {
     expect(await everyPage(app, "")).toEqual(slugsOf(await catalog(app, "?limit=50")));
@@ -64,6 +75,8 @@ describe("GET /v1/challenges", () => {
     ["a limit above the maximum", "?limit=51"],
     ["an unknown difficulty", "?difficulty_min=0"],
     ["a reversed difficulty range", "?difficulty_min=7&difficulty_max=3"],
+    ["an unknown SLA window", "?sla=20to30"],
+    ["an unknown status", "?status=lost"],
     ["a malformed cursor", "?cursor=nope"],
   ])("answers %s with 400", async (_name, query) => {
     expect((await (await player(app, randomUUID())).catalog(query)).status).toBe(400);

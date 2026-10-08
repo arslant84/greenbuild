@@ -486,7 +486,7 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`; OpenAPI из 
 | --- | --- | --- | --- | --- |
 | GET / PATCH | /v1/me | Профиль, timezone, режим поиска, раскрываемые поля | 1 | Нет — задача 32 |
 | GET | /v1/daily?track= | Задание дня и статус | 2 | Нет — задача 41b |
-| GET | /v1/challenges | Каталог живых публичных заданий, новые первыми: `skill`, `difficulty_min`, `difficulty_max`, `limit` (по умолчанию 9, не больше 50), `cursor` → `{challenges, next_cursor}` | 1 | Да; требует сессию |
+| GET | /v1/challenges | Каталог живых публичных заданий, новые первыми. Фильтры: `skill` и `sla` (окна лимита времени), повторяемые; `q`; `difficulty_min`/`difficulty_max`; `status` (unsolved, solved, failed, flagged — по попыткам игрока); `limit` (по умолчанию 9, не больше 50), `cursor` → `{challenges (с progress игрока), next_cursor, total, catalog}` | 1 | Да; требует сессию |
 | GET | /v1/challenges/{slug} | Карточка задания (название, условие, сложность, навыки, лимит времени живой версии) | 1 | Да; требует сессию |
 | POST | /v1/attempts | Начать попытку: `{challenge_slug}` → живая версия → seed → `sandbox.create`; вторая активная попытка — 409 | 1 | Да |
 | GET | /v1/attempts/{id} | Статус и токен подключения, когда песочница готова; только владелец, остальным 404 | 1 | Да |
