@@ -1,0 +1,12 @@
+#!/bin/sh
+# nightly-report: renders the regional reports in parallel; exits non-zero when any render fails.
+set -u
+readonly REGIONS=80
+log=/var/log/reports/nightly.log
+done_count=$(seq "$REGIONS" | xargs -P "$REGIONS" -n 1 render-region 2>> "$log" | grep -c rendered)
+echo "$(date -Iseconds) rendered $done_count of $REGIONS regions" >> "$log"
+if [ "$done_count" -ne "$REGIONS" ]; then
+  echo "nightly-report: rendered $done_count of $REGIONS regions; see $log" >&2
+  exit 1
+fi
+echo "nightly-report: all $REGIONS regions rendered"

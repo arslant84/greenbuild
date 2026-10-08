@@ -1,0 +1,6 @@
+#!/bin/sh
+# cache-warmup: pre-computes the report cache before the nightly run (one-off, REP-80).
+# Waits for the cache to fill. The cache moved in REP-77, so it never does.
+while [ ! -f /var/cache/reports/ready ]; do
+  :
+done
