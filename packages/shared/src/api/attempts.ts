@@ -49,6 +49,8 @@ export const attemptResultSchema = z.object({
   // From the sandbox being ready to the passing check.
   duration_ms: z.number().int().nonnegative().nullable(),
   finished_at: z.iso.datetime().nullable(),
+  // XP the attempt earned; null until the worker credits it (task 42b), and for an attempt not solved.
+  xp_earned: z.number().int().nonnegative().nullable(),
   checks: z.array(
     z.object({ passed: z.boolean(), output_tail: z.string(), duration_ms: z.number().int().nonnegative(), checked_at: z.iso.datetime() }),
   ),

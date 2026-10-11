@@ -33,6 +33,10 @@ export const meResponseSchema = z.object({
   // When the timezone may change again; null when it may change now.
   timezone_locked_until: z.iso.datetime().nullable(),
   locale: z.string(),
+  // XP in total, the level it reaches, and XP earned since midnight in the player's timezone (task 42b).
+  xp: z.number().int().nonnegative(),
+  level: z.number().int().nonnegative(),
+  xp_today: z.number().int().nonnegative(),
 });
 
 // PATCH /v1/me: any subset of the editable fields.

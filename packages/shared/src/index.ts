@@ -7,5 +7,6 @@ export * from "./api/catalog.js";
 export * from "./api/me.js";
 export * from "./api/daily.js";
 export * from "./challenge/manifest.js";
+export * from "./game/levels.js";
 export * from "./game/xp.js";
 export * from "./logging/index.js";
