@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: backend-ipv6-only
+version: 1
+title: "Up, listening, unreachable"
+statement: "After this morning's app release the site answers 502, yet the app is running and answers on its port when its developers test it. The nginx configuration is managed elsewhere: leave it as it is and make the site work again."
+difficulty: 3            # 1–10
+skills: { linux: 0.7, nginx: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache at start; nginx workers and the app switch users; root edits files it does
+# not own and stops the app's process, as on a server.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [checkout, inventory, profiles] }
+  port: { range: [4000, 4999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
