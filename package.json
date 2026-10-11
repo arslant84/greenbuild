@@ -13,6 +13,7 @@
     "typecheck": "turbo run typecheck",
     "test": "turbo run test && node --test \"scripts/*.test.mjs\"",
     "play:up": "node scripts/play.mjs up",
+    "report:gate": "turbo run build --filter=@greenbuild/db... && node packages/db/dist/gate-report.js",
     "play:down": "node scripts/play.mjs down",
     "challenges:validate": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:validate",
     "challenges:schema": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:schema"

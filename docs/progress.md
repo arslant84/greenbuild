@@ -60,7 +60,7 @@ The vertical slice above covers part of Stage 1. Status of each Stage 1 item:
 | Attempt lifecycle: expiry, idle timeout, give up, `attempt.finished`, resume | Not started | Added in the 2026-10-04 revision: tasks 17a–21b |
 | Staging, and the task 16 journey passing there | Not started | Added from Stage 0: tasks 28a–28h |
 
-Stage 1 gate (20 engineers solve challenges; p95 start < 20 s; < 3% failed starts; no sandbox escape): not measured yet; needs staging, login and tasks 39a–39b.
+Stage 1 gate (20 engineers solve challenges; p95 start < 20 s; < 3% failed starts; no sandbox escape): not measured yet; needs staging, login and task 39b (the report, 39a, exists).
 
 ## Stage 1 — remaining tasks (from architecture.md, 2026-10-04 revision)
 
@@ -129,7 +129,7 @@ Order follows the recommendation for decision D2. "Blocked" means the task waits
 | 37c | `play:up` on Windows | Done | `pnpm play:up`/`play:down` run `scripts/play.mjs`, which starts `play-stack.sh` with Git Bash on Windows (found next to `git.exe` from `where git`, under Git's `cmd` or `mingw64in` folder), never WSL's `bash`, and stops with an install hint when Git Bash is missing; elsewhere it uses `bash`. The play runbook explains it and how to delete a rejected `gb_dev_session` cookie (the web app keeps a cookie that is present). Root `pnpm test` also runs the scripts' tests (`node --test`). Verified: 4 unit tests of the shell choice (Linux, Git's cmd folder, its mingw64 folder, Git Bash missing) |
 | 37d | Go processes after `pnpm dev` on Windows | Not started | |
 | 38 | ADRs | Not started | |
-| 39a | Gate report | Not started | |
+| 39a | Gate report | Done | `pnpm report:gate --since YYYY-MM-DD` (`packages/db/src/gate-report.ts`, reads `DATABASE_URL`) prints, for attempts created since that UTC date: p95 time from attempt creation to `ready` (`percentile_disc`, an observed value), the share of failed starts (attempts that failed before `ready`, out of those plus the ones that reached it; abuse failures after `ready` and starts abandoned before it are not failed starts) and the number of players with a solved attempt, each against its Stage 1 threshold. Verified: a test on a migrated PostgreSQL fixture with known numbers (21 ready starts, 1 failed start, 2 solvers, older attempts left out); the command run against a fresh migrated and seeded database and against an unreachable one (names the connection error) |
 | 39b | Stage 1 gate run | Not started | Owner, with 20 engineers |
 
 ## Stage 2 — tasks (from architecture.md)
