@@ -6,6 +6,7 @@ import { runDailyPublisher } from "./daily/schedule.js";
 import { createHealthServer } from "./health/health-server.js";
 import { logger } from "./logger.js";
 import { runRelay } from "./outbox/relay.js";
+import { runXpConsumer } from "./xp/consumer.js";
 
 const SHUTDOWN_SIGNALS = ["SIGINT", "SIGTERM"] as const;
 
@@ -14,7 +15,7 @@ type Stop = () => Promise<void>;
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
-  const stops = [await startRelay(env), startDailyPublisher(env)];
+  const stops = [await startRelay(env), startDailyPublisher(env), await startXpConsumer(env)];
 
   server.listen(env.PORT, () => {
     logger.info("worker listening", { port: env.PORT });
@@ -58,6 +59,27 @@ function startDailyPublisher(env: Env): Stop {
   const running = runDailyPublisher(database.db, controller.signal);
   return async () => {
     controller.abort();
+    await running;
+    await database.close();
+  };
+}
+
+// startXpConsumer credits XP from attempt.finished when the worker has a database and Redis. Its
+// blocking reads get their own Redis connection.
+async function startXpConsumer(env: Env): Promise<Stop> {
+  if (!env.DATABASE_URL || !env.REDIS_URL) {
+    logger.warn("XP disabled; set DATABASE_URL and REDIS_URL to credit XP");
+    return async () => undefined;
+  }
+  const database = connect(env.DATABASE_URL);
+  const redis = createClient({ url: env.REDIS_URL });
+  redis.on("error", (error: unknown) => logger.error("redis connection error", { error }));
+  await redis.connect();
+  const controller = new AbortController();
+  const running = runXpConsumer(database.db, redis, controller.signal);
+  return async () => {
+    controller.abort();
+    redis.destroy();
     await running;
     await database.close();
   };
