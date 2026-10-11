@@ -4,6 +4,8 @@ A challenge is a folder in `challenges/` (see "Спецификация зада
 
 ## The folder
 
+`pnpm challenges:new <id>` creates it with every file below, filled with placeholders that pass `challenges:validate`; its `check.sh` fails until you write it, so `verify-challenge.sh` cannot pass an unfinished challenge.
+
 `challenge.yaml`, `Dockerfile`, `setup.sh`, `check.sh`, `solution.sh`, `hints.md`, `README.md`. Start `challenge.yaml` with `# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json` so your editor checks it while you type.
 
 ## Checklist
