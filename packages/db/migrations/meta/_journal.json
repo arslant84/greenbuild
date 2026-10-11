@@ -78,6 +78,13 @@
       "when": 1791707627314,
       "tag": "0010_consent_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791709877097,
+      "tag": "0011_daily_challenges",
+      "breakpoints": true
     }
   ]
 }

@@ -25,3 +25,8 @@ export const HANDLE_MIN = 3;
 export const HANDLE_MAX = 32;
 export const DISPLAY_NAME_MAX = 64;
 export const TIMEZONE_CHANGE_INTERVAL_DAYS = 30;
+
+// architecture.md, decision D1: one track, Linux/DevOps. Task 41a: a challenge is not the daily
+// challenge of a track again within 180 days.
+export const DAILY_TRACKS = ["linux"] as const;
+export const DAILY_REPEAT_WINDOW_DAYS = 180;
