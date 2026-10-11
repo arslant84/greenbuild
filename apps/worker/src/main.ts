@@ -8,6 +8,7 @@ import { logger } from "./logger.js";
 import { runRelay } from "./outbox/relay.js";
 import { type FinishedHandler, runFinishedConsumer } from "./finished-consumer.js";
 import { dailyBoardHandler } from "./leaderboards/boards.js";
+import { runLeakCheck } from "./leaks/check.js";
 import { ratingHandler } from "./rating/rate.js";
 import { BlobSessionLogs } from "./signals/logs.js";
 import { streakHandler } from "./streaks/count.js";
@@ -22,7 +23,7 @@ type Stop = () => Promise<void>;
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
-  const stops = [await startRelay(env), startDailyPublisher(env)];
+  const stops = [await startRelay(env), startDailyPublisher(env), startLeakCheck(env)];
   for (const handler of FINISHED_HANDLERS) {
     stops.push(await startFinishedConsumer(env, handler));
   }
@@ -91,6 +92,22 @@ async function startFinishedConsumer(env: Env, handler: FinishedHandler): Promis
   return async () => {
     controller.abort();
     redis.destroy();
+    await running;
+    await database.close();
+  };
+}
+
+// startLeakCheck looks for leaked challenge versions weekly when the worker has a database (task 49d).
+function startLeakCheck(env: Env): Stop {
+  if (!env.DATABASE_URL) {
+    logger.warn("leak check disabled; set DATABASE_URL");
+    return async () => undefined;
+  }
+  const database = connect(env.DATABASE_URL);
+  const controller = new AbortController();
+  const running = runLeakCheck(database.db, controller.signal);
+  return async () => {
+    controller.abort();
     await running;
     await database.close();
   };

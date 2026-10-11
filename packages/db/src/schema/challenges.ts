@@ -47,7 +47,9 @@ export const challengeVersions = pgTable(
     ratingDeviation: real("rating_deviation").notNull().default(GLICKO_INITIAL_RATING_DEVIATION),
     // Glicko-2 needs the volatility too (task 43b).
     ratingVolatility: real("rating_volatility").notNull().default(GLICKO_INITIAL_VOLATILITY),
+    // Set once from the version's first finished attempts; the weekly leak check compares against them (task 49d).
     solveRateBaseline: real("solve_rate_baseline"),
+    medianSolveMsBaseline: integer("median_solve_ms_baseline"),
     retiredReason: text("retired_reason"),
     source: challengeSource("source").notNull(),
     ...timestampColumns(),
