@@ -128,7 +128,7 @@ UI-задача без фрейма помечается «блок: нужен 
 greenbuild/
 ├─ apps/
 │  ├─ web/             # Next.js 16: экраны игрока; e2e/ — Playwright
-│  ├─ api/             # NestJS 12: модульный монолит (модули attempts — старт, проверки, подсказки, сдаться, возобновление; challenges — карточка и каталог; health; служебные auth — dev-токен и `@Public()`, engine — клиент движка, infra, config, errors)
+│  ├─ api/             # NestJS 12: модульный монолит (модули attempts — старт, проверки, подсказки, сдаться, возобновление; challenges — карточка и каталог; users — `GET`/`PATCH /v1/me`; health; служебные auth — dev-токен и `@Public()`, engine — клиент движка, infra, config, errors)
 │  ├─ sandbox-engine/  # Go: control plane, /attach, /internal, consumer очереди, лог сессий
 │  ├─ sandbox-agent/   # Go: агент ноды, gRPC с mTLS, TTL-reaper; cmd/sandbox-shell
 │  ├─ worker/          # TypeScript: /health и публикация outbox в Redis Streams (задача 20b)
@@ -485,7 +485,7 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`; OpenAPI из 
 
 | Метод | Путь | Что делает | Этап | Есть |
 | --- | --- | --- | --- | --- |
-| GET / PATCH | /v1/me | Профиль, timezone, режим поиска, раскрываемые поля | 1 | Нет — задача 32 |
+| GET / PATCH | /v1/me | Профиль, timezone, режим поиска, раскрываемые поля | 1 | Да: профиль и timezone (32); режим поиска и раскрываемые поля — задача 47a |
 | GET | /v1/daily?track= | Задание дня и статус | 2 | Нет — задача 41b |
 | GET | /v1/challenges | Каталог живых публичных заданий, новые первыми. Фильтры: `skill` и `sla` (окна лимита времени), повторяемые; `q`; `difficulty_min`/`difficulty_max`; `status` (unsolved, solved, failed, flagged — по попыткам игрока); `limit` (по умолчанию 9, не больше 50), `cursor` → `{challenges (с progress игрока), next_cursor, total, catalog}` | 1 | Да; требует сессию |
 | GET | /v1/challenges/{slug} | Карточка задания (название, условие, сложность, навыки, лимит времени живой версии) | 1 | Да; требует сессию |
