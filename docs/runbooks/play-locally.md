@@ -15,6 +15,8 @@ pnpm play:down    # stops everything
 
 Then open <http://localhost:3001>. A dev session starts on the first visit. Press **Start Challenge**, wait for the sandbox, fix the site in the terminal and press **Check Solution** (or Cmd/Ctrl+Enter). The result opens from the scorecard's link.
 
+On Windows, `play:up` runs the script with Git Bash (found next to `git.exe`), never with WSL's `bash`: WSL would run it inside Linux, where the Windows Docker, Go and Node are not found. Without Git for Windows it stops and says so.
+
 The first `play:up` builds the Go binaries, the dev certificates, the API and one image per challenge (`greenbuild-challenge/<id>:<version>`), which takes a few minutes; later runs are faster.
 
 ## What it sets up
@@ -37,6 +39,10 @@ Everything else lives in `.play/` (git-ignored): binaries, dev certificates, thr
 - The terminal opens only with a 60-second attach token, which the API issues to the attempt's owner and the engine verifies.
 - Every API call carries the dev user token from the session cookie; the browser never sees it, and writes also need the `x-greenbuild-request` header.
 - Dev sessions exist only outside production and only with `DEV_AUTH_SECRET`. Auth.js login replaces them.
+
+## A rejected dev session
+
+The dev session cookie (`gb_dev_session`) is signed with `DEV_AUTH_SECRET`. If the secret changes (for example after deleting `.play/`), the old cookie is refused: the screens show the service error and API calls answer 401, and the web app does not replace a cookie that is present. Delete the cookie and reload: in the browser's developer tools, Application (Chrome) or Storage (Firefox) › Cookies › `http://localhost:3001` › `gb_dev_session`; or use a private window. Auth.js sign-in replaces dev sessions (task 30e).
 
 ## End-to-end test
 
