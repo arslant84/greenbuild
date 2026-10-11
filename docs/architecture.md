@@ -859,7 +859,7 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`; OpenAPI из 
 | № | Задача | Что сказать Claude Code | Готово, когда |
 | --- | --- | --- | --- |
 | 37a | Проверка сгенерированного gRPC-кода | В CI запусти `generate.sh` в `packages/agent-api` и упади при изменениях в `*.pb.go`. | CI падает на ветке с изменённым proto без перегенерации |
-| 37b | `eslint-config-next` | Подключи `eslint-config-next` к `apps/web`, исправь найденное. | Lint зелёный с новым конфигом |
+| 37b | `eslint-config-next` | Подключи `eslint-config-next` к `apps/web`, исправь найденное. **Уточнено владельцем 11 октября 2026:** `eslint-config-next` тянет `eslint-plugin-react`, который не поддерживает ESLint 10; поэтому подключены только `@next/eslint-plugin-next` (core-web-vitals) и `eslint-plugin-react-hooks`, а плагины React, import и a11y — когда появится поддержка ESLint 10. | Lint зелёный с новым конфигом |
 | 37c | `play:up` в Windows | Обёртка запуска `play-stack.sh`: в Windows ищет Git Bash и не берёт WSL bash; если Git Bash нет — понятная ошибка. В runbook — как сбросить отклонённую cookie `gb_dev_session`, пока dev-путь не удалён (30e). | Unit-тест выбора оболочки |
 | 37d | Go-процессы после `pnpm dev` в Windows | В `pnpm dev` собирать Go-приложения один раз и запускать бинарник, а не `go run`. | После остановки `pnpm dev` не остаётся процессов агента и движка (проверка скриптом) |
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { ChallengeCard } from "@greenbuild/shared";
 import { formatClock } from "../../../ui/format";
 import { InfoIcon, TerminalMiniIcon, TimerMiniIcon } from "../../../ui/icons";
@@ -23,9 +24,9 @@ export function Provisioning({ card, attemptId, createdAt }: ProvisioningProps) 
     <div className="flex min-h-screen items-center justify-center bg-[#131314] p-4">
       <div className={`flex w-[560px] flex-col gap-4 rounded-xl border ${BORDER} bg-canvas p-6 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]`}>
         <header className="flex items-center justify-between border-b border-[#3c494c33] pb-1">
-          <a href="/play" className="type-label flex items-center gap-1.5 text-ink-muted">
+          <Link href="/play" className="type-label flex items-center gap-1.5 text-ink-muted">
             <span className="text-[#bbc9cdb2]">←</span> Return to Daily Challenge
-          </a>
+          </Link>
           <span className="flex items-center gap-2">
             <span className="type-label flex items-center gap-1 rounded bg-surface-raised px-2 py-0.5">
               <span className="font-semibold text-accent-soft">&gt;_</span>

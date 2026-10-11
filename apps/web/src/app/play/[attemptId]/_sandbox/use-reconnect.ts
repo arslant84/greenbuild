@@ -19,10 +19,12 @@ export function useReconnect(initialToken: string, status: ConnectionStatus, ref
       setToken(latest.attach_token);
     }
   }, [refresh]);
+  // A working connection starts the next run of retries from zero; set while rendering, not in an
+  // effect, so it never takes an extra render to apply.
+  if (status === "connected" && retry !== 0) {
+    setRetry(0);
+  }
   useEffect(() => {
-    if (status === "connected") {
-      setRetry(0);
-    }
     if (status !== "disconnected" || retry >= MAX_RECONNECTS) {
       return undefined;
     }

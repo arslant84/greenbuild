@@ -18,7 +18,9 @@ export function SandboxTerminal({ attachUrl, token, onStatus, onSize, locked }: 
   const container = useRef<HTMLDivElement>(null);
   // A ref, so locking and unlocking never reconnects the terminal.
   const lockedRef = useRef(locked);
-  lockedRef.current = locked;
+  useEffect(() => {
+    lockedRef.current = locked;
+  }, [locked]);
   useEffect(() => {
     const element = container.current;
     if (!element) {
