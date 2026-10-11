@@ -507,7 +507,7 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`; OpenAPI из 
 
 | Метод | Путь | Что делает | Этап | Есть |
 | --- | --- | --- | --- | --- |
-| PUT | /v1/me/discovery | Режим hidden / passive / open, подтверждение 18+ | 2 | Нет — задача 47a |
+| PUT | /v1/me/discovery | Режим hidden / passive / open, подтверждение 18+ | 2 | Да (47a; без 18+ — 422, согласие пишется в `consents`) |
 | GET | /v1/me/contact-requests | Входящие запросы | 3 | Нет |
 | POST | /v1/me/contact-requests/{id}/accept | Принять, выбрать раскрываемые поля | 3 | Нет |
 | POST | /v1/me/contact-requests/{id}/decline | Отклонить с причиной | 3 | Нет |
