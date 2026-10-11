@@ -100,7 +100,7 @@ Order follows the recommendation for decision D2. "Blocked" means the task waits
 | 28f | Blob via managed identity | Not started | |
 | 28g | Deploy on merge to main | Not started | Closes the technical half of the Stage 0 gate |
 | 28h | Task 16 journey in staging | Not started | |
-| 29a | `users` table | Not started | Includes `age_confirmed_16_at` |
+| 29a | `users` table | Done | Migration 0005 adds `users` with the plan's columns (handle and email nullable, unique and stored lowercase; country ISO alpha-2; timezone `UTC`, locale `en`, role `player`/`admin`, status `active`/`banned`/`deleted`; `age_confirmed_16_at`, `age_confirmed_18_at`, `timezone_changed_at`, `deleted_at`) and `auth_accounts` (`github`/`google`/`email`, one row per provider identity, removed with the user). Additive only; handle format rules come with task 32. Verified: migrations on an empty database list the new tables; migrating a database at 0004 that holds an attempt keeps it; defaults, the lowercase and country checks, unique handle and email, unique provider identity and cascade delete are tested on PostgreSQL 16 |
 | 29b | Foreign key `attempts.user_id` | Not started | Backfill dev orphans, `NOT VALID`, then validate |
 | 29c | Auth.js adapter decision | Not started | Plan only, recorded as an ADR |
 | 30a | Auth.js: GitHub and email | Blocked | Decision D6 (email provider) |
