@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { challenges, challengeVersions, connect } from "@greenbuild/db";
+import { challenges, challengeVersions, companies, connect } from "@greenbuild/db";
 import type { ChallengeList } from "@greenbuild/shared";
 import { beforeAll, describe, expect, it } from "vitest";
 import { type AttemptsApp, player, useAttemptsApp } from "../testing/attempts-app.js";
@@ -8,9 +8,10 @@ const PRIVATE_SLUG = "company-private-drill";
 
 async function insertPrivateChallenge(databaseUrl: string): Promise<void> {
   const seeding = connect(databaseUrl);
+  const [company] = await seeding.db.insert(companies).values({ name: "Acme", domain: "acme.dev" }).returning();
   const [challenge] = await seeding.db
     .insert(challenges)
-    .values({ slug: PRIVATE_SLUG, title: "Private", difficulty: 2, status: "live", visibility: "company_private", companyId: randomUUID() })
+    .values({ slug: PRIVATE_SLUG, title: "Private", difficulty: 2, status: "live", visibility: "company_private", companyId: company?.id ?? "" })
     .returning({ id: challenges.id });
   const spec = { title: "Private", statement: "Private.", difficulty: 2, skills: { linux: 1 }, time_limit_sec: 600 };
   await seeding.db.insert(challengeVersions).values({ challengeId: challenge!.id, version: 1, specJson: spec, imageRef: "private:1", checkerHash: "x", source: "company" });
