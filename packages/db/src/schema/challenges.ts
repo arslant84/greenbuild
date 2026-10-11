@@ -2,6 +2,7 @@ import { GLICKO_INITIAL_RATING, GLICKO_INITIAL_RATING_DEVIATION } from "@greenbu
 import { sql } from "drizzle-orm";
 import { check, integer, jsonb, pgEnum, pgTable, real, smallint, text, unique, uuid } from "drizzle-orm/pg-core";
 import { idColumn, timestampColumns } from "./columns.js";
+import { companies } from "./companies.js";
 
 export const challengeStatus = pgEnum("challenge_status", ["draft", "review", "live", "retired"]);
 export const challengeVisibility = pgEnum("challenge_visibility", ["public", "company_private"]);
@@ -16,8 +17,8 @@ export const challenges = pgTable(
     difficulty: smallint("difficulty").notNull(),
     status: challengeStatus("status").notNull().default("draft"),
     visibility: challengeVisibility("visibility").notNull().default("public"),
-    // References companies once that table exists (Stage 1.5).
-    companyId: uuid("company_id"),
+    // Validated in a separate migration (task 31b), so existing rows are checked without a long lock.
+    companyId: uuid("company_id").references(() => companies.id, { onDelete: "restrict" }),
     ...timestampColumns(),
   },
   (table) => [
