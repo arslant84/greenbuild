@@ -3,6 +3,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import type { Database } from "@greenbuild/db";
 import { type AttemptFinished, attemptFinishedSchema, QUEUE_PAYLOAD_FIELD, STREAM_ATTEMPT_FINISHED } from "@greenbuild/shared";
 import { logger } from "./logger.js";
+import type { SessionLogs } from "./signals/logs.js";
 
 const BLOCK_MS = 5_000;
 const BATCH_SIZE = 10;
@@ -28,10 +29,12 @@ export interface Boards {
   zAdd(key: string, member: { score: number; value: string }, options?: { comparison: "LT" }): Promise<unknown>;
 }
 
-// HandlerDeps is what a job gets: the database, and Redis for the leaderboards.
+// HandlerDeps is what a job gets: the database, Redis for the leaderboards, and the session logs when
+// the worker can read them.
 export interface HandlerDeps {
   db: Database;
   boards: Boards;
+  logs: SessionLogs | null;
 }
 
 type ReadReply = { messages: StreamMessage[] }[] | null;
@@ -48,11 +51,12 @@ export interface FinishedConsumer {
   db: Database;
   redis: StreamReader & Boards;
   handler: FinishedHandler;
+  logs: SessionLogs | null;
 }
 
 // consumeFinishedBatch handles this consumer's pending messages, then waits up to blockMs for new ones.
 // A message is acknowledged once handled or found invalid; a failure leaves it pending for a retry.
-export async function consumeFinishedBatch({ db, redis, handler }: FinishedConsumer, blockMs = BLOCK_MS): Promise<void> {
+export async function consumeFinishedBatch({ db, redis, handler, logs }: FinishedConsumer, blockMs = BLOCK_MS): Promise<void> {
   await redis.xGroupCreate(STREAM_ATTEMPT_FINISHED, handler.group, "0", { MKSTREAM: true }).catch((error: unknown) => {
     if (!String(error).includes("BUSYGROUP")) {
       throw error;
@@ -64,7 +68,7 @@ export async function consumeFinishedBatch({ db, redis, handler }: FinishedConsu
     for (const { id, message } of (reply as ReadReply)?.[0]?.messages ?? []) {
       const event = attemptFinishedSchema.safeParse(parseJson(message[QUEUE_PAYLOAD_FIELD]));
       if (event.success) {
-        await handler.handle({ db, boards: redis }, event.data);
+        await handler.handle({ db, boards: redis, logs }, event.data);
       } else {
         // Redelivery cannot fix a malformed message.
         logger.warn("drop invalid attempt.finished message", { id, group: handler.group });

@@ -15,13 +15,15 @@ interface ContainerOptions {
   image: string;
   port: number;
   env?: Record<string, string>;
+  // Replaces the image's command, e.g. Azurite with --skipApiVersionCheck.
+  args?: string[];
   ready: (address: string) => Promise<void>;
 }
 
 // startContainer runs image with port published on a free loopback port and waits until ready succeeds.
 export async function startContainer(options: ContainerOptions): Promise<Container> {
   const env = Object.entries(options.env ?? {}).flatMap(([name, value]) => ["-e", `${name}=${value}`]);
-  const { stdout } = await run("docker", ["run", "-d", "--rm", ...env, "-p", `127.0.0.1::${options.port}`, options.image]);
+  const { stdout } = await run("docker", ["run", "-d", "--rm", ...env, "-p", `127.0.0.1::${options.port}`, options.image, ...(options.args ?? [])]);
   const id = stdout.trim();
   const stop = async (): Promise<void> => {
     await run("docker", ["rm", "-f", id]);

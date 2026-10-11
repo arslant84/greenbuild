@@ -126,7 +126,7 @@ describe("consumeXpBatch", () => {
     await redis.xAdd(STREAM_ATTEMPT_FINISHED, "*", { [QUEUE_PAYLOAD_FIELD]: JSON.stringify(event) });
     await redis.xAdd(STREAM_ATTEMPT_FINISHED, "*", { [QUEUE_PAYLOAD_FIELD]: "not json" });
 
-    await consumeFinishedBatch({ db: database.db, redis, handler: xpHandler }, 100);
+    await consumeFinishedBatch({ db: database.db, redis, handler: xpHandler, logs: null }, 100);
     expect(await ledger(event.attempt_id)).toEqual({ solve: 40 });
     expect((await redis.xPending(STREAM_ATTEMPT_FINISHED, xpHandler.group)).pending).toBe(0);
   });

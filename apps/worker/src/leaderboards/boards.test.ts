@@ -46,8 +46,8 @@ afterAll(async () => {
   await Promise.all(containers.map((container) => container.stop()));
 });
 
-function deps(): { db: typeof database.db; boards: typeof redis } {
-  return { db: database.db, boards: redis };
+function deps(): { db: typeof database.db; boards: typeof redis; logs: null } {
+  return { db: database.db, boards: redis, logs: null };
 }
 
 async function aUser(country: string | null = null): Promise<string> {
