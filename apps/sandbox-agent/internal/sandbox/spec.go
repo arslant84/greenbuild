@@ -25,6 +25,10 @@ const (
 	networkNone         = "none"
 	dropAllCapabilities = "ALL"
 	noNewPrivileges     = "no-new-privileges"
+	// seccompBuiltin gives every sandbox Docker's built-in default seccomp profile even when the
+	// daemon is configured with another one (task 33d). runsc enforces it only when installed with
+	// --oci-seccomp (.github/scripts/install-gvisor.sh; nodes in task 28e).
+	seccompBuiltin = "seccomp=builtin"
 )
 
 // ErrInvalidSpec is wrapped by every validation error returned from Spec.Validate.
@@ -92,7 +96,7 @@ func ContainerConfig(spec Spec, runtime string) (*container.Config, *container.H
 		NetworkMode: networkNone,
 		CapDrop:     []string{dropAllCapabilities},
 		CapAdd:      slices.Clone(spec.Capabilities),
-		SecurityOpt: []string{noNewPrivileges},
+		SecurityOpt: []string{noNewPrivileges, seccompBuiltin},
 		Resources: container.Resources{
 			NanoCPUs: spec.CPUMillis * nanoCPUsPerMilliCPU,
 			Memory:   spec.MemoryBytes,

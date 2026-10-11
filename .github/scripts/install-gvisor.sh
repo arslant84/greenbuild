@@ -18,7 +18,9 @@ sha512sum -c gvisor.tar.bz2.sha512
 tar -xjf gvisor.tar.bz2 runsc containerd-shim-runsc-v1
 sudo install -m 0755 runsc containerd-shim-runsc-v1 /usr/local/bin/
 
-sudo /usr/local/bin/runsc install
+# --oci-seccomp makes runsc enforce the seccomp profile Docker passes (the agent sets
+# seccomp=builtin, task 33d); without it runsc ignores the profile.
+sudo /usr/local/bin/runsc install -- --oci-seccomp
 sudo systemctl restart docker
 
 if ! docker info --format '{{json .Runtimes}}' | grep -q '"runsc"'; then
