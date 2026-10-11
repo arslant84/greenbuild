@@ -1,5 +1,5 @@
 import type { Server } from "node:http";
-import { connect } from "@greenbuild/db";
+import { connect, type Database } from "@greenbuild/db";
 import { createClient } from "redis";
 import { type Env, loadEnv } from "./config/env.js";
 import { runDailyPublisher } from "./daily/schedule.js";
@@ -9,12 +9,19 @@ import { runRelay } from "./outbox/relay.js";
 import { type FinishedHandler, runFinishedConsumer } from "./finished-consumer.js";
 import { dailyBoardHandler } from "./leaderboards/boards.js";
 import { runLeakCheck } from "./leaks/check.js";
+import { runPrivacyPurge } from "./privacy/purge.js";
 import { ratingHandler } from "./rating/rate.js";
 import { BlobSessionLogs } from "./signals/logs.js";
 import { streakHandler } from "./streaks/count.js";
 import { xpHandler } from "./xp/credit.js";
 
 const SHUTDOWN_SIGNALS = ["SIGINT", "SIGTERM"] as const;
+// Jobs that need only the database and run on their own schedule.
+const DATABASE_JOBS: [string, DatabaseJob][] = [
+  ["daily challenge publisher", runDailyPublisher],
+  ["leak check", runLeakCheck],
+  ["account purge", runPrivacyPurge],
+];
 // The jobs that follow attempt.finished, each in its own consumer group.
 const FINISHED_HANDLERS = [xpHandler, ratingHandler, streakHandler, dailyBoardHandler];
 
@@ -23,7 +30,10 @@ type Stop = () => Promise<void>;
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
-  const stops = [await startRelay(env), startDailyPublisher(env), startLeakCheck(env)];
+  const stops = [await startRelay(env)];
+  for (const [name, job] of DATABASE_JOBS) {
+    stops.push(startDatabaseJob(env, name, job));
+  }
   for (const handler of FINISHED_HANDLERS) {
     stops.push(await startFinishedConsumer(env, handler));
   }
@@ -59,22 +69,6 @@ async function startRelay(env: Env): Promise<Stop> {
   };
 }
 
-// startDailyPublisher keeps the daily challenge published when the worker has a database.
-function startDailyPublisher(env: Env): Stop {
-  if (!env.DATABASE_URL) {
-    logger.warn("daily challenge publisher disabled; set DATABASE_URL to publish the daily challenge");
-    return async () => undefined;
-  }
-  const database = connect(env.DATABASE_URL);
-  const controller = new AbortController();
-  const running = runDailyPublisher(database.db, controller.signal);
-  return async () => {
-    controller.abort();
-    await running;
-    await database.close();
-  };
-}
-
 // startFinishedConsumer runs one attempt.finished job (XP, rating) when the worker has a database and
 // Redis. Its blocking reads get their own Redis connection.
 async function startFinishedConsumer(env: Env, handler: FinishedHandler): Promise<Stop> {
@@ -97,15 +91,17 @@ async function startFinishedConsumer(env: Env, handler: FinishedHandler): Promis
   };
 }
 
-// startLeakCheck looks for leaked challenge versions weekly when the worker has a database (task 49d).
-function startLeakCheck(env: Env): Stop {
+type DatabaseJob = (db: Database, signal: AbortSignal) => Promise<void>;
+
+// startDatabaseJob runs a job that needs only the database, when the worker has one.
+function startDatabaseJob(env: Env, name: string, job: DatabaseJob): Stop {
   if (!env.DATABASE_URL) {
-    logger.warn("leak check disabled; set DATABASE_URL");
+    logger.warn(`${name} disabled; set DATABASE_URL`);
     return async () => undefined;
   }
   const database = connect(env.DATABASE_URL);
   const controller = new AbortController();
-  const running = runLeakCheck(database.db, controller.signal);
+  const running = job(database.db, controller.signal);
   return async () => {
     controller.abort();
     await running;

@@ -53,3 +53,12 @@ export const updateMeRequestSchema = z
 
 export type MeResponse = z.infer<typeof meResponseSchema>;
 export type UpdateMeRequest = z.infer<typeof updateMeRequestSchema>;
+
+// architecture.md, "Права пользователя" (task 50b): an account is hidden at once and its personal data
+// deleted this many days later.
+export const ACCOUNT_DELETION_DAYS = 30;
+
+// DELETE /v1/me answers when the personal data will be gone.
+export const deletionResponseSchema = z.object({ deletion_scheduled_for: z.iso.datetime() });
+
+export type DeletionResponse = z.infer<typeof deletionResponseSchema>;
