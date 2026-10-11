@@ -20,7 +20,10 @@ sudo install -m 0755 runsc containerd-shim-runsc-v1 /usr/local/bin/
 
 # --oci-seccomp makes runsc enforce the seccomp profile Docker passes (the agent sets
 # seccomp=builtin, task 33d); without it runsc ignores the profile.
-sudo /usr/local/bin/runsc install -- --oci-seccomp
+# --overlay2 keeps runsc's default root overlay (backed by a file in the container's rootfs) and
+# caps its upper layer at 1 GiB, so a sandbox cannot fill the node's disk (task 33b; the agent's
+# TestSandboxRootfsWriteLimitOnRunsc writes past it).
+sudo /usr/local/bin/runsc install -- --oci-seccomp --overlay2=root:self,size=1g
 sudo systemctl restart docker
 
 if ! docker info --format '{{json .Runtimes}}' | grep -q '"runsc"'; then

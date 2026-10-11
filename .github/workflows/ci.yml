@@ -99,6 +99,10 @@ jobs:
         env:
           SANDBOX_TEST_RUNTIME: runsc
 
+      # Limits that exist only under runsc, such as the root overlay cap (task 33b).
+      - run: go test -tags integration -count=1 -v -run OnRunsc ./...
+        working-directory: apps/sandbox-agent
+
       # The engine creates and destroys a sandbox through the real agent process, under runsc.
       - run: go test -tags integration -count=1 -v -run OnRealDocker ./...
         working-directory: apps/sandbox-engine
