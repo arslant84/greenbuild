@@ -12,6 +12,8 @@ import { useMigratedDatabase } from "./migrated.js";
 import { startPostgres, type TestDatabase } from "./postgres.js";
 
 const STARTUP_TIMEOUT_MS = 120_000;
+// Applies every migration twice; beyond vitest's 5 s default while other suites start containers.
+const MIGRATION_TEST_TIMEOUT_MS = 60_000;
 // Migrations before 0005_users, i.e. a database as it was before tasks 29a and 29b.
 const MIGRATIONS_BEFORE_USERS = 5;
 
@@ -69,7 +71,7 @@ describe("migrations 0005–0007 on a database whose attempts have no users", ()
       await connection.close();
       await rm(folder, { recursive: true, force: true });
     }
-  });
+  }, MIGRATION_TEST_TIMEOUT_MS);
 });
 
 describe("users and auth_accounts", () => {
