@@ -96,6 +96,16 @@ describe("publishDaily", () => {
   });
 });
 
+describe("publishDaily and retired versions", () => {
+  it("skips a challenge whose newest version was retired (task 49d)", async () => {
+    const kept = await aChallenge("kept");
+    await aChallenge("leaked", { versions: 2 });
+    await database.db.execute(sql`update challenge_versions set retired_reason = 'leak_suspected' where version = 2`);
+
+    expect(await publishDaily(database.db, "2026-11-01", "linux")).toBe(kept);
+  });
+});
+
 describe("publishDue", () => {
   it("publishes today's and tomorrow's challenge in UTC", async () => {
     await aChallenge("a");

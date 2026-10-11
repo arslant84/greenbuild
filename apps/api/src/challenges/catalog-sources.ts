@@ -1,17 +1,25 @@
 import { attempts, challenges, challengeVersions, type Database, desc, eq, sql } from "@greenbuild/db";
 
-// latestVersions is each challenge's newest version: what its card shows and what a start launches.
+// latestVersions is each challenge's newest version: what its card shows and what a start launches. A
+// challenge whose newest version was retired (a leak, task 49d) has none until a newer one is published;
+// an older version does not come back.
 export function latestVersions(db: Database) {
-  return db
+  const newest = db
     .selectDistinctOn([challengeVersions.challengeId], {
       challengeId: challengeVersions.challengeId,
       id: challengeVersions.id,
       version: challengeVersions.version,
       imageRef: challengeVersions.imageRef,
       specJson: challengeVersions.specJson,
+      retiredReason: challengeVersions.retiredReason,
     })
     .from(challengeVersions)
     .orderBy(challengeVersions.challengeId, desc(challengeVersions.version))
+    .as("newest");
+  return db
+    .select({ challengeId: newest.challengeId, id: newest.id, version: newest.version, imageRef: newest.imageRef, specJson: newest.specJson })
+    .from(newest)
+    .where(sql`${newest.retiredReason} is null`)
     .as("latest");
 }
 
