@@ -6,7 +6,9 @@ import { runDailyPublisher } from "./daily/schedule.js";
 import { createHealthServer } from "./health/health-server.js";
 import { logger } from "./logger.js";
 import { runRelay } from "./outbox/relay.js";
-import { runXpConsumer } from "./xp/consumer.js";
+import { type FinishedHandler, runFinishedConsumer } from "./finished-consumer.js";
+import { ratingHandler } from "./rating/rate.js";
+import { xpHandler } from "./xp/credit.js";
 
 const SHUTDOWN_SIGNALS = ["SIGINT", "SIGTERM"] as const;
 
@@ -15,7 +17,7 @@ type Stop = () => Promise<void>;
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
-  const stops = [await startRelay(env), startDailyPublisher(env), await startXpConsumer(env)];
+  const stops = [await startRelay(env), startDailyPublisher(env), await startFinishedConsumer(env, xpHandler), await startFinishedConsumer(env, ratingHandler)];
 
   server.listen(env.PORT, () => {
     logger.info("worker listening", { port: env.PORT });
@@ -64,11 +66,11 @@ function startDailyPublisher(env: Env): Stop {
   };
 }
 
-// startXpConsumer credits XP from attempt.finished when the worker has a database and Redis. Its
-// blocking reads get their own Redis connection.
-async function startXpConsumer(env: Env): Promise<Stop> {
+// startFinishedConsumer runs one attempt.finished job (XP, rating) when the worker has a database and
+// Redis. Its blocking reads get their own Redis connection.
+async function startFinishedConsumer(env: Env, handler: FinishedHandler): Promise<Stop> {
   if (!env.DATABASE_URL || !env.REDIS_URL) {
-    logger.warn("XP disabled; set DATABASE_URL and REDIS_URL to credit XP");
+    logger.warn(`${handler.name} disabled; set DATABASE_URL and REDIS_URL`);
     return async () => undefined;
   }
   const database = connect(env.DATABASE_URL);
@@ -76,7 +78,7 @@ async function startXpConsumer(env: Env): Promise<Stop> {
   redis.on("error", (error: unknown) => logger.error("redis connection error", { error }));
   await redis.connect();
   const controller = new AbortController();
-  const running = runXpConsumer(database.db, redis, controller.signal);
+  const running = runFinishedConsumer({ db: database.db, redis, handler }, controller.signal);
   return async () => {
     controller.abort();
     redis.destroy();

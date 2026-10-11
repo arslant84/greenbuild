@@ -1,6 +1,7 @@
 import { and, attempts, challenges, challengeVersions, type Database, eq, sql, xpLedger } from "@greenbuild/db";
 import { type AttemptFinished, solveXp, XP_MEDIAN_MIN_SOLVES } from "@greenbuild/shared";
 import { z } from "zod";
+import type { FinishedHandler } from "../finished-consumer.js";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
@@ -95,3 +96,5 @@ function skillNames(specJson: unknown): string[] {
   const parsed = manifestSkillsSchema.safeParse(specJson);
   return parsed.success ? Object.keys(parsed.data.skills) : [];
 }
+
+export const xpHandler: FinishedHandler = { group: "worker-xp", name: "credit XP", handle: creditSolve };
