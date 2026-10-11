@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: redis-aof-corrupt
+version: 1
+title: "Sessions after the power cut"
+statement: "The session store's host lost power last night. Since then Redis refuses to start and every user is logged out. Bring it back with the sessions it had, and keep it durable: the append-only file stays on."
+difficulty: 3            # 1–10
+skills: { redis: 0.7, linux: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# Root reads and repairs files Redis owns, kills the crashed server, and starts Redis as its user.
+capabilities: [DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  port: { range: [6300, 6399] }
+  sessions: { range: [20, 69] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
