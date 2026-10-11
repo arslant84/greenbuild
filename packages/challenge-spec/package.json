@@ -19,9 +19,11 @@
     "test": "vitest run",
     "challenges:validate": "node dist/cli.js ../../challenges",
     "challenges:schema": "node dist/write-schema.js",
-    "challenges:new": "node dist/new.js ../../challenges"
+    "challenges:new": "node dist/new.js ../../challenges",
+    "challenges:draft": "node dist/draft-cli.js ../../challenges"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.128.0",
     "@greenbuild/shared": "workspace:*",
     "yaml": "^2.9.1",
     "zod": "^4.6.5"

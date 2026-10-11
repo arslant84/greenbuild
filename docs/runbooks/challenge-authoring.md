@@ -6,6 +6,8 @@ A challenge is a folder in `challenges/` (see "Спецификация зада
 
 `pnpm challenges:new <id>` creates it with every file below, filled with placeholders that pass `challenges:validate`; its `check.sh` fails until you write it, so `verify-challenge.sh` cannot pass an unfinished challenge.
 
+`pnpm challenges:draft <id> --brief <file>` asks the Claude API (`ANTHROPIC_API_KEY`) for a first draft instead: the brief describes the incident in a few lines, and the prompt carries this guide and `challenges/etc-hosts-stale` as the example. It writes a new folder (never over an existing one) with `source: ai` and prints what `challenges:validate` finds. A draft is a start: fix it until `verify-challenge.sh` passes.
+
 `challenge.yaml`, `Dockerfile`, `setup.sh`, `check.sh`, `solution.sh`, `hints.md`, `README.md`. Start `challenge.yaml` with `# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json` so your editor checks it while you type.
 
 ## Checklist

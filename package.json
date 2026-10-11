@@ -17,6 +17,7 @@
     "play:down": "node scripts/play.mjs down",
     "challenges:validate": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:validate",
     "challenges:new": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:new",
+    "challenges:draft": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:draft",
     "challenges:schema": "turbo run build --filter=@greenbuild/challenge-spec... && pnpm --filter @greenbuild/challenge-spec challenges:schema"
   },
   "devDependencies": {

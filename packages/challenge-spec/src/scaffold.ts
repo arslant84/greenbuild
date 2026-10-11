@@ -1,6 +1,7 @@
-import { access, mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { challengeManifestSchema } from "@greenbuild/shared";
+import { exists } from "./exists.js";
 import {
   CHECK_TEMPLATE,
   DOCKERFILE_TEMPLATE,
@@ -35,13 +36,4 @@ export async function scaffoldChallenge(challengesDir: string, id: string): Prom
     await writeFile(join(dir, name), content, { mode: name.endsWith(".sh") ? 0o755 : 0o644 });
   }
   return dir;
-}
-
-async function exists(path: string): Promise<boolean> {
-  try {
-    await access(path);
-    return true;
-  } catch {
-    return false;
-  }
 }
