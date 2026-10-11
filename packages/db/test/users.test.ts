@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { eq } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { connect } from "../src/client.js";
+import { connect, type Database } from "../src/client.js";
 import { applyMigrations, MIGRATIONS_FOLDER } from "../src/migrate.js";
 import { attempts, authAccounts, challenges, challengeVersions, users } from "../src/schema/index.js";
 import { uuidv7 } from "../src/uuid.js";
@@ -12,7 +12,7 @@ import { useMigratedDatabase } from "./migrated.js";
 import { startPostgres, type TestDatabase } from "./postgres.js";
 
 const STARTUP_TIMEOUT_MS = 120_000;
-// Migrations before 0005_users, i.e. a database as it was before task 29a.
+// Migrations before 0005_users, i.e. a database as it was before tasks 29a and 29b.
 const MIGRATIONS_BEFORE_USERS = 5;
 
 interface Journal {
@@ -29,7 +29,17 @@ async function migrationsUpTo(count: number): Promise<string> {
   return folder;
 }
 
-describe("migration 0005 on a database with attempts", () => {
+// anAttempt adds a challenge, a version and an attempt by userId, with the schema of any revision.
+async function anAttempt(db: Database, userId: string): Promise<void> {
+  const [challenge] = await db.insert(challenges).values({ slug: `c-${uuidv7()}`, title: "C", difficulty: 3 }).returning();
+  const [version] = await db
+    .insert(challengeVersions)
+    .values({ challengeId: challenge?.id ?? "", version: 1, specJson: {}, imageRef: "img", checkerHash: "sha256:x", source: "human" })
+    .returning();
+  await db.insert(attempts).values({ userId, challengeVersionId: version?.id ?? "", seed: 1, context: "catalog" });
+}
+
+describe("migrations 0005–0007 on a database whose attempts have no users", () => {
   let database: TestDatabase | undefined;
   beforeAll(async () => {
     database = await startPostgres();
@@ -38,23 +48,23 @@ describe("migration 0005 on a database with attempts", () => {
     await database?.stop();
   });
 
-  it("adds users and auth_accounts and keeps the existing attempts", async () => {
+  it("give each orphaned attempt a user, validate the foreign key and refuse unknown users", async () => {
     const url = database?.url ?? "";
     const folder = await migrationsUpTo(MIGRATIONS_BEFORE_USERS);
     const connection = connect(url);
+    const orphanUserId = uuidv7();
     try {
       await migrate(connection.db, { migrationsFolder: folder });
-      const [challenge] = await connection.db.insert(challenges).values({ slug: "kept", title: "Kept", difficulty: 3 }).returning();
-      const [version] = await connection.db
-        .insert(challengeVersions)
-        .values({ challengeId: challenge?.id ?? "", version: 1, specJson: {}, imageRef: "img", checkerHash: "sha256:x", source: "human" })
-        .returning();
-      await connection.db.insert(attempts).values({ userId: uuidv7(), challengeVersionId: version?.id ?? "", seed: 1, context: "catalog" });
+      await anAttempt(connection.db, orphanUserId);
 
       await applyMigrations(url);
 
-      await expect(connection.db.select().from(attempts)).resolves.toHaveLength(1);
-      await expect(connection.db.select().from(users)).resolves.toEqual([]);
+      await expect(connection.db.select({ id: users.id }).from(users)).resolves.toEqual([{ id: orphanUserId }]);
+      const [foreignKey] = await connection.db.execute<{ convalidated: boolean }>(
+        "select convalidated from pg_constraint where conname = 'attempts_user_id_users_id_fk'",
+      );
+      expect(foreignKey?.convalidated).toBe(true);
+      await expect(anAttempt(connection.db, uuidv7())).rejects.toThrow();
     } finally {
       await connection.close();
       await rm(folder, { recursive: true, force: true });

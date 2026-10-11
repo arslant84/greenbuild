@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import { bigint, boolean, check, index, integer, pgEnum, pgTable, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { challengeVersions } from "./challenges.js";
 import { idColumn, timestampColumns } from "./columns.js";
+import { users } from "./users.js";
 
 export const attemptContext = pgEnum("attempt_context", ["daily", "catalog", "assessment", "duel"]);
 export const attemptStatus = pgEnum("attempt_status", ATTEMPT_STATUSES);
@@ -12,8 +13,10 @@ export const attempts = pgTable(
   "attempts",
   {
     id: idColumn(),
-    // References users once that table exists.
-    userId: uuid("user_id").notNull(),
+    // Attempts are anonymised, not deleted, when a user is (architecture.md, privacy), so restrict.
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "restrict" }),
     challengeVersionId: uuid("challenge_version_id")
       .notNull()
       .references(() => challengeVersions.id, { onDelete: "restrict" }),

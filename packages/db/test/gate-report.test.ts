@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { gateReport, parseSince } from "../src/gate-report.js";
-import { attempts, challenges, challengeVersions } from "../src/schema/index.js";
+import { attempts, challenges, challengeVersions, users } from "../src/schema/index.js";
 import { uuidv7 } from "../src/uuid.js";
 import { useMigratedDatabase, type MigratedDatabase } from "./migrated.js";
 
@@ -32,6 +32,7 @@ async function insertAttempts({ db }: MigratedDatabase, fixtures: FixtureAttempt
     createdAt,
     startedAt: startSeconds === null ? null : new Date(createdAt.getTime() + startSeconds * SECOND_MS),
   }));
+  await db.insert(users).values([...new Set(rows.map((row) => row.userId))].map((id) => ({ id })));
   await db.insert(attempts).values(rows);
 }
 

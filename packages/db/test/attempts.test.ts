@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { attempts, challenges, challengeVersions } from "../src/schema/index.js";
 import { uuidv7 } from "../src/uuid.js";
 import { useMigratedDatabase, type MigratedDatabase } from "./migrated.js";
+import { aUser } from "./users-fixture.js";
 
 async function aVersion({ db }: MigratedDatabase): Promise<string> {
   const [challenge] = await db.insert(challenges).values({ slug: `c-${uuidv7()}`, title: "C", difficulty: 3 }).returning();
@@ -18,7 +19,7 @@ describe("one active attempt per user", () => {
 
   it("refuses a second starting or ready attempt, allows one after the first ends", async () => {
     const { db } = database();
-    const userId = uuidv7();
+    const userId = await aUser(db);
     const attempt = { userId, challengeVersionId: await aVersion(database()), seed: 1, context: "catalog" as const };
     const [first] = await db.insert(attempts).values(attempt).returning();
 
@@ -32,7 +33,7 @@ describe("one active attempt per user", () => {
   it("lets different users start at the same time", async () => {
     const { db } = database();
     const challengeVersionId = await aVersion(database());
-    const starts = [uuidv7(), uuidv7()].map((userId) => db.insert(attempts).values({ userId, challengeVersionId, seed: 1, context: "catalog" }));
+    const starts = [await aUser(db), await aUser(db)].map((userId) => db.insert(attempts).values({ userId, challengeVersionId, seed: 1, context: "catalog" }));
 
     await expect(Promise.all(starts)).resolves.toHaveLength(2);
   });
