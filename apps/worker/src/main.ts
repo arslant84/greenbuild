@@ -7,18 +7,24 @@ import { createHealthServer } from "./health/health-server.js";
 import { logger } from "./logger.js";
 import { runRelay } from "./outbox/relay.js";
 import { type FinishedHandler, runFinishedConsumer } from "./finished-consumer.js";
+import { dailyBoardHandler } from "./leaderboards/boards.js";
 import { ratingHandler } from "./rating/rate.js";
 import { streakHandler } from "./streaks/count.js";
 import { xpHandler } from "./xp/credit.js";
 
 const SHUTDOWN_SIGNALS = ["SIGINT", "SIGTERM"] as const;
+// The jobs that follow attempt.finished, each in its own consumer group.
+const FINISHED_HANDLERS = [xpHandler, ratingHandler, streakHandler, dailyBoardHandler];
 
 type Stop = () => Promise<void>;
 
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
-  const stops = [await startRelay(env), startDailyPublisher(env), await startFinishedConsumer(env, xpHandler), await startFinishedConsumer(env, ratingHandler), await startFinishedConsumer(env, streakHandler)];
+  const stops = [await startRelay(env), startDailyPublisher(env)];
+  for (const handler of FINISHED_HANDLERS) {
+    stops.push(await startFinishedConsumer(env, handler));
+  }
 
   server.listen(env.PORT, () => {
     logger.info("worker listening", { port: env.PORT });

@@ -23,6 +23,17 @@ export interface StreamReader {
   xAck(key: string, group: string, id: string): Promise<unknown>;
 }
 
+// Boards is the part of a node-redis client the leaderboard updates use (task 45a).
+export interface Boards {
+  zAdd(key: string, member: { score: number; value: string }, options?: { comparison: "LT" }): Promise<unknown>;
+}
+
+// HandlerDeps is what a job gets: the database, and Redis for the leaderboards.
+export interface HandlerDeps {
+  db: Database;
+  boards: Boards;
+}
+
 type ReadReply = { messages: StreamMessage[] }[] | null;
 
 // FinishedHandler is one job that follows attempt.finished (XP, rating, …). Each has its own consumer
@@ -30,12 +41,12 @@ type ReadReply = { messages: StreamMessage[] }[] | null;
 export interface FinishedHandler {
   group: string;
   name: string;
-  handle: (db: Database, event: AttemptFinished) => Promise<void>;
+  handle: (deps: HandlerDeps, event: AttemptFinished) => Promise<void>;
 }
 
 export interface FinishedConsumer {
   db: Database;
-  redis: StreamReader;
+  redis: StreamReader & Boards;
   handler: FinishedHandler;
 }
 
@@ -53,7 +64,7 @@ export async function consumeFinishedBatch({ db, redis, handler }: FinishedConsu
     for (const { id, message } of (reply as ReadReply)?.[0]?.messages ?? []) {
       const event = attemptFinishedSchema.safeParse(parseJson(message[QUEUE_PAYLOAD_FIELD]));
       if (event.success) {
-        await handler.handle(db, event.data);
+        await handler.handle({ db, boards: redis }, event.data);
       } else {
         // Redelivery cannot fix a malformed message.
         logger.warn("drop invalid attempt.finished message", { id, group: handler.group });

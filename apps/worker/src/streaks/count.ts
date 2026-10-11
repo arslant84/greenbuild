@@ -36,4 +36,4 @@ function toState(row: StreakRow): StreakState {
   return { current: row.current, longest: row.longest, lastDay: row.lastDay, freezes: row.freezesAvailable };
 }
 
-export const streakHandler: FinishedHandler = { group: "worker-streak", name: "count streak", handle: countStreak };
+export const streakHandler: FinishedHandler = { group: "worker-streak", name: "count streak", handle: ({ db }, event) => countStreak(db, event) };

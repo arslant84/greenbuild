@@ -2,6 +2,7 @@ import { and, attempts, challengeVersions, type Database, eq, inArray, sql, user
 import { type AttemptFinished, type Glicko2Rating, updateRating } from "@greenbuild/shared";
 import { z } from "zod";
 import type { FinishedHandler } from "../finished-consumer.js";
+import { syncSkillBoards } from "../leaderboards/boards.js";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 type UserSkillRow = typeof userSkills.$inferSelect;
@@ -97,4 +98,12 @@ function playerAgainst(skills: UserSkillRow[], weights: Record<string, number>):
   return { rating: mean((skill) => skill.rating), deviation: mean((skill) => skill.ratingDeviation) };
 }
 
-export const ratingHandler: FinishedHandler = { group: "worker-rating", name: "rate attempt", handle: rateAttempt };
+// The skill boards follow user_skills, so they are set after the ratings are committed (task 45a).
+export const ratingHandler: FinishedHandler = {
+  group: "worker-rating",
+  name: "rate attempt",
+  handle: async (deps, event) => {
+    await rateAttempt(deps.db, event);
+    await syncSkillBoards(deps, event.user_id);
+  },
+};

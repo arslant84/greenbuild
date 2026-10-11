@@ -2,6 +2,7 @@ import { and, attempts, challenges, challengeVersions, type Database, eq, sql, x
 import { type AttemptFinished, solveXp, XP_MEDIAN_MIN_SOLVES } from "@greenbuild/shared";
 import { z } from "zod";
 import type { FinishedHandler } from "../finished-consumer.js";
+import { syncWeeklyXp } from "../leaderboards/boards.js";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
@@ -97,4 +98,14 @@ function skillNames(specJson: unknown): string[] {
   return parsed.success ? Object.keys(parsed.data.skills) : [];
 }
 
-export const xpHandler: FinishedHandler = { group: "worker-xp", name: "credit XP", handle: creditSolve };
+// The weekly XP boards follow the ledger, so they are set after the award is committed (task 45a).
+export const xpHandler: FinishedHandler = {
+  group: "worker-xp",
+  name: "credit XP",
+  handle: async (deps, event) => {
+    await creditSolve(deps.db, event);
+    if (event.status === "solved") {
+      await syncWeeklyXp(deps, event.user_id, new Date());
+    }
+  },
+};
