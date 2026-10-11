@@ -20,11 +20,10 @@ export function AttemptScreen({ initial, card, attachUrl }: AttemptScreenProps) 
   const { attempt, refresh } = useAttempt(initial);
   const [token, setToken] = useState(initial.attach_token);
   const solvedHere = attempt.status === "solved" && initial.status !== "solved";
-  useEffect(() => {
-    if (!token && attempt.attach_token) {
-      setToken(attempt.attach_token);
-    }
-  }, [attempt.attach_token, token]);
+  // The first attach token the attempt gets is kept; set while rendering, not in an effect.
+  if (!token && attempt.attach_token) {
+    setToken(attempt.attach_token);
+  }
   useEffect(() => {
     if (isFinished(attempt.status) && !solvedHere) {
       router.replace(`/play/${attempt.id}/result`);

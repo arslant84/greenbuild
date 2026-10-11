@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { ATTEMPT_MAX_CHECKS } from "@greenbuild/shared";
 import { useState } from "react";
 import { formatClock } from "../../../../../ui/format";
@@ -30,10 +31,10 @@ export function SolvedPanel({ attemptId, solvedInSeconds, checksUsed }: SolvedPa
       <div className="flex flex-1 flex-col gap-5 p-5">
         <Bounty solvedInSeconds={solvedInSeconds} />
         <Scorecard lines={scorecard} resultUrl={resultUrl} />
-        <a href="/play" className="flex items-center justify-center gap-1.5 pt-1 text-ink-muted">
+        <Link href="/play" className="flex items-center justify-center gap-1.5 pt-1 text-ink-muted">
           <ArrowBackIcon />
           <span className="font-mono text-[13px] leading-[18px]">Return to Daily Hub</span>
-        </a>
+        </Link>
       </div>
     </aside>
   );

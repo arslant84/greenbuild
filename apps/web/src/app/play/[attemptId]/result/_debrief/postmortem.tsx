@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowForwardIcon } from "../../../../../ui/icons";
 import { AnalysisIcon, ArrowBackSmallIcon, CodeIcon, ExpandSmallIcon, FastForwardIcon } from "../../../../../ui/icons-debrief";
 
@@ -39,10 +40,10 @@ export function NextActions() {
           <ArrowForwardIcon width={11} height={11} />
         </span>
       </div>
-      <a href="/play" className="flex items-center gap-1 text-ink-subtle">
+      <Link href="/play" className="flex items-center gap-1 text-ink-subtle">
         <ArrowBackSmallIcon />
         <span className="type-label">RETURN TO OPERATIONS CONSOLE</span>
-      </a>
+      </Link>
     </section>
   );
 }

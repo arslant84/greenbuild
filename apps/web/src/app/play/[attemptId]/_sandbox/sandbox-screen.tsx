@@ -87,11 +87,9 @@ function useRefreshWhenTimeIsUp(remainingSeconds: number, refresh: () => Promise
 function useSolvedTime(check: CheckState, elapsed: number): number | null {
   const [solvedIn, setSolvedIn] = useState<number | null>(null);
   const passed = check.kind === "done" && check.result.passed;
-  useEffect(() => {
-    if (passed) {
-      setSolvedIn((current) => current ?? elapsed);
-    }
-  }, [passed, elapsed]);
+  if (passed && solvedIn === null) {
+    setSolvedIn(elapsed);
+  }
   return solvedIn;
 }
 
