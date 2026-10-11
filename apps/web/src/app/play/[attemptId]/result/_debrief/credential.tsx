@@ -3,6 +3,7 @@
 import type { AttemptResult } from "@greenbuild/shared";
 import { useState } from "react";
 import { AuthenticIcon, CredentialIcon, DownloadIcon, LinkIcon, ShareIcon, TerminalBadgeIcon } from "../../../../../ui/icons-debrief";
+import { xpAmount } from "../../../xp-view";
 import { checkSummary } from "./outcome";
 import { formatDuration } from "./summary";
 
@@ -69,7 +70,7 @@ function Player({ result }: { result: AttemptResult }) {
         </span>
       </span>
       <span className="flex items-center gap-3">
-        <Metric value="— XP" label="REWARD" tone="text-warn" />
+        <Metric value={`${xpAmount(result.xp_earned)} XP`} label="REWARD" tone="text-warn" />
         <Metric value="— MMR" label="GLOBAL" tone="text-accent" />
         <span className="flex flex-col items-end rounded bg-control px-2 py-1">
           <span className="font-mono text-[13px] leading-[18px] font-semibold text-ink">—</span>

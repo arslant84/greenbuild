@@ -1,6 +1,7 @@
 import { formatClock } from "../../../../../ui/format";
 import { BoltIcon, FlameIcon } from "../../../../../ui/icons";
 import { KeyIcon, TrendingUpIcon } from "../../../../../ui/icons-debrief";
+import { xpAmount } from "../../../xp-view";
 import { type Outcome, TONE_BG, TONE_TEXT } from "./outcome";
 
 const MS_PER_SECOND = 1_000;
@@ -13,11 +14,13 @@ interface SummaryProps {
   title: string;
   outcome: Outcome;
   durationMs: number | null;
+  // Null until the worker credits the attempt (task 42b).
+  xpEarned: number | null;
 }
 
-// Figma › Breadcrumb & Challenge Meta, Hero Result Section and Stats Bento Row. XP, rating and streaks
-// arrive with the game layer, so their cards show empty values.
-export function Summary({ title, outcome, durationMs }: SummaryProps) {
+// Figma › Breadcrumb & Challenge Meta, Hero Result Section and Stats Bento Row. XP earned comes from
+// the result (task 42b); rating and streaks arrive with their tasks, so their cards show empty values.
+export function Summary({ title, outcome, durationMs, xpEarned }: SummaryProps) {
   return (
     <>
       <section className="flex flex-col gap-1 pb-5">
@@ -47,7 +50,7 @@ export function Summary({ title, outcome, durationMs }: SummaryProps) {
         </span>
       </section>
       <section className="mb-5 flex gap-2">
-        <Stat label="XP EARNED" value="—" note="—" icon={<BoltIcon className="text-warn" />} tone="text-warn" />
+        <Stat label="XP EARNED" value={xpAmount(xpEarned)} note="—" icon={<BoltIcon className="text-warn" />} tone="text-warn" />
         <Stat label="RATING CHANGE" value="—" note="—" icon={<TrendingUpIcon className="text-ok" />} tone="text-accent" />
         <Stat label="ACTIVE STREAK" value="—" note="—" icon={<FlameIcon width={11} height={13} className="text-warn" />} tone="text-ink" />
       </section>
