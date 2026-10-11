@@ -1,5 +1,5 @@
 import { GLICKO_INITIAL_RATING, GLICKO_INITIAL_RATING_DEVIATION, GLICKO_INITIAL_VOLATILITY } from "@greenbuild/shared";
-import { index, integer, pgEnum, pgTable, real, text, unique, uuid } from "drizzle-orm/pg-core";
+import { date, index, integer, pgEnum, pgTable, real, text, unique, uuid } from "drizzle-orm/pg-core";
 import { attempts } from "./attempts.js";
 import { idColumn, timestampColumns } from "./columns.js";
 import { users } from "./users.js";
@@ -43,3 +43,18 @@ export const userSkills = pgTable(
   },
   (table) => [unique("user_skills_user_skill").on(table.userId, table.skill)],
 );
+
+// streaks is one row per player (task 44): the worker applies each solve with shared applySolve.
+export const streaks = pgTable("streaks", {
+  id: idColumn(),
+  userId: uuid("user_id")
+    .notNull()
+    .unique()
+    .references(() => users.id, { onDelete: "restrict" }),
+  current: integer("current").notNull().default(0),
+  longest: integer("longest").notNull().default(0),
+  // The player's calendar day (their timezone) of the last solve that counted.
+  lastDay: date("last_day", { mode: "string" }),
+  freezesAvailable: integer("freezes_available").notNull().default(0),
+  ...timestampColumns(),
+});

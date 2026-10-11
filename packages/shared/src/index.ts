@@ -9,5 +9,6 @@ export * from "./api/daily.js";
 export * from "./challenge/manifest.js";
 export * from "./game/glicko2.js";
 export * from "./game/levels.js";
+export * from "./game/streaks.js";
 export * from "./game/xp.js";
 export * from "./logging/index.js";
