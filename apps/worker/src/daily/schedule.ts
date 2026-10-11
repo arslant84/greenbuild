@@ -1,16 +1,11 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import type { Database } from "@greenbuild/db";
-import { DAILY_TRACKS } from "@greenbuild/shared";
+import { DAILY_TRACKS, utcDay } from "@greenbuild/shared";
 import { logger } from "../logger.js";
 import { publishDaily } from "./publish.js";
 
 const DAY_MS = 86_400_000;
 const CHECK_INTERVAL_MS = 60_000;
-
-// utcDay is the YYYY-MM-DD of a moment in UTC, the calendar the daily challenge follows.
-export function utcDay(moment: Date): string {
-  return moment.toISOString().slice(0, 10);
-}
 
 // publishDue publishes today's and tomorrow's daily challenge for every track, so the next one is in
 // place before 00:00 UTC (architecture.md, task 41a).
