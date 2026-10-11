@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: umask-uploads
+version: 1
+title: "Forbidden since Tuesday"
+statement: "Files that users uploaded since Tuesday answer 403 on the site; older files still work. Make every upload work again, including the ones that arrive after you leave."
+difficulty: 3            # 1–10
+skills: { linux: 0.8, nginx: 0.2 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache at start; nginx workers and the uploader run as their own users; root fixes
+# files it does not own and restarts the uploader, as on a server.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  service: { pick: [uploader, ingest, media] }
+  new_files: { range: [3, 7] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
