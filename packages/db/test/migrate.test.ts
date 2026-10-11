@@ -12,7 +12,7 @@ describe("migrations on an empty PostgreSQL 16", () => {
     const rows = await db().db.execute<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'public' order by table_name",
     );
-    expect(rows.map((row) => row.table_name)).toEqual(["attempt_checks", "attempts", "challenge_versions", "challenges", "outbox", "sandbox_sessions"]);
+    expect(rows.map((row) => row.table_name)).toEqual(["attempt_checks", "attempts", "auth_accounts", "challenge_versions", "challenges", "outbox", "sandbox_sessions", "users"]);
   });
 
   it("fill ids, timestamps and defaults", async () => {
