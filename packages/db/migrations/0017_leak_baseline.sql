@@ -1,0 +1,1 @@
+ALTER TABLE "challenge_versions" ADD COLUMN "median_solve_ms_baseline" integer;
