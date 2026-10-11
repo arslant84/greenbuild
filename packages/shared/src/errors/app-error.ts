@@ -49,6 +49,14 @@ export class ConflictError extends AppError {
   }
 }
 
+// UnprocessableError means a well-formed request the player cannot make in their current state, such
+// as being found by companies without confirming they are 18 or older.
+export class UnprocessableError extends AppError {
+  constructor(message: string) {
+    super("unprocessable", message);
+  }
+}
+
 export class RateLimitedError extends AppError {
   constructor(message: string) {
     super("rate_limited", message);

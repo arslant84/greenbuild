@@ -6,6 +6,7 @@ export const ERROR_CODES = [
   "forbidden",
   "not_found",
   "conflict",
+  "unprocessable",
   "rate_limited",
   "unavailable",
   "internal",

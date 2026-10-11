@@ -7,6 +7,7 @@ const STATUS_BY_CODE: Record<ErrorCode, HttpStatus> = {
   forbidden: HttpStatus.FORBIDDEN,
   not_found: HttpStatus.NOT_FOUND,
   conflict: HttpStatus.CONFLICT,
+  unprocessable: HttpStatus.UNPROCESSABLE_ENTITY,
   rate_limited: HttpStatus.TOO_MANY_REQUESTS,
   unavailable: HttpStatus.SERVICE_UNAVAILABLE,
   internal: HttpStatus.INTERNAL_SERVER_ERROR,
