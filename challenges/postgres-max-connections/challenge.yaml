@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: postgres-max-connections
+version: 1
+title: "Too many clients already"
+statement: "Since the new reporting worker went live, the app cannot connect to PostgreSQL: it is refused with \"too many clients\". The reports are needed too, so keep the reporting worker running, and make sure the app stays connectable."
+difficulty: 4            # 1–10
+skills: { postgresql: 0.7, linux: 0.3 }
+time_limit_sec: 1200
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# PostgreSQL and the worker run as their own users; root edits their files and stops their processes.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  reporter: { pick: [reports, analytics, exports] }
+  database: { pick: [shop, crm, billing] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
