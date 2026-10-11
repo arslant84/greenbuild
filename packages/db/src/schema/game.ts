@@ -58,3 +58,20 @@ export const streaks = pgTable("streaks", {
   freezesAvailable: integer("freezes_available").notNull().default(0),
   ...timestampColumns(),
 });
+
+// attempt_signals keeps the anti-cheat signals the worker found for an attempt (task 49b); they outlive
+// the raw session log, which is deleted after 90 days.
+export const attemptSignals = pgTable(
+  "attempt_signals",
+  {
+    id: idColumn(),
+    attemptId: uuid("attempt_id")
+      .notNull()
+      .references(() => attempts.id, { onDelete: "restrict" }),
+    signal: text("signal").notNull(),
+    value: real("value").notNull(),
+    weight: integer("weight").notNull(),
+    ...timestampColumns(),
+  },
+  (table) => [unique("attempt_signals_attempt_signal").on(table.attemptId, table.signal)],
+);
