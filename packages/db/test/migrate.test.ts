@@ -4,7 +4,24 @@ import { attempts, challenges, challengeVersions } from "../src/schema/index.js"
 import { useMigratedDatabase } from "./migrated.js";
 import { aUser } from "./users-fixture.js";
 
-const TABLES = ["assessment_invites", "attempt_checks", "attempts", "auth_accounts", "challenge_versions", "challenges", "companies", "company_invitations", "company_members", "outbox", "sandbox_sessions", "subscriptions", "users"];
+const TABLES = [
+  "assessment_invites",
+  "attempt_checks",
+  "attempts",
+  "auth_accounts",
+  "challenge_versions",
+  "challenges",
+  "companies",
+  "company_invitations",
+  "company_members",
+  "consents",
+  "outbox",
+  "privacy_requests",
+  "sandbox_sessions",
+  "subscriptions",
+  "user_settings",
+  "users",
+];
 
 describe("migrations on an empty PostgreSQL 16", () => {
   const db = useMigratedDatabase();

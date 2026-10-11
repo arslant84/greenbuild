@@ -71,6 +71,13 @@
       "when": 1791707269178,
       "tag": "0009_validate_challenges_company_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791707627314,
+      "tag": "0010_consent_tables",
+      "breakpoints": true
     }
   ]
 }
