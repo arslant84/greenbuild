@@ -85,6 +85,13 @@
       "when": 1791709877097,
       "tag": "0011_daily_challenges",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791710855905,
+      "tag": "0012_xp_ledger",
+      "breakpoints": true
     }
   ]
 }

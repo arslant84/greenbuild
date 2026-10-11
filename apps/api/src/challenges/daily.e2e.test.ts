@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { challenges, challengeVersions, connect, dailyChallenges, desc, eq } from "@greenbuild/db";
+import { attempts, challenges, challengeVersions, connect, dailyChallenges, desc, eq } from "@greenbuild/db";
 import { utcDay } from "@greenbuild/shared";
 import { describe, expect, it } from "vitest";
 import { signDevUserToken } from "../auth/dev-user-token.js";
@@ -31,6 +31,16 @@ async function publishToday(slug: string): Promise<void> {
   }
 }
 
+async function contextOf(attemptId: string): Promise<string | undefined> {
+  const connection = connect(app().env.DATABASE_URL);
+  try {
+    const [attempt] = await connection.db.select({ context: attempts.context }).from(attempts).where(eq(attempts.id, attemptId));
+    return attempt?.context;
+  } finally {
+    await connection.close();
+  }
+}
+
 describe("GET /v1/daily", () => {
   it("answers 404 while nothing is published for today", async () => {
     const response = await daily(randomUUID());
@@ -54,5 +64,16 @@ describe("GET /v1/daily", () => {
     const started = (await (await (await player(app, userId)).start(NGINX_502)).json()) as { id: string };
     expect(await (await daily(userId)).json()).toMatchObject({ attempt: { id: started.id, status: "starting" } });
     expect(await (await daily(randomUUID())).json()).toMatchObject({ attempt: null });
+  });
+});
+
+// Task 42a: the server marks an attempt at today's daily challenge as daily (x1.5 XP); the client cannot.
+describe("starting an attempt", () => {
+  it("records today's daily challenge as daily and any other as catalog", async () => {
+    const daily = (await (await (await player(app, randomUUID())).start(NGINX_502)).json()) as { id: string };
+    const other = (await (await (await player(app, randomUUID())).start({ challenge_slug: "app-env-renamed" })).json()) as { id: string };
+
+    expect(await contextOf(daily.id)).toBe("daily");
+    expect(await contextOf(other.id)).toBe("catalog");
   });
 });

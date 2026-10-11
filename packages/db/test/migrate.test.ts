@@ -22,6 +22,7 @@ const TABLES = [
   "subscriptions",
   "user_settings",
   "users",
+  "xp_ledger",
 ];
 
 describe("migrations on an empty PostgreSQL 16", () => {

@@ -28,7 +28,8 @@ export class AttemptsService {
   // queued, the attempt is marked failed so it does not block the user's next one.
   async start(userId: string, challengeSlug: string): Promise<AttemptResponse> {
     const version = await this.liveVersions.latest(challengeSlug);
-    const attempt = await this.insert(userId, version.id);
+    const context = (await this.liveVersions.isTodaysDaily(version.id)) ? "daily" : "catalog";
+    const attempt = await this.insert(userId, version.id, context);
     try {
       await this.sandboxes.request(attempt, version);
     } catch (error) {
@@ -38,11 +39,11 @@ export class AttemptsService {
     return toResponse(attempt, challengeSlug);
   }
 
-  private async insert(userId: string, challengeVersionId: string): Promise<StartedAttempt> {
+  private async insert(userId: string, challengeVersionId: string, context: "daily" | "catalog"): Promise<StartedAttempt> {
     try {
       const [attempt] = await this.database.db
         .insert(attempts)
-        .values({ userId, challengeVersionId, seed: randomSeed(), context: "catalog" })
+        .values({ userId, challengeVersionId, seed: randomSeed(), context })
         .returning({
           id: attempts.id,
           seed: attempts.seed,
