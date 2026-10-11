@@ -1,6 +1,6 @@
 # Play a challenge locally
 
-Runs the whole Stage 1 slice on one machine: Postgres and Redis (Docker Compose), the sandbox agent, the engine, the API and the web app. Sandboxes use runc locally; gVisor is covered in CI.
+Runs the whole Stage 1 slice on one machine: Postgres and Redis (Docker Compose), the sandbox agent, the engine, the API, the worker and the web app. Sandboxes use runc locally; gVisor is covered in CI.
 
 ## Needs
 
@@ -25,12 +25,13 @@ The first `play:up` builds the Go binaries, the dev certificates, the API and on
 |---|---|---|
 | Web | `localhost:3001` | `next dev`, so the dev session exists |
 | API | `127.0.0.1:3000` | dev user tokens on |
+| Worker | `127.0.0.1:3002` | relays `attempt.finished`, publishes the daily challenge |
 | Engine | `127.0.0.1:8080` | consumer on, `/attach` and `/internal` on |
 | Agent | `127.0.0.1:8081`, gRPC `9443` | runc |
-| Postgres | `127.0.0.1:15432` | migrated and seeded with nginx-502 |
+| Postgres | `127.0.0.1:15432` | migrated and seeded with every challenge; nginx-502 is the daily challenge on the stack's first day, the worker picks the following days |
 | Redis | `127.0.0.1:16379` | clear of a local Redis on 6379 (e.g. Memurai) |
 
-Each port can be changed with `PLAY_WEB_PORT`, `PLAY_API_PORT`, `PLAY_ENGINE_PORT`, `PLAY_AGENT_PORT` and `PLAY_AGENT_GRPC_PORT`, e.g. to run next to `pnpm dev`.
+Each port can be changed with `PLAY_WEB_PORT`, `PLAY_API_PORT`, `PLAY_WORKER_PORT`, `PLAY_ENGINE_PORT`, `PLAY_AGENT_PORT` and `PLAY_AGENT_GRPC_PORT`, e.g. to run next to `pnpm dev`.
 
 Everything else lives in `.play/` (git-ignored): binaries, dev certificates, throwaway secrets kept across restarts, process ids and one log per service in `.play/logs`. If a service does not come up, the script stops and prints the end of its log.
 

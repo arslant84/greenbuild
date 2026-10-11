@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs the whole Stage 1 slice on one machine: Postgres and Redis (Docker Compose), the sandbox agent
-# (runc), the engine, the API and the web app. Used by `pnpm play:up` / `pnpm play:down` and by CI's
+# (runc), the engine, the API, the worker and the web app. Used by `pnpm play:up` / `pnpm play:down` and by CI's
 # Playwright job. State, logs and throwaway secrets live in .play/ (git-ignored).
 #
 #   bash scripts/play-stack.sh up     # then open http://localhost:3001
@@ -14,6 +14,7 @@ READY_TIMEOUT_S=120
 # Defaults match each service's own defaults; override them to run next to another local stack.
 WEB_PORT="${PLAY_WEB_PORT:-3001}"
 API_PORT="${PLAY_API_PORT:-3000}"
+WORKER_PORT="${PLAY_WORKER_PORT:-3002}"
 ENGINE_PORT="${PLAY_ENGINE_PORT:-8080}"
 AGENT_PORT="${PLAY_AGENT_PORT:-8081}"
 AGENT_GRPC_PORT="${PLAY_AGENT_GRPC_PORT:-9443}"
@@ -37,8 +38,8 @@ build() {
   log "building agent, engine and certificates"
   (cd "$ROOT/apps/sandbox-agent" && go build -o "$PLAY/bin/sandbox-agent" ./cmd/sandbox-agent && go run ./cmd/devcerts -out "$PLAY/certs" >/dev/null)
   (cd "$ROOT/apps/sandbox-engine" && go build -o "$PLAY/bin/sandbox-engine" ./cmd/sandbox-engine)
-  log "building the API and the database package"
-  (cd "$ROOT" && pnpm --filter "@greenbuild/api..." build >/dev/null)
+  log "building the API, the worker and the database package"
+  (cd "$ROOT" && pnpm --filter "@greenbuild/api..." --filter "@greenbuild/worker..." build >/dev/null)
   challenge_images
 }
 
@@ -59,6 +60,16 @@ database() {
   "${COMPOSE[@]}" up -d --wait >/dev/null
   log "migrating and seeding"
   (cd "$ROOT/packages/db" && DATABASE_URL="$DATABASE_URL" node dist/migrate.js && DATABASE_URL="$DATABASE_URL" node dist/seed.js)
+  todays_daily
+}
+
+# todays_daily makes nginx-502 today's daily challenge when none is published yet, so the stack and its
+# Playwright tests start from a known challenge; the worker publishes the following days.
+todays_daily() {
+  local id
+  id="$(cd "$ROOT/packages/db" && node --input-type=module -e 'import { uuidv7 } from "./dist/uuid.js"; console.log(uuidv7())')"
+  "${COMPOSE[@]}" exec -T postgres psql -q -U postgres -d greenbuild -c \
+    "insert into daily_challenges (id, day, track, challenge_version_id) select '$id', '$(date -u +%F)', 'linux', v.id from challenge_versions v join challenges c on c.id = v.challenge_id where c.slug = 'nginx-502-upstream' order by v.version desc limit 1 on conflict do nothing" >/dev/null
 }
 
 # start runs one service in the background with its output in .play/logs/<name>.log.
@@ -114,6 +125,9 @@ services() {
     ENGINE_INTERNAL_URL="http://127.0.0.1:$ENGINE_PORT" ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" \
     node apps/api/dist/main.js
   wait_for api "$API_PORT"
+  # The worker relays attempt.finished and publishes the daily challenge (task 41a).
+  start worker NODE_ENV=development PORT="$WORKER_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" node apps/worker/dist/main.js
+  wait_for worker "$WORKER_PORT"
   # next dev, not next start: the dev session exists only outside production builds.
   start web API_URL="http://127.0.0.1:$API_PORT" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" ENGINE_ATTACH_URL="ws://127.0.0.1:$ENGINE_PORT/attach" \
     bash -c "cd apps/web && exec ./node_modules/.bin/next dev --port $WEB_PORT"
@@ -148,7 +162,7 @@ up() {
 }
 
 down() {
-  for pidfile in "$PLAY"/pids/web "$PLAY"/pids/api "$PLAY"/pids/engine "$PLAY"/pids/agent; do
+  for pidfile in "$PLAY"/pids/web "$PLAY"/pids/worker "$PLAY"/pids/api "$PLAY"/pids/engine "$PLAY"/pids/agent; do
     if [ -f "$pidfile" ]; then stop "$pidfile"; fi
   done
   "${COMPOSE[@]}" down >/dev/null 2>&1 || true
