@@ -8,6 +8,7 @@ import { logger } from "./logger.js";
 import { runRelay } from "./outbox/relay.js";
 import { type FinishedHandler, runFinishedConsumer } from "./finished-consumer.js";
 import { ratingHandler } from "./rating/rate.js";
+import { streakHandler } from "./streaks/count.js";
 import { xpHandler } from "./xp/credit.js";
 
 const SHUTDOWN_SIGNALS = ["SIGINT", "SIGTERM"] as const;
@@ -17,7 +18,7 @@ type Stop = () => Promise<void>;
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
-  const stops = [await startRelay(env), startDailyPublisher(env), await startFinishedConsumer(env, xpHandler), await startFinishedConsumer(env, ratingHandler)];
+  const stops = [await startRelay(env), startDailyPublisher(env), await startFinishedConsumer(env, xpHandler), await startFinishedConsumer(env, ratingHandler), await startFinishedConsumer(env, streakHandler)];
 
   server.listen(env.PORT, () => {
     logger.info("worker listening", { port: env.PORT });
