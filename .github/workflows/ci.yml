@@ -66,6 +66,16 @@ jobs:
 
       - run: pnpm build
 
+      # The committed gRPC code must match agent.proto (architecture.md, task 37a). The only place
+      # the generator versions are pinned; packages/agent-api/generate.sh points here.
+      - name: Check generated gRPC code
+        run: |
+          curl -fsSLo "${RUNNER_TEMP}/protoc.zip" https://github.com/protocolbuffers/protobuf/releases/download/v36.0/protoc-36.0-linux-x86_64.zip
+          sudo unzip -q -o "${RUNNER_TEMP}/protoc.zip" -d /usr/local bin/protoc "include/*"
+          go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
+          go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
+          bash .github/scripts/check-grpc-codegen.sh
+
   sandbox-integration:
     name: Sandbox integration (gVisor)
     runs-on: ubuntu-latest

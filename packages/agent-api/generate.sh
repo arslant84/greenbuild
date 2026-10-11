@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Regenerates the Go code for the agent contract. Commit the result.
-# Needs protoc 36.0, protoc-gen-go v1.36.12 and protoc-gen-go-grpc 1.6.2 on PATH:
-#   go install google.golang.org/protobuf/cmd/protoc-gen-go@v1.36.12
-#   go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@v1.6.2
+# Regenerates the Go code for the agent contract. Commit the result; CI fails when the committed
+# code does not match agent.proto (.github/scripts/check-grpc-codegen.sh).
+# Needs on PATH the protoc, protoc-gen-go and protoc-gen-go-grpc versions the CI step "Check
+# generated gRPC code" installs (.github/workflows/ci.yml); the same commands work locally.
 set -euo pipefail
 cd "$(dirname "$0")"
 
