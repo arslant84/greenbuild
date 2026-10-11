@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { applyMigrations } from "../src/migrate.js";
 import { attempts, challenges, challengeVersions } from "../src/schema/index.js";
-import { uuidv7 } from "../src/uuid.js";
 import { useMigratedDatabase } from "./migrated.js";
+import { aUser } from "./users-fixture.js";
 
 describe("migrations on an empty PostgreSQL 16", () => {
   const db = useMigratedDatabase();
@@ -37,7 +37,7 @@ describe("migrations on an empty PostgreSQL 16", () => {
       .db.insert(challengeVersions)
       .values({ challengeId: challenge?.id ?? "", version: 1, specJson: {}, imageRef: "img", checkerHash: "sha256:x", source: "human" })
       .returning();
-    const attempt = { userId: uuidv7(), challengeVersionId: version?.id ?? "", context: "catalog" as const };
+    const attempt = { userId: await aUser(db().db), challengeVersionId: version?.id ?? "", context: "catalog" as const };
 
     await expect(db().db.insert(attempts).values({ ...attempt, seed: Number.MAX_SAFE_INTEGER + 2 })).rejects.toThrow();
     await expect(db().db.insert(attempts).values({ ...attempt, seed: 1, checksUsed: 11 })).rejects.toThrow();

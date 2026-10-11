@@ -168,7 +168,7 @@ greenbuild/
 
 Все ID — UUID v7; все таблицы имеют `created_at` и `updated_at`; мультитенантность через `company_id` и таблицы согласия создаются на этапе 0, даже если кабинет открывается позже.
 
-**Что уже есть (миграции 0000–0005):** `challenges`, `challenge_versions` (с `hints_json`, 0004), `attempts`, `sandbox_sessions`, `attempt_checks`, `outbox` (0003), `users` и `auth_accounts` (0005, задача 29a). ID — UUID v7, генерируются в приложении (в PostgreSQL 16 нет `uuidv7()`). Ограничения: сложность 1–10, приватное задание требует компании, seed ≤ 2^53−1, не больше 10 проверок на попытку (`ATTEMPT_MAX_CHECKS`); частичный уникальный индекс `attempts_one_active_per_user` (статусы starting и ready). У `attempts.user_id` пока нет внешнего ключа (задача 29b). Остальные таблицы этого раздела ещё не созданы: согласие — 31a, компании — 31b.
+**Что уже есть (миграции 0000–0007):** `challenges`, `challenge_versions` (с `hints_json`, 0004), `attempts`, `sandbox_sessions`, `attempt_checks`, `outbox` (0003), `users` и `auth_accounts` (0005, задача 29a); внешний ключ `attempts.user_id` → `users` (0006–0007, задача 29b; dev-путь создаёт пользователя dev-токена до Auth.js). ID — UUID v7, генерируются в приложении (в PostgreSQL 16 нет `uuidv7()`). Ограничения: сложность 1–10, приватное задание требует компании, seed ≤ 2^53−1, не больше 10 проверок на попытку (`ATTEMPT_MAX_CHECKS`); частичный уникальный индекс `attempts_one_active_per_user` (статусы starting и ready). Остальные таблицы этого раздела ещё не созданы: согласие — 31a, компании — 31b.
 
 ### Пользователи и доступ
 
