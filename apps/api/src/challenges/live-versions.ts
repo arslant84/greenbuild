@@ -10,20 +10,21 @@ export interface LiveVersion {
   specJson: unknown;
 }
 
-// LiveVersions finds what players get for a challenge: its newest version, while it is live.
+// LiveVersions finds what players get for a challenge: its newest version, while the challenge is live
+// and that version is not retired (task 49d).
 @Injectable()
 export class LiveVersions {
   constructor(private readonly database: DatabaseClient) {}
 
   async latest(slug: string): Promise<LiveVersion> {
     const [version] = await this.database.db
-      .select({ id: challengeVersions.id, version: challengeVersions.version, imageRef: challengeVersions.imageRef, specJson: challengeVersions.specJson })
+      .select({ id: challengeVersions.id, version: challengeVersions.version, imageRef: challengeVersions.imageRef, specJson: challengeVersions.specJson, retiredReason: challengeVersions.retiredReason })
       .from(challengeVersions)
       .innerJoin(challenges, eq(challenges.id, challengeVersions.challengeId))
       .where(and(eq(challenges.slug, slug), eq(challenges.status, "live")))
       .orderBy(desc(challengeVersions.version))
       .limit(1);
-    if (!version) {
+    if (!version || version.retiredReason !== null) {
       throw new NotFoundError("Challenge not found");
     }
     return version;

@@ -39,14 +39,16 @@ async function publishedVersion(tx: Transaction, day: string, track: DailyTrack)
   return row?.versionId;
 }
 
-// liveCandidates lists the newest version of every live public challenge, as players get it.
+// liveCandidates lists the newest version of every live public challenge, as players get it; a challenge
+// whose newest version was retired (task 49d) has none.
 async function liveCandidates(tx: Transaction): Promise<Candidate[]> {
-  return tx
-    .selectDistinctOn([challengeVersions.challengeId], { challengeId: challengeVersions.challengeId, versionId: challengeVersions.id })
+  const newest = await tx
+    .selectDistinctOn([challengeVersions.challengeId], { challengeId: challengeVersions.challengeId, versionId: challengeVersions.id, retiredReason: challengeVersions.retiredReason })
     .from(challengeVersions)
     .innerJoin(challenges, eq(challenges.id, challengeVersions.challengeId))
     .where(and(eq(challenges.status, "live"), eq(challenges.visibility, "public")))
     .orderBy(challengeVersions.challengeId, desc(challengeVersions.version));
+  return newest.filter((row) => row.retiredReason === null);
 }
 
 // lastPublished maps each challenge to the last day before day it was this track's daily challenge.
