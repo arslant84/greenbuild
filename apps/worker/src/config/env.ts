@@ -8,6 +8,8 @@ const envSchema = z
     // The outbox relay runs only with both; they hold passwords, so errors never echo them.
     DATABASE_URL: z.url({ protocol: /^postgres(ql)?$/ }).optional(),
     REDIS_URL: z.url({ protocol: /^rediss?$/ }).optional(),
+    // Where the engine saves session logs (task 49b reads them for anti-cheat signals); holds a key.
+    SESSION_BLOB_CONNECTION_STRING: z.string().min(1).optional(),
   })
   .refine((env) => (env.DATABASE_URL === undefined) === (env.REDIS_URL === undefined), {
     message: "DATABASE_URL and REDIS_URL must be set together",

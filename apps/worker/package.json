@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@azure/storage-blob": "^12.34.0",
     "@greenbuild/db": "workspace:*",
     "@greenbuild/shared": "workspace:*",
     "redis": "^6.3.0",

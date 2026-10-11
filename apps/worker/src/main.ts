@@ -9,6 +9,7 @@ import { runRelay } from "./outbox/relay.js";
 import { type FinishedHandler, runFinishedConsumer } from "./finished-consumer.js";
 import { dailyBoardHandler } from "./leaderboards/boards.js";
 import { ratingHandler } from "./rating/rate.js";
+import { BlobSessionLogs } from "./signals/logs.js";
 import { streakHandler } from "./streaks/count.js";
 import { xpHandler } from "./xp/credit.js";
 
@@ -85,7 +86,8 @@ async function startFinishedConsumer(env: Env, handler: FinishedHandler): Promis
   redis.on("error", (error: unknown) => logger.error("redis connection error", { error }));
   await redis.connect();
   const controller = new AbortController();
-  const running = runFinishedConsumer({ db: database.db, redis, handler }, controller.signal);
+  const logs = env.SESSION_BLOB_CONNECTION_STRING ? new BlobSessionLogs(env.SESSION_BLOB_CONNECTION_STRING) : null;
+  const running = runFinishedConsumer({ db: database.db, redis, handler, logs }, controller.signal);
   return async () => {
     controller.abort();
     redis.destroy();

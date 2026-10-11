@@ -128,7 +128,7 @@ describe("rateAttempt", () => {
     const event = await finishedAttempt({ status: "solved" });
     await redis.xAdd(STREAM_ATTEMPT_FINISHED, "*", { [QUEUE_PAYLOAD_FIELD]: JSON.stringify(event) });
 
-    await consumeFinishedBatch({ db: database.db, redis, handler: ratingHandler }, 100);
+    await consumeFinishedBatch({ db: database.db, redis, handler: ratingHandler, logs: null }, 100);
     expect((await skillRatings(event.user_id)).linux).toBeGreaterThan(START.rating);
   });
 });

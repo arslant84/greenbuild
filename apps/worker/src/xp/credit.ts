@@ -73,7 +73,7 @@ async function solvedAttempt(tx: Transaction, attemptId: string): Promise<Solved
 
 // medianSolveMs is the median solve time of other attempts at the challenge (any version), or null
 // with fewer than XP_MEDIAN_MIN_SOLVES of them.
-async function medianSolveMs(tx: Transaction, challengeId: string, attemptId: string): Promise<number | null> {
+export async function medianSolveMs(tx: Pick<Database, "select">, challengeId: string, attemptId: string): Promise<number | null> {
   const [row] = await tx
     .select({ solves: sql<number>`count(*)::int`, median: sql<number | null>`percentile_cont(0.5) within group (order by ${attempts.durationMs})` })
     .from(attempts)
