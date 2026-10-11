@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: json-bom-config
+version: 1
+title: "The config that looks fine"
+statement: "This morning someone raised the app's upload limit to 50 MB in its config file and restarted it. The app has not come up since, although the file looks perfectly valid. Bring the app back with the new limit."
+difficulty: 3            # 1–10
+skills: { linux: 0.8, python: 0.2 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# The app runs as its own user and owns its log; root edits its config.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [gallery, invoices, tickets] }
+  port: { range: [8000, 8999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
