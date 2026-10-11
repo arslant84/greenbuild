@@ -1,5 +1,15 @@
-import { type Database, eq, sql, users, xpLedger } from "@greenbuild/db";
-import { ConflictError, levelForXp, type MeResponse, NotFoundError, TIMEZONE_CHANGE_INTERVAL_DAYS, type UpdateMeRequest } from "@greenbuild/shared";
+import { type Database, eq, sql, streaks, users, xpLedger } from "@greenbuild/db";
+import {
+  ConflictError,
+  levelForXp,
+  localDay,
+  type MeResponse,
+  NO_STREAK,
+  NotFoundError,
+  TIMEZONE_CHANGE_INTERVAL_DAYS,
+  type UpdateMeRequest,
+  visibleStreak,
+} from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { violatesUnique } from "../infra/postgres-errors.js";
 import { DatabaseClient } from "../infra/services.js";
@@ -15,6 +25,11 @@ interface XpSummary {
   today: number;
 }
 
+interface Progress {
+  xp: XpSummary;
+  streak: MeResponse["streak"];
+}
+
 // MeService reads and edits the signed-in player's own profile (architecture.md, task 32).
 @Injectable()
 export class MeService {
@@ -25,7 +40,7 @@ export class MeService {
     if (!user) {
       throw new NotFoundError("User not found");
     }
-    return toResponse(user, await xpSummary(this.database.db, user));
+    return toResponse(user, await progressOf(this.database.db, user));
   }
 
   // update locks the row, so two timezone changes at once cannot both pass the 30-day rule.
@@ -42,7 +57,7 @@ export class MeService {
           const [updated] = await tx.update(users).set(columns).where(eq(users.id, userId)).returning();
           current = updated ?? user;
         }
-        return toResponse(current, await xpSummary(tx, current));
+        return toResponse(current, await progressOf(tx, current));
       });
     } catch (error) {
       if (violatesUnique(error, HANDLE_TAKEN)) {
@@ -96,7 +111,18 @@ async function xpSummary(db: Pick<Database, "select">, user: UserRow): Promise<X
   return { total: row?.total ?? 0, today: row?.today ?? 0 };
 }
 
-function toResponse(user: UserRow, xp: XpSummary): MeResponse {
+// streakToday is the player's streak as it stands on their calendar day today (task 44).
+async function streakToday(db: Pick<Database, "select">, user: UserRow): Promise<MeResponse["streak"]> {
+  const [row] = await db.select().from(streaks).where(eq(streaks.userId, user.id));
+  const state = row ? { current: row.current, longest: row.longest, lastDay: row.lastDay, freezes: row.freezesAvailable } : NO_STREAK;
+  return { current: visibleStreak(state, localDay(new Date(), user.timezone)), longest: state.longest, freezes: state.freezes };
+}
+
+async function progressOf(db: Pick<Database, "select">, user: UserRow): Promise<Progress> {
+  return { xp: await xpSummary(db, user), streak: await streakToday(db, user) };
+}
+
+function toResponse(user: UserRow, { xp, streak }: Progress): MeResponse {
   return {
     id: user.id,
     handle: user.handle,
@@ -107,5 +133,6 @@ function toResponse(user: UserRow, xp: XpSummary): MeResponse {
     xp: xp.total,
     level: levelForXp(xp.total),
     xp_today: xp.today,
+    streak,
   };
 }

@@ -16,7 +16,8 @@ const NAV: NavItem[] = [
 ];
 
 // Figma "Hotfix — Daily Challenge" › Aside: 240 px, brand and nav on top, streak and player at the bottom.
-export function Sidebar() {
+// streak is the player's current streak from GET /v1/me (task 44), 0 without one.
+export function Sidebar({ streak }: { streak: number }) {
   return (
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col justify-between border-r border-[#3c494c4d] bg-canvas p-3">
       <div className="flex flex-col gap-5">
@@ -30,7 +31,7 @@ export function Sidebar() {
           ))}
         </nav>
       </div>
-      <SidebarFooter />
+      <SidebarFooter streak={streak} />
     </aside>
   );
 }
@@ -50,14 +51,14 @@ function NavLink({ item }: { item: NavItem }) {
   );
 }
 
-// Streak and profile details come with accounts and the game layer; until then they show empty values.
-function SidebarFooter() {
+// Profile details come with accounts; until then they show empty values.
+function SidebarFooter({ streak }: { streak: number }) {
   return (
     <div className="flex flex-col gap-1 border-t border-[#3c494c33] pt-3">
       <div className="flex items-center justify-between p-1">
         <span className="flex items-center gap-1 text-warn">
           <FlameIcon width={11} height={13} />
-          <span className="type-label font-semibold tracking-[0.5px] uppercase">0 day streak</span>
+          <span className="type-label font-semibold tracking-[0.5px] uppercase">{streak} day streak</span>
         </span>
         <span className="size-2 rounded-full bg-line" />
       </div>

@@ -6,7 +6,7 @@ const FIX =
   '. /srv/app/app.env && sed -i "s#proxy_pass http://127.0.0.1:[0-9]*;#proxy_pass http://127.0.0.1:${PORT};#" /etc/nginx/conf.d/site.conf && nginx -s reload && sleep 1 && echo fixed-$((40+2))\n';
 const SANDBOX_START_TIMEOUT_MS = 90_000;
 const CHECK_TIMEOUT_MS = 60_000;
-// The worker relays attempt.finished and credits XP within seconds of the solve.
+// The worker relays attempt.finished and credits XP and the streak within seconds of the solve.
 const XP_TIMEOUT_MS = 30_000;
 
 async function startChallenge(page: Page): Promise<void> {
@@ -52,4 +52,15 @@ test("a player solves nginx-502 from the Daily screen to the debrief", async ({ 
       { timeout: XP_TIMEOUT_MS },
     )
     .not.toBe("+0 XP TODAY");
+
+  // Task 44: the worker counts the solve, and the streak shows its first day.
+  await expect
+    .poll(
+      async () => {
+        await page.goto("/play");
+        return page.getByText(/^Day d+$/).textContent();
+      },
+      { timeout: XP_TIMEOUT_MS },
+    )
+    .toBe("Day 1");
 });

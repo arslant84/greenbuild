@@ -1,4 +1,4 @@
-import { attemptResultSchema, challengeCardSchema } from "@greenbuild/shared";
+import { attemptResultSchema, challengeCardSchema, meResponseSchema } from "@greenbuild/shared";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 import { apiGet } from "../../../../server/api";
@@ -24,13 +24,14 @@ export default async function ResultPage({ params }: ResultPageProps) {
   if (!result) {
     notFound();
   }
-  const card = await apiGet(`/v1/challenges/${result.challenge_slug}`, challengeCardSchema);
+  const [card, player] = await Promise.all([apiGet(`/v1/challenges/${result.challenge_slug}`, challengeCardSchema), apiGet("/v1/me", meResponseSchema)]);
+  const streak = player ? player.streak.current : null;
   const outcome = outcomeOf(result.status);
   return (
     <DebriefFrame incident={attemptId.slice(0, 8).toUpperCase()} outcome={outcome}>
-      <Summary title={card?.title ?? result.challenge_slug} outcome={outcome} durationMs={result.duration_ms} xpEarned={result.xp_earned} />
+      <Summary title={card?.title ?? result.challenge_slug} outcome={outcome} durationMs={result.duration_ms} xpEarned={result.xp_earned} streak={streak} />
       <Postmortem />
-      <Credential result={result} skills={card?.skills ?? []} />
+      <Credential result={result} skills={card?.skills ?? []} streak={streak} />
       <NextActions />
     </DebriefFrame>
   );

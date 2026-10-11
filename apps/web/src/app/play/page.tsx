@@ -17,7 +17,7 @@ export default async function DailyPage() {
     <div className="min-h-screen bg-canvas">
       {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
       <div className="mx-auto flex w-[1280px]">
-        <Sidebar />
+        <Sidebar streak={player ? player.streak.current : 0} />
         <div className="flex w-[1040px] justify-between pb-8">
           <main className="flex w-[760px] flex-col gap-5 px-3 pt-5">
             <StatusBar player={player} />

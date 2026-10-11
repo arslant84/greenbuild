@@ -16,11 +16,14 @@ interface SummaryProps {
   durationMs: number | null;
   // Null until the worker credits the attempt (task 42b).
   xpEarned: number | null;
+  // The player's current streak (task 44), or null when the profile could not be read.
+  streak: number | null;
 }
 
 // Figma › Breadcrumb & Challenge Meta, Hero Result Section and Stats Bento Row. XP earned comes from
-// the result (task 42b); rating and streaks arrive with their tasks, so their cards show empty values.
-export function Summary({ title, outcome, durationMs, xpEarned }: SummaryProps) {
+// the result (task 42b) and the streak from the profile (task 44); the rating card shows empty values
+// until it has a task.
+export function Summary({ title, outcome, durationMs, xpEarned, streak }: SummaryProps) {
   return (
     <>
       <section className="flex flex-col gap-1 pb-5">
@@ -52,7 +55,7 @@ export function Summary({ title, outcome, durationMs, xpEarned }: SummaryProps) 
       <section className="mb-5 flex gap-2">
         <Stat label="XP EARNED" value={xpAmount(xpEarned)} note="—" icon={<BoltIcon className="text-warn" />} tone="text-warn" />
         <Stat label="RATING CHANGE" value="—" note="—" icon={<TrendingUpIcon className="text-ok" />} tone="text-accent" />
-        <Stat label="ACTIVE STREAK" value="—" note="—" icon={<FlameIcon width={11} height={13} className="text-warn" />} tone="text-ink" />
+        <Stat label="ACTIVE STREAK" value={xpAmount(streak)} note="—" icon={<FlameIcon width={11} height={13} className="text-warn" />} tone="text-ink" />
       </section>
     </>
   );

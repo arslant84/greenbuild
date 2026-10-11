@@ -10,11 +10,13 @@ import { formatDuration } from "./summary";
 interface CredentialProps {
   result: AttemptResult;
   skills: string[];
+  // The player's current streak, or null when the profile could not be read.
+  streak: number | null;
 }
 
 // Figma › Verifiable Credential Section. Accounts, sharing and signed proofs arrive later; the card shows
 // what this attempt proves and empty values for the rest. The verification link is this result page.
-export function Credential({ result, skills }: CredentialProps) {
+export function Credential({ result, skills, streak }: CredentialProps) {
   return (
     <section className="flex flex-col gap-2 pb-8">
       <div className="flex items-center justify-between">
@@ -36,7 +38,7 @@ export function Credential({ result, skills }: CredentialProps) {
             <span className="type-label">{result.status === "solved" ? "AUTHENTIC" : "UNVERIFIED"}</span>
           </span>
         </div>
-        <Player result={result} />
+        <Player result={result} streak={streak} />
         <ChecksRow result={result} skills={skills} />
         <div className="flex justify-between pt-1 font-mono text-[10px] leading-[18px] text-ink-subtle">
           <span>Verified by greenbuild sandbox engine</span>
@@ -48,7 +50,7 @@ export function Credential({ result, skills }: CredentialProps) {
   );
 }
 
-function Player({ result }: { result: AttemptResult }) {
+function Player({ result, streak }: { result: AttemptResult; streak: number | null }) {
   return (
     <div className="flex items-start justify-between">
       <span className="flex gap-2">
@@ -73,7 +75,7 @@ function Player({ result }: { result: AttemptResult }) {
         <Metric value={`${xpAmount(result.xp_earned)} XP`} label="REWARD" tone="text-warn" />
         <Metric value="— MMR" label="GLOBAL" tone="text-accent" />
         <span className="flex flex-col items-end rounded bg-control px-2 py-1">
-          <span className="font-mono text-[13px] leading-[18px] font-semibold text-ink">—</span>
+          <span className="font-mono text-[13px] leading-[18px] font-semibold text-ink">{xpAmount(streak)}</span>
           <span className="font-mono text-[9px] leading-[18px] text-ink-subtle">STREAK</span>
         </span>
       </span>
@@ -90,7 +92,7 @@ function Metric({ value, label, tone }: { value: string; label: string; tone: st
   );
 }
 
-function ChecksRow({ result, skills }: CredentialProps) {
+function ChecksRow({ result, skills }: Omit<CredentialProps, "streak">) {
   return (
     <div className="flex items-center justify-between pt-2">
       <span className="flex gap-1.5">
