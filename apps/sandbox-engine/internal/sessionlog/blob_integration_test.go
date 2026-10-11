@@ -3,6 +3,7 @@
 package sessionlog
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -27,5 +28,30 @@ func TestBlobStoreAppendsSessionsOnRealDocker(t *testing.T) {
 	}
 	if content != "{\"type\":\"start\"}\n{\"type\":\"end\"}\n" || mime != contentType {
 		t.Errorf("saved %q as %s, want both sessions in order as %s", content, mime, contentType)
+	}
+}
+
+// Task 49a: a session is in Blob Storage before it ends. The recording is never finished, as when the
+// engine is killed, and the blob still holds the command typed before the last flush.
+func TestSessionSurvivesAnEngineThatDiesOnRealDocker(t *testing.T) {
+	connection := azuritetest.Start(t, Container)
+	store, err := NewBlobStore(connection)
+	if err != nil {
+		t.Fatal(err)
+	}
+	recording := (&Log{store: store, now: time.Now, flushEvery: 50 * time.Millisecond}).Start("att-crash", "sbx-crash")
+	recording.Input([]byte("systemctl status nginx\r"))
+
+	blob := azuritetest.Blob{Connection: connection, Container: Container, Name: Name("att-crash", time.Now())}
+	deadline := time.Now().Add(10 * time.Second)
+	for {
+		content, _, err := azuritetest.Download(t.Context(), blob)
+		if err == nil && strings.Contains(content, `"data":"systemctl status nginx"`) {
+			return
+		}
+		if time.Now().After(deadline) {
+			t.Fatalf("blob = %q, %v; want the command saved before the session ended", content, err)
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
 }

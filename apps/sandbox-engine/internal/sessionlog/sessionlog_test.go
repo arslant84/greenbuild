@@ -8,20 +8,50 @@ import (
 	"errors"
 	"slices"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 )
 
+// fakeStore records saved chunks; the flusher calls it from its own goroutine. err fails every
+// save, failFirst only the first few.
 type fakeStore struct {
-	names    []string
-	contents [][]byte
-	err      error
+	mu        sync.Mutex
+	names     []string
+	contents  [][]byte
+	err       error
+	failFirst int
 }
 
 func (s *fakeStore) Append(_ context.Context, name string, content []byte) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.names = append(s.names, name)
+	if s.failFirst > 0 {
+		s.failFirst--
+		return errors.New("blob service unavailable")
+	}
 	s.contents = append(s.contents, content)
 	return s.err
+}
+
+// saved is every chunk saved so far, joined in order.
+func (s *fakeStore) saved() []byte {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return bytes.Join(s.contents, nil)
+}
+
+// waitForSave waits until a chunk containing want is saved, as an engine that keeps running would.
+func waitForSave(t *testing.T, store *fakeStore, want string) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for !bytes.Contains(store.saved(), []byte(want)) {
+		if time.Now().After(deadline) {
+			t.Fatalf("no chunk with %q saved in time", want)
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
 }
 
 // tickingClock starts at a fixed time and moves one second per reading.
@@ -62,7 +92,7 @@ func types(parsed []Event) []string {
 
 func TestRecordingSavesCommandsWithTimings(t *testing.T) {
 	store := &fakeStore{}
-	log := &Log{store: store, now: tickingClock()}
+	log := &Log{store: store, now: tickingClock(), flushEvery: flushInterval}
 	recording := log.Start("att-1", "sbx-1")
 	recording.Input([]byte("cat /etc/ngnix"))
 	recording.Input([]byte("\x7f\x7f\x7finx.conf\r"))
@@ -121,14 +151,14 @@ func TestLineBufferHandlesTerminalKeys(t *testing.T) {
 
 func TestRecordingIsCapped(t *testing.T) {
 	store := &fakeStore{}
-	recording := (&Log{store: store, now: tickingClock()}).Start("att-1", "sbx-1")
+	recording := (&Log{store: store, now: tickingClock(), flushEvery: flushInterval}).Start("att-1", "sbx-1")
 	paste := []byte(strings.Repeat("x", 64<<10))
 	for range 40 {
 		recording.Input(paste)
 	}
 	recording.Finish(t.Context())
 
-	content := store.contents[0]
+	content := store.saved()
 	if len(content) > maxLogBytes+1024 {
 		t.Errorf("log is %d bytes, want about %d at most", len(content), maxLogBytes)
 	}
@@ -146,5 +176,45 @@ func TestFailedSaveDoesNotPanic(t *testing.T) {
 	recording.Finish(t.Context())
 	if len(store.names) != 1 {
 		t.Errorf("save attempts = %d, want 1", len(store.names))
+	}
+}
+
+// Task 49a: what was typed is saved while the session runs, so an engine that dies loses little.
+func TestRecordingSavesOnTheIntervalBeforeTheSessionEnds(t *testing.T) {
+	store := &fakeStore{}
+	recording := (&Log{store: store, now: tickingClock(), flushEvery: 10 * time.Millisecond}).Start("att-1", "sbx-1")
+	t.Cleanup(func() { recording.Finish(context.Background()) })
+	recording.Input([]byte("ls"))
+
+	waitForSave(t, store, "\"command\"")
+	if want := []string{EventStart, EventInput, EventCommand}; !slices.Equal(types(events(t, store.saved())), want) {
+		t.Errorf("saved before the end = %v, want %v", types(events(t, store.saved())), want)
+	}
+}
+
+func TestRecordingSavesOnceAChunkIsFull(t *testing.T) {
+	store := &fakeStore{}
+	recording := (&Log{store: store, now: tickingClock(), flushEvery: time.Hour}).Start("att-1", "sbx-1")
+	recording.Input([]byte(strings.Repeat("x", flushBytes)))
+
+	waitForSave(t, store, strings.Repeat("x", flushBytes))
+	recording.Input([]byte("pwd"))
+	recording.Finish(t.Context())
+	if got := types(events(t, store.saved())); !slices.Equal(got, []string{EventStart, EventInput, EventInput, EventCommand, EventEnd}) {
+		t.Errorf("event types = %v, want the whole session once, in order", got)
+	}
+}
+
+func TestFailedChunkIsSavedLaterInOrder(t *testing.T) {
+	store := &fakeStore{failFirst: 1}
+	recording := (&Log{store: store, now: tickingClock(), flushEvery: 10 * time.Millisecond}).Start("att-1", "sbx-1")
+	recording.Input([]byte("ls"))
+
+	waitForSave(t, store, "\"ls\"")
+	recording.Input([]byte("pwd"))
+	recording.Finish(t.Context())
+	got := events(t, store.saved())
+	if types(got)[0] != EventStart || got[len(got)-1].Type != EventEnd || len(got) != 6 {
+		t.Errorf("event types = %v, want start … end with nothing lost or doubled", types(got))
 	}
 }
