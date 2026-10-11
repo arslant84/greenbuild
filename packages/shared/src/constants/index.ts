@@ -18,3 +18,10 @@ export const GLICKO_INITIAL_RATING_DEVIATION = 350;
 // architecture.md: challenge difficulty is 1–10 and a challenge has at most 3 hints.
 export const CHALLENGE_DIFFICULTY_MAX = 10;
 export const CHALLENGE_HINTS_MAX = 3;
+
+// architecture.md, task 32: profile limits, and a timezone that changes at most once in 30 days so a
+// streak day cannot be won by switching zones.
+export const HANDLE_MIN = 3;
+export const HANDLE_MAX = 32;
+export const DISPLAY_NAME_MAX = 64;
+export const TIMEZONE_CHANGE_INTERVAL_DAYS = 30;

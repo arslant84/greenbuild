@@ -3,13 +3,13 @@ import { attempts } from "@greenbuild/db";
 import { type AttemptResponse, ConflictError, SEED_MAX } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { LiveVersions } from "../challenges/live-versions.js";
+import { violatesUnique } from "../infra/postgres-errors.js";
 import { DatabaseClient } from "../infra/services.js";
 import { activeAttemptId } from "./attempt-reader.js";
 import { type AttemptRow, toResponse } from "./attempt-response.js";
 import { finishAttempt } from "./finished-events.js";
 import { SandboxRequests } from "./sandbox-requests.js";
 
-const UNIQUE_VIOLATION = "23505";
 const ONE_ACTIVE_ATTEMPT = "attempts_one_active_per_user";
 
 interface StartedAttempt extends AttemptRow {
@@ -56,7 +56,7 @@ export class AttemptsService {
       }
       return attempt;
     } catch (error) {
-      if (violates(error, ONE_ACTIVE_ATTEMPT)) {
+      if (violatesUnique(error, ONE_ACTIVE_ATTEMPT)) {
         // The active attempt may end in between; then the 409 carries no id.
         const activeId = await activeAttemptId(this.database.db, userId);
         throw new ConflictError("Another attempt is still active", activeId ? { active_attempt_id: activeId } : undefined);
@@ -69,11 +69,4 @@ export class AttemptsService {
 // randomSeed stays within 2^53-1, the largest seed the queue contract and JSON numbers carry exactly.
 function randomSeed(): number {
   return Number(randomBytes(8).readBigUInt64BE() & BigInt(SEED_MAX));
-}
-
-// Drizzle wraps the driver's error, so the PostgreSQL code sits on the cause.
-function violates(error: unknown, constraint: string): boolean {
-  const cause = error instanceof Error && error.cause !== undefined ? error.cause : error;
-  const details = cause as { code?: unknown; constraint_name?: unknown };
-  return details.code === UNIQUE_VIOLATION && details.constraint_name === constraint;
 }
