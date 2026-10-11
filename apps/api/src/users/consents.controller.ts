@@ -1,0 +1,15 @@
+import type { ConsentHistory } from "@greenbuild/shared";
+import { Controller, Get } from "@nestjs/common";
+import type { AuthenticatedUser } from "../auth/dev-user-token.js";
+import { CurrentUser } from "../auth/dev-user.guard.js";
+import { Consents } from "./consents.js";
+
+@Controller("v1/me/consents")
+export class ConsentsController {
+  constructor(private readonly consents: Consents) {}
+
+  @Get()
+  history(@CurrentUser() user: AuthenticatedUser): Promise<ConsentHistory> {
+    return this.consents.history(user.id);
+  }
+}
