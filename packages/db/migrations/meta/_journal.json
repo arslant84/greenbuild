@@ -92,6 +92,13 @@
       "when": 1791710855905,
       "tag": "0012_xp_ledger",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791714368836,
+      "tag": "0013_ratings",
+      "breakpoints": true
     }
   ]
 }

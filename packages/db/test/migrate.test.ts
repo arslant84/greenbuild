@@ -21,6 +21,7 @@ const TABLES = [
   "sandbox_sessions",
   "subscriptions",
   "user_settings",
+  "user_skills",
   "users",
   "xp_ledger",
 ];

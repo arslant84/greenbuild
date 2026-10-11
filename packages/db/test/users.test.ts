@@ -1,12 +1,12 @@
 import { cp, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { connect, type Database } from "../src/client.js";
 import { applyMigrations, MIGRATIONS_FOLDER } from "../src/migrate.js";
-import { attempts, authAccounts, challenges, challengeVersions, users } from "../src/schema/index.js";
+import { authAccounts, users } from "../src/schema/index.js";
 import { uuidv7 } from "../src/uuid.js";
 import { useMigratedDatabase } from "./migrated.js";
 import { startPostgres, type TestDatabase } from "./postgres.js";
@@ -31,14 +31,16 @@ async function migrationsUpTo(count: number): Promise<string> {
   return folder;
 }
 
-// anAttempt adds a challenge, a version and an attempt by userId, with the schema of any revision.
+// anAttempt adds a challenge, a version and an attempt by userId. Plain SQL naming only the columns that
+// existed at migration 0004, so it works on the old schema and the current one alike.
 async function anAttempt(db: Database, userId: string): Promise<void> {
-  const [challenge] = await db.insert(challenges).values({ slug: `c-${uuidv7()}`, title: "C", difficulty: 3 }).returning();
-  const [version] = await db
-    .insert(challengeVersions)
-    .values({ challengeId: challenge?.id ?? "", version: 1, specJson: {}, imageRef: "img", checkerHash: "sha256:x", source: "human" })
-    .returning();
-  await db.insert(attempts).values({ userId, challengeVersionId: version?.id ?? "", seed: 1, context: "catalog" });
+  const challengeId = uuidv7();
+  const versionId = uuidv7();
+  await db.execute(sql`insert into challenges (id, slug, title, difficulty) values (${challengeId}, ${`c-${challengeId}`}, 'C', 3)`);
+  await db.execute(
+    sql`insert into challenge_versions (id, challenge_id, version, spec_json, image_ref, checker_hash, source) values (${versionId}, ${challengeId}, 1, '{}', 'img', 'sha256:x', 'human')`,
+  );
+  await db.execute(sql`insert into attempts (id, user_id, challenge_version_id, seed, context) values (${uuidv7()}, ${userId}, ${versionId}, 1, 'catalog')`);
 }
 
 describe("migrations 0005–0007 on a database whose attempts have no users", () => {

@@ -1,4 +1,4 @@
-import { GLICKO_INITIAL_RATING, GLICKO_INITIAL_RATING_DEVIATION } from "@greenbuild/shared";
+import { GLICKO_INITIAL_RATING, GLICKO_INITIAL_RATING_DEVIATION, GLICKO_INITIAL_VOLATILITY } from "@greenbuild/shared";
 import { sql } from "drizzle-orm";
 import { check, integer, jsonb, pgEnum, pgTable, real, smallint, text, unique, uuid } from "drizzle-orm/pg-core";
 import { idColumn, timestampColumns } from "./columns.js";
@@ -45,6 +45,8 @@ export const challengeVersions = pgTable(
     hintsJson: jsonb("hints_json").$type<string[]>(),
     rating: real("rating").notNull().default(GLICKO_INITIAL_RATING),
     ratingDeviation: real("rating_deviation").notNull().default(GLICKO_INITIAL_RATING_DEVIATION),
+    // Glicko-2 needs the volatility too (task 43b).
+    ratingVolatility: real("rating_volatility").notNull().default(GLICKO_INITIAL_VOLATILITY),
     solveRateBaseline: real("solve_rate_baseline"),
     retiredReason: text("retired_reason"),
     source: challengeSource("source").notNull(),

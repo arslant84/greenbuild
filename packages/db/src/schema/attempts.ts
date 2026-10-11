@@ -32,6 +32,8 @@ export const attempts = pgTable(
     hintsUsed: smallint("hints_used").notNull().default(0),
     score: integer("score"),
     flagged: boolean("flagged").notNull().default(false),
+    // Set when the worker applied the attempt to the ratings (task 43b), so a redelivered event is a no-op.
+    ratedAt: timestamp("rated_at", { withTimezone: true }),
     ...timestampColumns(),
   },
   (table) => [

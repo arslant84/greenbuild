@@ -4,8 +4,8 @@ import { type AttemptFinished, QUEUE_PAYLOAD_FIELD, STREAM_ATTEMPT_FINISHED } fr
 import { type Container, startContainer } from "@greenbuild/testkit";
 import { createClient } from "redis";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { consumeXpBatch, XP_GROUP } from "./consumer.js";
-import { creditSolve } from "./credit.js";
+import { consumeFinishedBatch } from "../finished-consumer.js";
+import { creditSolve, xpHandler } from "./credit.js";
 
 // architecture.md, task 42a: one attempt.finished, one award, computed with the shared formula.
 let containers: Container[] = [];
@@ -126,8 +126,8 @@ describe("consumeXpBatch", () => {
     await redis.xAdd(STREAM_ATTEMPT_FINISHED, "*", { [QUEUE_PAYLOAD_FIELD]: JSON.stringify(event) });
     await redis.xAdd(STREAM_ATTEMPT_FINISHED, "*", { [QUEUE_PAYLOAD_FIELD]: "not json" });
 
-    await consumeXpBatch(database.db, redis, 100);
+    await consumeFinishedBatch({ db: database.db, redis, handler: xpHandler }, 100);
     expect(await ledger(event.attempt_id)).toEqual({ solve: 40 });
-    expect((await redis.xPending(STREAM_ATTEMPT_FINISHED, XP_GROUP)).pending).toBe(0);
+    expect((await redis.xPending(STREAM_ATTEMPT_FINISHED, xpHandler.group)).pending).toBe(0);
   });
 });
