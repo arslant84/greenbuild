@@ -58,7 +58,7 @@ test("a player solves nginx-502 from the Daily screen to the debrief", async ({ 
     .poll(
       async () => {
         await page.goto("/play");
-        return page.getByText(/^Day d+$/).textContent();
+        return page.getByText(/^Day \d+$/).textContent();
       },
       { timeout: XP_TIMEOUT_MS },
     )
