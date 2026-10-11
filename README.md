@@ -51,6 +51,8 @@ Local addresses under `pnpm dev`:
 | Sandbox engine | http://127.0.0.1:8080/health |
 | Sandbox agent | http://127.0.0.1:8081/health |
 
+On Windows, `powershell -NoProfile -File scripts/check-dev-stop.ps1` checks that stopping `pnpm dev` with Ctrl+C leaves no agent or engine running.
+
 ## Try a sandbox by hand
 
 Needs Docker running. Opens a shell in a fresh sandbox with the agent's isolation; the sandbox is destroyed when you `exit`.

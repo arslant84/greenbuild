@@ -3,8 +3,8 @@
   "version": "0.0.0",
   "private": true,
   "scripts": {
-    "build": "go build -o bin/sandbox-engine ./cmd/sandbox-engine",
-    "dev": "go run ./cmd/sandbox-engine",
+    "build": "go build -o bin/ ./cmd/sandbox-engine",
+    "dev": "node ../../scripts/run-go-app.mjs sandbox-engine",
     "lint": "golangci-lint run --allow-parallel-runners --build-tags integration ./...",
     "typecheck": "go vet -tags integration ./...",
     "test": "go test ./...",
