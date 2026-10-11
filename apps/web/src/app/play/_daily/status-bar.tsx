@@ -11,15 +11,15 @@ interface StatusBarProps {
   player: MeResponse | null;
 }
 
-// Figma › Header - TOP STATUS TELEMETRY BAR. XP today and the level come from GET /v1/me (task 42b);
-// the streak and the daily reset arrive with their tasks and show empty values until then.
+// Figma › Header - TOP STATUS TELEMETRY BAR. The streak, XP today and the level come from GET /v1/me
+// (tasks 42b, 44); the daily reset shows an empty value until it has a task.
 export function StatusBar({ player }: StatusBarProps) {
   return (
     <header className="flex h-11 items-center justify-between rounded-xl bg-surface px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
       <div className="flex items-center gap-3">
         <span className="flex h-[26px] items-center gap-1 rounded-lg bg-control px-2 py-1">
           <FlameIcon className="text-warn" />
-          <span className="type-body font-semibold text-ink">Day 0</span>
+          <span className="type-body font-semibold text-ink">Day {player ? player.streak.current : 0}</span>
         </span>
         <span className="flex items-center gap-1 rounded-lg bg-[#ffc6401a] px-2 py-1 text-warn">
           <BoltIcon width={11} height={13} />

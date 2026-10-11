@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { connect, xpLedger } from "@greenbuild/db";
+import { connect, streaks, xpLedger } from "@greenbuild/db";
+import { utcDay } from "@greenbuild/shared";
 import { describe, expect, it } from "vitest";
 import { signDevUserToken } from "../auth/dev-user-token.js";
 import { player, TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
@@ -27,6 +28,15 @@ async function credit(userId: string, attemptId: string): Promise<void> {
   }
 }
 
+async function streakRow(userId: string, lastDay: string): Promise<void> {
+  const connection = connect(app().env.DATABASE_URL);
+  try {
+    await connection.db.insert(streaks).values({ userId, current: 4, longest: 6, lastDay, freezesAvailable: 1 });
+  } finally {
+    await connection.close();
+  }
+}
+
 describe("XP in the profile and the result", () => {
   it("shows no XP before the worker credits the attempt", async () => {
     const userId = randomUUID();
@@ -45,5 +55,24 @@ describe("XP in the profile and the result", () => {
 
     expect(await (await user.result(id)).json()).toMatchObject({ xp_earned: 200 });
     expect(await me(userId)).toMatchObject({ xp: 200, level: 1, xp_today: 150 });
+  });
+});
+
+// Task 44: the streak as it stands on the player's day (their timezone is UTC here).
+describe("the streak in the profile", () => {
+  it("shows a streak that is still alive", async () => {
+    const userId = randomUUID();
+    await me(userId);
+    await streakRow(userId, utcDay(new Date(Date.now() - DAY_MS)));
+
+    expect(await me(userId)).toMatchObject({ streak: { current: 4, longest: 6, freezes: 1 } });
+  });
+
+  it("shows 0 once missed days outran the freezes, keeping the longest", async () => {
+    const userId = randomUUID();
+    await me(userId);
+    await streakRow(userId, utcDay(new Date(Date.now() - 5 * DAY_MS)));
+
+    expect(await me(userId)).toMatchObject({ streak: { current: 0, longest: 6, freezes: 1 } });
   });
 });

@@ -37,6 +37,8 @@ export const meResponseSchema = z.object({
   xp: z.number().int().nonnegative(),
   level: z.number().int().nonnegative(),
   xp_today: z.number().int().nonnegative(),
+  // The streak as it stands today: current is 0 once missed days outran the freezes (task 44).
+  streak: z.object({ current: z.number().int().nonnegative(), longest: z.number().int().nonnegative(), freezes: z.number().int().nonnegative() }),
 });
 
 // PATCH /v1/me: any subset of the editable fields.
