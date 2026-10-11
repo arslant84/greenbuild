@@ -13,9 +13,13 @@ import (
 )
 
 const (
-	// maxLogBytes bounds one session in memory; typing never comes near it, a paste loop could.
+	// maxLogBytes bounds one session; typing never comes near it, a paste loop could.
 	maxLogBytes   = 1 << 20
 	uploadTimeout = 10 * time.Second
+	// A session is saved in chunks every flushInterval, or once flushBytes are waiting, so an engine
+	// that dies loses at most that much of it (task 49a).
+	flushInterval = 10 * time.Second
+	flushBytes    = 64 << 10
 )
 
 // Event types, one per JSONL line.
@@ -40,20 +44,21 @@ type Event struct {
 	ExitCode  *int32 `json:"exit_code,omitempty"`
 }
 
-// Store appends a finished session to the named log; reconnects add to the same one.
+// Store appends a chunk of a session to the named log; later chunks and reconnects add to the same one.
 type Store interface {
 	Append(ctx context.Context, name string, content []byte) error
 }
 
 // Log starts recordings that are saved to one Store.
 type Log struct {
-	store Store
-	now   func() time.Time
+	store      Store
+	now        func() time.Time
+	flushEvery time.Duration
 }
 
 // New returns a Log that saves to store.
 func New(store Store) *Log {
-	return &Log{store: store, now: time.Now}
+	return &Log{store: store, now: time.Now, flushEvery: flushInterval}
 }
 
 // Name is where an attempt's log goes inside the sessions container (architecture.md:
@@ -62,25 +67,36 @@ func Name(attemptID string, at time.Time) string {
 	return at.UTC().Format("2006/01/") + attemptID + ".jsonl"
 }
 
-// Start begins recording one terminal session.
+// Start begins recording one terminal session and saving it in chunks until Finish.
 func (l *Log) Start(attemptID, sandboxID string) *Recording {
 	started := l.now()
-	r := &Recording{store: l.store, now: l.now, name: Name(attemptID, started), started: started}
+	r := &Recording{
+		store: l.store, now: l.now, name: Name(attemptID, started), started: started,
+		wake: make(chan struct{}, 1), done: make(chan struct{}), flusherDone: make(chan struct{}),
+	}
 	r.write(Event{Type: EventStart, AttemptID: attemptID, SandboxID: sandboxID}, started)
+	go r.flushLoop(l.flushEvery)
 	return r
 }
 
 // Recording is one session's log. Input and Exit may be called from different goroutines.
 type Recording struct {
-	mu       sync.Mutex
-	store    Store
-	now      func() time.Time
-	name     string
-	started  time.Time
-	content  bytes.Buffer
+	mu      sync.Mutex
+	store   Store
+	now     func() time.Time
+	name    string
+	started time.Time
+	// pending holds what is not saved yet; size counts the whole session, for maxLogBytes.
+	pending  bytes.Buffer
+	size     int
 	line     lineBuffer
 	full     bool
 	finished bool
+	// flushMu keeps chunks in order: one save at a time.
+	flushMu     sync.Mutex
+	wake        chan struct{}
+	done        chan struct{}
+	flusherDone chan struct{}
 }
 
 // Input records keystrokes or a paste as the browser sent them, and every line they complete.
@@ -100,8 +116,8 @@ func (r *Recording) Exit(code int32) {
 	r.add(Event{Type: EventExit, ExitCode: &code})
 }
 
-// Finish ends the recording and saves it; later calls do nothing. A failed save is logged
-// without the content: the session is lost, the player's attempt is not.
+// Finish ends the recording and saves what is left; later calls do nothing. A failed save is logged
+// without the content: that chunk is lost, the player's attempt is not.
 func (r *Recording) Finish(ctx context.Context) {
 	r.mu.Lock()
 	if r.finished {
@@ -110,13 +126,51 @@ func (r *Recording) Finish(ctx context.Context) {
 	}
 	r.write(Event{Type: EventEnd}, r.now())
 	r.finished = true
-	content := bytes.Clone(r.content.Bytes())
 	r.mu.Unlock()
 
+	close(r.done)
+	<-r.flusherDone
+	r.flush(ctx)
+}
+
+// flushLoop saves pending chunks every interval, or sooner once flushBytes are waiting, until Finish.
+func (r *Recording) flushLoop(interval time.Duration) {
+	defer close(r.flusherDone)
+	ticker := time.NewTicker(interval)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-r.done:
+			return
+		case <-ticker.C:
+		case <-r.wake:
+		}
+		r.flush(context.Background())
+	}
+}
+
+// flush appends the pending bytes to the store. A failed append puts them back in front of what came
+// since, so the next flush retries them in order.
+func (r *Recording) flush(ctx context.Context) {
+	r.flushMu.Lock()
+	defer r.flushMu.Unlock()
+	r.mu.Lock()
+	chunk := bytes.Clone(r.pending.Bytes())
+	r.pending.Reset()
+	r.mu.Unlock()
+	if len(chunk) == 0 {
+		return
+	}
 	ctx, cancel := context.WithTimeout(ctx, uploadTimeout)
 	defer cancel()
-	if err := r.store.Append(ctx, r.name, content); err != nil {
+	if err := r.store.Append(ctx, r.name, chunk); err != nil {
 		slog.Error("save session log", "name", r.name, "error", err)
+		r.mu.Lock()
+		rest := bytes.Clone(r.pending.Bytes())
+		r.pending.Reset()
+		r.pending.Write(chunk)
+		r.pending.Write(rest)
+		r.mu.Unlock()
 	}
 }
 
@@ -125,7 +179,7 @@ func (r *Recording) add(event Event) {
 	if r.full || r.finished {
 		return
 	}
-	if r.content.Len() >= maxLogBytes-len(event.Data) {
+	if r.size >= maxLogBytes-len(event.Data) {
 		r.full = true
 		r.write(Event{Type: EventTruncated}, r.now())
 		return
@@ -133,6 +187,7 @@ func (r *Recording) add(event Event) {
 	r.write(event, r.now())
 }
 
+// write appends one line to the pending bytes and wakes the flusher once flushBytes are waiting.
 func (r *Recording) write(event Event, now time.Time) {
 	event.Time = now.UTC()
 	event.ElapsedMS = now.Sub(r.started).Milliseconds()
@@ -141,5 +196,12 @@ func (r *Recording) write(event Event, now time.Time) {
 		slog.Error("encode session event", "type", event.Type, "error", err)
 		return
 	}
-	r.content.Write(append(line, '\n'))
+	r.pending.Write(append(line, '\n'))
+	r.size += len(line) + 1
+	if r.pending.Len() >= flushBytes {
+		select {
+		case r.wake <- struct{}{}:
+		default:
+		}
+	}
 }
