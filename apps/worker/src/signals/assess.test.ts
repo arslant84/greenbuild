@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { applyMigrations, attempts, attemptSignals, challenges, challengeVersions, connect, eq, sql, users } from "@greenbuild/db";
+import { applyMigrations, attempts, attemptSignals, challenges, challengeVersions, cheatReviews, connect, eq, sql, users } from "@greenbuild/db";
 import { type Container, startContainer } from "@greenbuild/testkit";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { rateAttempt } from "../rating/rate.js";
@@ -90,5 +90,14 @@ describe("assessAttempt", () => {
 
     await assessAttempt(database.db, logOf([at(1, "input", "x".repeat(300))]), attemptId);
     expect((await stateOf(attemptId)).signals).toEqual([]);
+  });
+
+  it("leaves a reviewed attempt alone, so a cleared one is not flagged again (task 49c)", async () => {
+    const attemptId = await solvedAttempt();
+    const [reviewer] = await database.db.insert(users).values({ role: "admin" }).returning();
+    await database.db.insert(cheatReviews).values({ attemptId, reviewerId: reviewer?.id ?? "", decision: "clear" });
+
+    await assessAttempt(database.db, logOf([at(1, "input", "x".repeat(300)), at(2, "command", "sed -i s/a/b/ f")]), attemptId);
+    expect(await stateOf(attemptId)).toEqual({ flagged: false, signals: [], rated: false });
   });
 });

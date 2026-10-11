@@ -1,4 +1,4 @@
-import { and, attempts, attemptSignals, challengeVersions, type Database, eq, userSkills } from "@greenbuild/db";
+import { and, attempts, attemptSignals, challengeVersions, cheatReviews, type Database, eq, userSkills } from "@greenbuild/db";
 import { GLICKO_INITIAL_RATING } from "@greenbuild/shared";
 import { z } from "zod";
 import { medianSolveMs } from "../xp/credit.js";
@@ -24,16 +24,18 @@ async function ratingGap(db: Database, userId: string, version: { rating: number
 
 // assessAttempt records an attempt's anti-cheat signals and flags it when they add up (architecture.md,
 // "Античит — слой 2", task 49b). It runs before the rating, which leaves flagged attempts out until
-// reviewed. Attempts already rated or that never reached a sandbox are skipped; signals are unique per
-// attempt, so running again adds nothing.
+// reviewed. Attempts already rated, already reviewed (a cleared one comes back to be rated, task 49c)
+// or that never reached a sandbox are skipped; signals are unique per attempt, so running again adds
+// nothing.
 export async function assessAttempt(db: Database, logs: SessionLogs | null, attemptId: string): Promise<void> {
   const [row] = await db
-    .select({ attempt: attempts, challengeId: challengeVersions.challengeId, version: { rating: challengeVersions.rating, specJson: challengeVersions.specJson } })
+    .select({ attempt: attempts, challengeId: challengeVersions.challengeId, version: { rating: challengeVersions.rating, specJson: challengeVersions.specJson }, reviewId: cheatReviews.id })
     .from(attempts)
     .innerJoin(challengeVersions, eq(challengeVersions.id, attempts.challengeVersionId))
+    .leftJoin(cheatReviews, eq(cheatReviews.attemptId, attempts.id))
     .where(eq(attempts.id, attemptId));
   const startedAt = row?.attempt.startedAt;
-  if (!row || !startedAt || row.attempt.ratedAt) {
+  if (!row || !startedAt || row.attempt.ratedAt || row.reviewId) {
     return;
   }
   const { attempt } = row;

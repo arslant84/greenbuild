@@ -1,3 +1,4 @@
+export * from "./admin.js";
 export * from "./attempts.js";
 export * from "./challenges.js";
 export * from "./companies.js";
