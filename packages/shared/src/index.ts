@@ -4,6 +4,7 @@ export * from "./queue/index.js";
 export * from "./api/admin.js";
 export * from "./api/attempts.js";
 export * from "./api/challenges.js";
+export * from "./api/consents.js";
 export * from "./api/catalog.js";
 export * from "./api/me.js";
 export * from "./api/daily.js";

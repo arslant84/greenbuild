@@ -1,4 +1,4 @@
-import { DISCOVERY_MODES, REVEALED_FIELDS } from "@greenbuild/shared";
+import { CONSENT_KINDS, DISCOVERY_MODES, REVEALED_FIELDS } from "@greenbuild/shared";
 import { sql } from "drizzle-orm";
 import { boolean, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { idColumn, timestampColumns } from "./columns.js";
@@ -7,7 +7,7 @@ import { users } from "./users.js";
 // architecture.md, privacy by default: a player is invisible to companies until they choose otherwise.
 export const discoveryMode = pgEnum("discovery_mode", DISCOVERY_MODES);
 export const revealedField = pgEnum("revealed_field", REVEALED_FIELDS);
-export const consentKind = pgEnum("consent_kind", ["terms", "privacy", "discovery", "verified_recording"]);
+export const consentKind = pgEnum("consent_kind", CONSENT_KINDS);
 export const privacyRequestKind = pgEnum("privacy_request_kind", ["export", "delete", "correct"]);
 export const privacyRequestStatus = pgEnum("privacy_request_status", ["pending", "processing", "completed", "rejected"]);
 
