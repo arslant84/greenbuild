@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "challenges:validate": "node dist/cli.js ../../challenges",
-    "challenges:schema": "node dist/write-schema.js"
+    "challenges:schema": "node dist/write-schema.js",
+    "challenges:new": "node dist/new.js ../../challenges"
   },
   "dependencies": {
     "@greenbuild/shared": "workspace:*",
