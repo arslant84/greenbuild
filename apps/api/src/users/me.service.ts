@@ -1,5 +1,5 @@
-import { eq, users } from "@greenbuild/db";
-import { ConflictError, type MeResponse, NotFoundError, TIMEZONE_CHANGE_INTERVAL_DAYS, type UpdateMeRequest } from "@greenbuild/shared";
+import { type Database, eq, sql, users, xpLedger } from "@greenbuild/db";
+import { ConflictError, levelForXp, type MeResponse, NotFoundError, TIMEZONE_CHANGE_INTERVAL_DAYS, type UpdateMeRequest } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { violatesUnique } from "../infra/postgres-errors.js";
 import { DatabaseClient } from "../infra/services.js";
@@ -9,6 +9,11 @@ const TIMEZONE_INTERVAL_MS = TIMEZONE_CHANGE_INTERVAL_DAYS * DAY_MS;
 const HANDLE_TAKEN = "users_handle_unique";
 
 type UserRow = typeof users.$inferSelect;
+
+interface XpSummary {
+  total: number;
+  today: number;
+}
 
 // MeService reads and edits the signed-in player's own profile (architecture.md, task 32).
 @Injectable()
@@ -20,7 +25,7 @@ export class MeService {
     if (!user) {
       throw new NotFoundError("User not found");
     }
-    return toResponse(user);
+    return toResponse(user, await xpSummary(this.database.db, user));
   }
 
   // update locks the row, so two timezone changes at once cannot both pass the 30-day rule.
@@ -32,11 +37,12 @@ export class MeService {
           throw new NotFoundError("User not found");
         }
         const columns = columnsFor(user, changes);
-        if (Object.keys(columns).length === 0) {
-          return toResponse(user);
+        let current = user;
+        if (Object.keys(columns).length > 0) {
+          const [updated] = await tx.update(users).set(columns).where(eq(users.id, userId)).returning();
+          current = updated ?? user;
         }
-        const [updated] = await tx.update(users).set(columns).where(eq(users.id, userId)).returning();
-        return toResponse(updated ?? user);
+        return toResponse(current, await xpSummary(tx, current));
       });
     } catch (error) {
       if (violatesUnique(error, HANDLE_TAKEN)) {
@@ -77,7 +83,20 @@ function timezoneLockedUntil(user: UserRow, now = new Date()): Date | null {
   return until > now ? until : null;
 }
 
-function toResponse(user: UserRow): MeResponse {
+// xpSummary sums the player's XP in total and since midnight in their timezone (task 42b).
+async function xpSummary(db: Pick<Database, "select">, user: UserRow): Promise<XpSummary> {
+  const startOfToday = sql`(date_trunc('day', now() at time zone ${user.timezone}) at time zone ${user.timezone})`;
+  const [row] = await db
+    .select({
+      total: sql<number>`coalesce(sum(${xpLedger.amount}), 0)::int`,
+      today: sql<number>`coalesce(sum(${xpLedger.amount}) filter (where ${xpLedger.createdAt} >= ${startOfToday}), 0)::int`,
+    })
+    .from(xpLedger)
+    .where(eq(xpLedger.userId, user.id));
+  return { total: row?.total ?? 0, today: row?.today ?? 0 };
+}
+
+function toResponse(user: UserRow, xp: XpSummary): MeResponse {
   return {
     id: user.id,
     handle: user.handle,
@@ -85,5 +104,8 @@ function toResponse(user: UserRow): MeResponse {
     timezone: user.timezone,
     timezone_locked_until: timezoneLockedUntil(user)?.toISOString() ?? null,
     locale: user.locale,
+    xp: xp.total,
+    level: levelForXp(xp.total),
+    xp_today: xp.today,
   };
 }

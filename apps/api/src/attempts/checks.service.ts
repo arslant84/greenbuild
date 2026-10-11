@@ -1,4 +1,4 @@
-import { and, attemptChecks, attempts, challenges, challengeVersions, eq, sandboxSessions, sql } from "@greenbuild/db";
+import { and, attemptChecks, attempts, challenges, challengeVersions, eq, sandboxSessions, sql, xpLedger } from "@greenbuild/db";
 import { ATTEMPT_MAX_CHECKS, type AttemptResult, type CheckResponse, ConflictError, NotFoundError, RateLimitedError } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { EngineClient, type EngineCheck } from "../engine/engine-client.js";
@@ -48,6 +48,8 @@ export class ChecksService {
       throw new NotFoundError("Attempt not found");
     }
     const checks = await this.database.db.select().from(attemptChecks).where(eq(attemptChecks.attemptId, attemptId)).orderBy(attemptChecks.createdAt);
+    // The worker credits XP after attempt.finished, so a fresh solve has none yet: the sum is null.
+    const [xp] = await this.database.db.select({ earned: sql<number | null>`sum(${xpLedger.amount})::int` }).from(xpLedger).where(eq(xpLedger.attemptId, attemptId));
     return {
       id: attempt.id,
       status: attempt.status,
@@ -55,6 +57,7 @@ export class ChecksService {
       checks_used: attempt.checksUsed,
       duration_ms: attempt.durationMs,
       finished_at: attempt.finishedAt?.toISOString() ?? null,
+      xp_earned: xp?.earned ?? null,
       checks: checks.map((check) => ({ passed: check.passed, output_tail: check.outputTail, duration_ms: check.durationMs, checked_at: check.createdAt.toISOString() })),
     };
   }

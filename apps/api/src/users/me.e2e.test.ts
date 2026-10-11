@@ -37,7 +37,7 @@ describe("GET and PATCH /v1/me", () => {
     const response = await (await me(userId)).get();
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ id: userId, handle: null, display_name: null, timezone: "UTC", timezone_locked_until: null, locale: "en" });
+    expect(await response.json()).toEqual({ id: userId, handle: null, display_name: null, timezone: "UTC", timezone_locked_until: null, locale: "en", xp: 0, level: 0, xp_today: 0 });
   });
 
   it("changes the handle, name and locale, storing the handle lowercase", async () => {
