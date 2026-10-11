@@ -28,7 +28,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
   const outcome = outcomeOf(result.status);
   return (
     <DebriefFrame incident={attemptId.slice(0, 8).toUpperCase()} outcome={outcome}>
-      <Summary title={card?.title ?? result.challenge_slug} outcome={outcome} durationMs={result.duration_ms} />
+      <Summary title={card?.title ?? result.challenge_slug} outcome={outcome} durationMs={result.duration_ms} xpEarned={result.xp_earned} />
       <Postmortem />
       <Credential result={result} skills={card?.skills ?? []} />
       <NextActions />
