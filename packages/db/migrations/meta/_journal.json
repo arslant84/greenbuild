@@ -57,6 +57,20 @@
       "when": 1791706487703,
       "tag": "0007_validate_attempts_user_fk",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791707256790,
+      "tag": "0008_company_tables",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791707269178,
+      "tag": "0009_validate_challenges_company_fk",
+      "breakpoints": true
     }
   ]
 }

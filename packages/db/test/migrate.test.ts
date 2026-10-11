@@ -4,6 +4,8 @@ import { attempts, challenges, challengeVersions } from "../src/schema/index.js"
 import { useMigratedDatabase } from "./migrated.js";
 import { aUser } from "./users-fixture.js";
 
+const TABLES = ["assessment_invites", "attempt_checks", "attempts", "auth_accounts", "challenge_versions", "challenges", "companies", "company_invitations", "company_members", "outbox", "sandbox_sessions", "subscriptions", "users"];
+
 describe("migrations on an empty PostgreSQL 16", () => {
   const db = useMigratedDatabase();
 
@@ -12,7 +14,7 @@ describe("migrations on an empty PostgreSQL 16", () => {
     const rows = await db().db.execute<{ table_name: string }>(
       "select table_name from information_schema.tables where table_schema = 'public' order by table_name",
     );
-    expect(rows.map((row) => row.table_name)).toEqual(["attempt_checks", "attempts", "auth_accounts", "challenge_versions", "challenges", "outbox", "sandbox_sessions", "users"]);
+    expect(rows.map((row) => row.table_name)).toEqual(TABLES);
   });
 
   it("fill ids, timestamps and defaults", async () => {

@@ -22,7 +22,7 @@ export const attempts = pgTable(
       .references(() => challengeVersions.id, { onDelete: "restrict" }),
     seed: bigint("seed", { mode: "number" }).notNull(),
     context: attemptContext("context").notNull(),
-    // References assessment_invites once that table exists (Stage 1.5).
+    // Not a foreign key: assessment_invites.attempt_id links the two (task 31b); filled in Stage 1.5.
     assessmentInviteId: uuid("assessment_invite_id"),
     status: attemptStatus("status").notNull().default("starting"),
     startedAt: timestamp("started_at", { withTimezone: true }),
