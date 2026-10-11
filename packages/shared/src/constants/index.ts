@@ -14,6 +14,7 @@ export const SEED_MAX = Number.MAX_SAFE_INTEGER;
 // Glicko-2 starting values for an unrated player skill or challenge version.
 export const GLICKO_INITIAL_RATING = 1500;
 export const GLICKO_INITIAL_RATING_DEVIATION = 350;
+export const GLICKO_INITIAL_VOLATILITY = 0.06;
 
 // architecture.md: challenge difficulty is 1–10 and a challenge has at most 3 hints.
 export const CHALLENGE_DIFFICULTY_MAX = 10;
