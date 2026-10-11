@@ -39,6 +39,9 @@ func TestContainerConfigAppliesIsolation(t *testing.T) {
 	if !slices.Contains(host.SecurityOpt, "no-new-privileges") {
 		t.Errorf("SecurityOpt = %v, want no-new-privileges", host.SecurityOpt)
 	}
+	if !slices.Contains(host.SecurityOpt, "seccomp=builtin") {
+		t.Errorf("SecurityOpt = %v, want seccomp=builtin", host.SecurityOpt)
+	}
 	if host.Privileged {
 		t.Error("Privileged = true, want false")
 	}
