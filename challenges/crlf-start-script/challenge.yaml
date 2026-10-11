@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: crlf-start-script
+version: 1
+title: "Start script not found"
+statement: "Since this morning's release the site answers 502. The deploy hook ran the app's start script as always, yet the app never came up, and the log says the script is \"not found\" although it is right there. Bring the app back so the next deploy starts it too."
+difficulty: 3            # 1–10
+skills: { linux: 0.8, nginx: 0.2 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache at start; nginx workers and the app switch users; root edits files it does
+# not own, as on a server.
+capabilities: [CHOWN, DAC_OVERRIDE, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [billing, reports, search] }
+  port: { range: [4000, 4999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
