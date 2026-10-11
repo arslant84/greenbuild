@@ -139,7 +139,7 @@ All not started; each row is split into sub-tasks when work begins.
 | # | Task | Status |
 |---|---|---|
 | 40 | Production environment | Not started |
-| 41a–41c | Daily challenge (data, API, Daily without the hardcode) | Not started |
+| 41a–41c | Daily challenge (data, API, Daily without the hardcode) | In progress | **41a done**: migration 0011 adds `daily_challenges` (UTC `day`, `track`, `challenge_version_id`; unique day and track). One track, `linux` (decision D1; `DAILY_TRACKS` in `packages/shared`). The worker checks every minute and publishes today's and tomorrow's challenge per track, so the next one is in place before 00:00 UTC: the newest version of a live public challenge, at random among those not used in the last 180 days. With fewer challenges than days in the window (15 now) every one is used within it after 15 days; then it takes the one used longest ago. Publishing a day again returns the same challenge, and the unique pair settles two workers at once. Verified with worker tests on PostgreSQL 16: newest live public version only (no draft, no private), idempotent with one row, no repeat while a rested challenge is left then the oldest, eligible again after 180 days, error with no live challenge, today and tomorrow in UTC. 41b and 41c not started |
 | 42a–42b | XP and levels | Not started |
 | 43a–43b | Glicko-2 | Not started |
 | 44 | Streaks | Not started |

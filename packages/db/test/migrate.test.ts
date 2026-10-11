@@ -15,6 +15,7 @@ const TABLES = [
   "company_invitations",
   "company_members",
   "consents",
+  "daily_challenges",
   "outbox",
   "privacy_requests",
   "sandbox_sessions",

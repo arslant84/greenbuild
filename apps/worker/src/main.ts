@@ -2,6 +2,7 @@ import type { Server } from "node:http";
 import { connect } from "@greenbuild/db";
 import { createClient } from "redis";
 import { type Env, loadEnv } from "./config/env.js";
+import { runDailyPublisher } from "./daily/schedule.js";
 import { createHealthServer } from "./health/health-server.js";
 import { logger } from "./logger.js";
 import { runRelay } from "./outbox/relay.js";
@@ -13,14 +14,14 @@ type Stop = () => Promise<void>;
 async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
-  const stopRelay = await startRelay(env);
+  const stops = [await startRelay(env), startDailyPublisher(env)];
 
   server.listen(env.PORT, () => {
     logger.info("worker listening", { port: env.PORT });
   });
 
   for (const signal of SHUTDOWN_SIGNALS) {
-    process.once(signal, () => void shutdown(server, stopRelay));
+    process.once(signal, () => void shutdown(server, stops));
   }
 }
 
@@ -46,8 +47,24 @@ async function startRelay(env: Env): Promise<Stop> {
   };
 }
 
-async function shutdown(server: Server, stopRelay: Stop): Promise<void> {
-  await stopRelay();
+// startDailyPublisher keeps the daily challenge published when the worker has a database.
+function startDailyPublisher(env: Env): Stop {
+  if (!env.DATABASE_URL) {
+    logger.warn("daily challenge publisher disabled; set DATABASE_URL to publish the daily challenge");
+    return async () => undefined;
+  }
+  const database = connect(env.DATABASE_URL);
+  const controller = new AbortController();
+  const running = runDailyPublisher(database.db, controller.signal);
+  return async () => {
+    controller.abort();
+    await running;
+    await database.close();
+  };
+}
+
+async function shutdown(server: Server, stops: Stop[]): Promise<void> {
+  await Promise.all(stops.map((stop) => stop()));
   server.close((error) => {
     if (error) {
       logger.error("worker shutdown failed", { error });
