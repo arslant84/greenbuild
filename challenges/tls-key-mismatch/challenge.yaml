@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: tls-key-mismatch
+version: 1
+title: "The renewal that took the site down"
+statement: "The site's TLS certificate was renewed yesterday and nginx has not started since: the site is down on HTTP and HTTPS. The internal CA is offline, so no new certificate can be issued today. Bring the site back with the renewed certificate."
+difficulty: 4            # 1–10
+skills: { tls: 0.7, nginx: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache directories at start and its workers switch users.
+capabilities: [CHOWN, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  host: { pick: [shop, api, portal] }
+  matching_key: { range: [1, 3] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
