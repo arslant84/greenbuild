@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: stale-pidfile
+version: 1
+title: "Already running, says the dead app"
+statement: "The app crashed overnight and the site answers 502. Its control script refuses to start it: it says the app is already running. Bring the app back without disturbing anything else on the host."
+difficulty: 3            # 1–10
+skills: { linux: 0.9, nginx: 0.1 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache at start; the app and the backup job run as their own users; root checks
+# other users' processes (kill -0) and edits files it does not own, as on a server.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [ledger, mailer, tracker] }
+  port: { range: [4000, 4999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
