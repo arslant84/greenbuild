@@ -500,7 +500,7 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`; OpenAPI из 
 | POST | /v1/attempts/{id}/share | Создать токен карточки | 2 | Нет — задача 51a |
 | GET | /v1/share/{token}.png | Карточка по токену | 2 | Нет — задача 51 |
 | GET | /v1/users/{handle} | Публичный игровой профиль (если включён) | 2 | Нет — задача 46a |
-| GET | /v1/leaderboards/{kind} | Лидерборды | 2 | Нет — задача 45b |
+| GET | /v1/leaderboards/{kind} | Лидерборды | 2 | Да: API (45b; `weekly`, `skill`, `daily`); экран — блок: нужен фрейм Figma 3:3639 |
 | POST | /v1/follows/{handle}, /v1/duels | Друзья и дуэли | 4 | Нет |
 
 ### Кандидат: согласие и приватность

@@ -6,6 +6,7 @@ import { AppErrorFilter } from "./errors/app-error.filter.js";
 import { HealthController } from "./health/health.controller.js";
 import { AttemptsModule } from "./attempts/attempts.module.js";
 import { InfraModule } from "./infra/infra.module.js";
+import { LeaderboardsModule } from "./leaderboards/leaderboards.module.js";
 import { UsersModule } from "./users/users.module.js";
 
 @Module({
@@ -19,6 +20,6 @@ import { UsersModule } from "./users/users.module.js";
 export class AppModule {
   // forRoot adds the features that need PostgreSQL, Redis and the secrets.
   static forRoot(services: ServicesEnv): DynamicModule {
-    return { module: AppModule, imports: [InfraModule.forRoot(services), AttemptsModule, UsersModule] };
+    return { module: AppModule, imports: [InfraModule.forRoot(services), AttemptsModule, UsersModule, LeaderboardsModule] };
   }
 }
