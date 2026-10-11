@@ -1,34 +1,15 @@
-import { type Database, eq, sql, streaks, users, xpLedger } from "@greenbuild/db";
-import {
-  ConflictError,
-  levelForXp,
-  localDay,
-  type MeResponse,
-  NO_STREAK,
-  NotFoundError,
-  TIMEZONE_CHANGE_INTERVAL_DAYS,
-  type UpdateMeRequest,
-  visibleStreak,
-} from "@greenbuild/shared";
+import { eq, users } from "@greenbuild/db";
+import { ConflictError, levelForXp, type MeResponse, NotFoundError, TIMEZONE_CHANGE_INTERVAL_DAYS, type UpdateMeRequest } from "@greenbuild/shared";
 import { Injectable } from "@nestjs/common";
 import { violatesUnique } from "../infra/postgres-errors.js";
 import { DatabaseClient } from "../infra/services.js";
+import { type Progress, progressOf } from "./progress.js";
 
 const DAY_MS = 86_400_000;
 const TIMEZONE_INTERVAL_MS = TIMEZONE_CHANGE_INTERVAL_DAYS * DAY_MS;
 const HANDLE_TAKEN = "users_handle_unique";
 
 type UserRow = typeof users.$inferSelect;
-
-interface XpSummary {
-  total: number;
-  today: number;
-}
-
-interface Progress {
-  xp: XpSummary;
-  streak: MeResponse["streak"];
-}
 
 // MeService reads and edits the signed-in player's own profile (architecture.md, task 32).
 @Injectable()
@@ -96,30 +77,6 @@ function timezoneLockedUntil(user: UserRow, now = new Date()): Date | null {
   }
   const until = new Date(user.timezoneChangedAt.getTime() + TIMEZONE_INTERVAL_MS);
   return until > now ? until : null;
-}
-
-// xpSummary sums the player's XP in total and since midnight in their timezone (task 42b).
-async function xpSummary(db: Pick<Database, "select">, user: UserRow): Promise<XpSummary> {
-  const startOfToday = sql`(date_trunc('day', now() at time zone ${user.timezone}) at time zone ${user.timezone})`;
-  const [row] = await db
-    .select({
-      total: sql<number>`coalesce(sum(${xpLedger.amount}), 0)::int`,
-      today: sql<number>`coalesce(sum(${xpLedger.amount}) filter (where ${xpLedger.createdAt} >= ${startOfToday}), 0)::int`,
-    })
-    .from(xpLedger)
-    .where(eq(xpLedger.userId, user.id));
-  return { total: row?.total ?? 0, today: row?.today ?? 0 };
-}
-
-// streakToday is the player's streak as it stands on their calendar day today (task 44).
-async function streakToday(db: Pick<Database, "select">, user: UserRow): Promise<MeResponse["streak"]> {
-  const [row] = await db.select().from(streaks).where(eq(streaks.userId, user.id));
-  const state = row ? { current: row.current, longest: row.longest, lastDay: row.lastDay, freezes: row.freezesAvailable } : NO_STREAK;
-  return { current: visibleStreak(state, localDay(new Date(), user.timezone)), longest: state.longest, freezes: state.freezes };
-}
-
-async function progressOf(db: Pick<Database, "select">, user: UserRow): Promise<Progress> {
-  return { xp: await xpSummary(db, user), streak: await streakToday(db, user) };
 }
 
 function toResponse(user: UserRow, { xp, streak }: Progress): MeResponse {

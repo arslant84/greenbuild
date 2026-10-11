@@ -7,6 +7,7 @@ export * from "./api/catalog.js";
 export * from "./api/me.js";
 export * from "./api/daily.js";
 export * from "./api/leaderboards.js";
+export * from "./api/profile.js";
 export * from "./challenge/manifest.js";
 export * from "./game/glicko2.js";
 export * from "./game/leaderboards.js";

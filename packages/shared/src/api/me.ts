@@ -3,7 +3,7 @@ import { DISPLAY_NAME_MAX, HANDLE_MAX, HANDLE_MIN } from "../constants/index.js"
 
 // A handle is how others find a player: lowercase letters, digits and inner hyphens. Input is
 // lowercased first, so "Arslan" and "arslan" are the same handle.
-const handleSchema = z
+export const handleSchema = z
   .string()
   .trim()
   .toLowerCase()

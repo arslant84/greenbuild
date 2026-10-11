@@ -9,7 +9,7 @@ import { type AttemptsApp, useAttemptsApp } from "../testing/attempts-app.js";
 // architecture.md, task 30c: every route needs a session unless it is public, and the public ones are
 // exactly those the architecture's API rules name.
 const ARCHITECTURE = new URL("../../../../docs/architecture.md", import.meta.url);
-const PUBLIC_ROUTES = ["GET /health"];
+const PUBLIC_ROUTES = ["GET /health", "GET /v1/users/:handle"];
 
 interface Route {
   method: string;
@@ -61,7 +61,9 @@ describe("explicit access on every API route", () => {
   it("names every public route in the architecture's API rules", async () => {
     const rules = await documentedRules();
     for (const route of PUBLIC_ROUTES) {
-      expect(rules).toContain(`\`${route.split(" ")[1]}\``);
+      // Nest writes parameters as :name, the architecture as {name}.
+      const path = (route.split(" ")[1] ?? "").replace(/:([a-zA-Z]+)/g, "{$1}");
+      expect(rules).toContain(`\`${path}\``);
     }
   });
 });
