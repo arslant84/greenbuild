@@ -106,6 +106,13 @@
       "when": 1791714785979,
       "tag": "0014_streaks",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1791717416547,
+      "tag": "0015_attempt_signals",
+      "breakpoints": true
     }
   ]
 }

@@ -7,6 +7,7 @@ import { aUser } from "./users-fixture.js";
 const TABLES = [
   "assessment_invites",
   "attempt_checks",
+  "attempt_signals",
   "attempts",
   "auth_accounts",
   "challenge_versions",
