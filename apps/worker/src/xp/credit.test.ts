@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
-import { applyMigrations, attempts, challenges, challengeVersions, connect, eq, sql, users, xpLedger } from "@greenbuild/db";
-import { type AttemptFinished, QUEUE_PAYLOAD_FIELD, STREAM_ATTEMPT_FINISHED } from "@greenbuild/shared";
+import { applyMigrations, attempts, challenges, challengeVersions, cheatReviews, connect, eq, sql, users, xpLedger } from "@greenbuild/db";
+import { type AttemptFinished, isoWeek, leaderboardKeys, QUEUE_PAYLOAD_FIELD, STREAM_ATTEMPT_FINISHED } from "@greenbuild/shared";
 import { type Container, startContainer } from "@greenbuild/testkit";
 import { createClient } from "redis";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -117,6 +117,26 @@ describe("creditSolve", () => {
 
     await creditSolve(database.db, event);
     expect(await ledger(event.attempt_id)).toEqual({});
+  });
+});
+
+describe("xpHandler after a review", () => {
+  it("takes back a voided attempt's XP and lowers the weekly board, once", async () => {
+    const userId = await aUser();
+    const kept = await finished({ userId, versionId: await aVersion({}) });
+    const voided = await finished({ userId, versionId: await aVersion({}) });
+    const deps = { db: database.db, boards: redis, logs: null };
+    await xpHandler.handle(deps, kept);
+    await xpHandler.handle(deps, voided);
+    const week = leaderboardKeys.globalWeekly(isoWeek(new Date()));
+    expect(await redis.zScore(week, userId)).toBe(80);
+
+    await database.db.insert(cheatReviews).values({ attemptId: voided.attempt_id, reviewerId: await aUser(), decision: "void" });
+    await xpHandler.handle(deps, voided);
+    await xpHandler.handle(deps, voided);
+    expect(await ledger(voided.attempt_id)).toEqual({});
+    expect(await ledger(kept.attempt_id)).toEqual({ solve: 40 });
+    expect(await redis.zScore(week, userId)).toBe(40);
   });
 });
 
