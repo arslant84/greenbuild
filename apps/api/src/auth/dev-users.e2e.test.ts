@@ -27,4 +27,18 @@ describe("a dev user's first request", () => {
     expect(await userRows(userId)).toEqual([{ id: userId }]);
     expect((await user.start(NGINX_502)).status).toBe(201);
   });
+
+  it("refuses a banned account with 403", async () => {
+    const userId = randomUUID();
+    const user = await player(app, userId);
+    expect((await user.catalog("")).status).toBe(200);
+
+    const connection = connect(app().env.DATABASE_URL);
+    try {
+      await connection.db.update(users).set({ status: "banned" }).where(eq(users.id, userId));
+    } finally {
+      await connection.close();
+    }
+    expect((await user.catalog("")).status).toBe(403);
+  });
 });
