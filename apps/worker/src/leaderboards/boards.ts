@@ -1,8 +1,10 @@
-import { and, attempts, dailyChallenges, eq, sql, users, userSkills, xpLedger } from "@greenbuild/db";
+import { and, attempts, dailyChallenges, type Database, eq, sql, users, userSkills, xpLedger } from "@greenbuild/db";
 import { type AttemptFinished, isoWeek, isoWeekStart, leaderboardKeys, utcDay } from "@greenbuild/shared";
 import type { FinishedHandler, HandlerDeps } from "../finished-consumer.js";
+import { notVoided } from "../reviews/voided.js";
 
-const WEEK_MS = 7 * 86_400_000;
+const DAY_MS = 86_400_000;
+const WEEK_MS = 7 * DAY_MS;
 
 // Every update writes an absolute score computed from the database, so a redelivered event or a retry
 // after a failure leaves the boards right (architecture.md, "Лидерборды", task 45a).
@@ -33,7 +35,8 @@ export async function syncSkillBoards({ db, boards }: HandlerDeps, userId: strin
   }
 }
 
-// recordDailyTime puts a solve of the daily challenge on that day's board, keeping the player's best time.
+// recordDailyTime sets, after a solve of the daily challenge, the player's best time on that day's board:
+// the fastest of their solves of it that day no review voided; with none left they leave the board.
 export async function recordDailyTime({ db, boards }: HandlerDeps, event: AttemptFinished): Promise<void> {
   if (event.status !== "solved") {
     return;
@@ -50,9 +53,32 @@ export async function recordDailyTime({ db, boards }: HandlerDeps, event: Attemp
     .select({ track: dailyChallenges.track })
     .from(dailyChallenges)
     .where(and(eq(dailyChallenges.day, day), eq(dailyChallenges.challengeVersionId, attempt.versionId)));
-  if (daily) {
-    await boards.zAdd(leaderboardKeys.daily(day, daily.track), { score: attempt.durationMs, value: event.user_id }, { comparison: "LT" });
+  if (!daily) {
+    return;
   }
+  const key = leaderboardKeys.daily(day, daily.track);
+  const best = await bestDailyTime(db, { userId: event.user_id, versionId: attempt.versionId, day });
+  await (best === null ? boards.zRem(key, event.user_id) : boards.zAdd(key, { score: best, value: event.user_id }));
+}
+
+async function bestDailyTime(db: Database, { userId, versionId, day }: { userId: string; versionId: string; day: string }): Promise<number | null> {
+  const start = new Date(`${day}T00:00:00Z`);
+  const end = new Date(start.getTime() + DAY_MS);
+  const [row] = await db
+    .select({ best: sql<number | null>`min(${attempts.durationMs})` })
+    .from(attempts)
+    .where(
+      and(
+        eq(attempts.userId, userId),
+        eq(attempts.challengeVersionId, versionId),
+        eq(attempts.context, "daily"),
+        eq(attempts.status, "solved"),
+        sql`${attempts.createdAt} >= ${start.toISOString()}`,
+        sql`${attempts.createdAt} < ${end.toISOString()}`,
+        notVoided,
+      ),
+    );
+  return row?.best ?? null;
 }
 
 export const dailyBoardHandler: FinishedHandler = { group: "worker-daily-board", name: "record daily time", handle: recordDailyTime };

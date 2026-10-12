@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { applyMigrations, attempts, challenges, challengeVersions, connect, dailyChallenges, sql, users, userSkills, xpLedger } from "@greenbuild/db";
+import { applyMigrations, attempts, challenges, challengeVersions, cheatReviews, connect, dailyChallenges, eq, sql, users, userSkills, xpLedger } from "@greenbuild/db";
 import { type AttemptFinished, isoWeek, leaderboardKeys, utcDay } from "@greenbuild/shared";
 import { type Container, startContainer } from "@greenbuild/testkit";
 import { createClient } from "redis";
@@ -72,6 +72,18 @@ async function anAttempt(userId: string, options: { durationMs: number; context:
   return { attemptId: attempt?.id ?? "", versionId };
 }
 
+// todaysDailyVersion publishes a new version as today's daily challenge, unless a test already did.
+async function todaysDailyVersion(today: string): Promise<string> {
+  const { versionId } = await anAttempt(await aUser(), { durationMs: 1, context: "catalog" });
+  await database.db.insert(dailyChallenges).values({ day: today, track: "linux", challengeVersionId: versionId }).onConflictDoNothing();
+  const [daily] = await database.db.select().from(dailyChallenges).where(eq(dailyChallenges.day, today));
+  return daily?.challengeVersionId ?? "";
+}
+
+async function voidAttempt(attemptId: string): Promise<void> {
+  await database.db.insert(cheatReviews).values({ attemptId, reviewerId: await aUser(), decision: "void" });
+}
+
 function solved(userId: string, attemptId: string): AttemptFinished {
   return { version: 1, attempt_id: attemptId, user_id: userId, challenge_version_id: randomUUID(), status: "solved", checks_used: 1, finished_at: new Date().toISOString() };
 }
@@ -121,5 +133,23 @@ describe("recordDailyTime", () => {
     await recordDailyTime(deps(), solved(userId, slower.attemptId));
     await recordDailyTime(deps(), solved(randomUUID(), elsewhere.attemptId));
     expect(await redis.zRangeWithScores(board, 0, -1)).toEqual([{ value: userId, score: 90_000 }]);
+  });
+
+  it("falls back to the next best time when a review voids the best one, and drops a player with none left", async () => {
+    const userId = await aUser();
+    const today = utcDay(new Date());
+    const versionId = await todaysDailyVersion(today);
+    const best = await anAttempt(userId, { durationMs: 30_000, context: "daily", versionId });
+    const slower = await anAttempt(userId, { durationMs: 70_000, context: "daily", versionId });
+    const board = leaderboardKeys.daily(today, "linux");
+    await recordDailyTime(deps(), solved(userId, best.attemptId));
+
+    await voidAttempt(best.attemptId);
+    await recordDailyTime(deps(), solved(userId, best.attemptId));
+    expect(await redis.zScore(board, userId)).toBe(70_000);
+
+    await voidAttempt(slower.attemptId);
+    await recordDailyTime(deps(), solved(userId, slower.attemptId));
+    expect(await redis.zScore(board, userId)).toBeNull();
   });
 });
