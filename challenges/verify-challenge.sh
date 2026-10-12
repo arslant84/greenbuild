@@ -77,8 +77,13 @@ environment_fingerprint() {
     -o -path /etc/hostname -o -path /etc/hosts -o -path /etc/resolv.conf \) -prune -o -type f -exec sha256sum {} + | sort | sha256sum'
 }
 
+# copy_in writes a script into the sandbox through exec, as the agent does (CopyIn): under gVisor's root
+# overlay, a file docker cp puts into the container's rootfs can stay invisible inside the sandbox.
+copy_in() {
+  docker exec -i "${container_id}" sh -c 'mkdir -p /opt/greenbuild && cat > "/opt/greenbuild/$1"' sh "$1" < "${challenge_dir}/$1"
+}
+
 run_script() {
-  docker cp "${challenge_dir}/$1" "${container_id}:/opt/greenbuild/$1"
   docker exec "${container_id}" sh "/opt/greenbuild/$1"
 }
 
@@ -92,9 +97,12 @@ verify_seed() {
   if docker exec "${container_id}" test -e /opt/greenbuild/setup.sh; then
     fail "seed ${seed}: setup.sh is still in the container"
   fi
+  # Copied before the if, so a failed copy stops the run instead of counting as a failing check.
+  copy_in check.sh
   if run_script check.sh; then
     fail "seed ${seed}: check passes before the fix, so the environment is not broken"
   fi
+  copy_in solution.sh
   run_script solution.sh
   run_script check.sh || fail "seed ${seed}: check fails after solution.sh"
 
