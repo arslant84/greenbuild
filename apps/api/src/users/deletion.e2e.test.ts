@@ -15,7 +15,7 @@ async function me(userId: string, method: string, body?: unknown): Promise<Respo
 }
 
 describe("DELETE /v1/me", () => {
-  it("hides the profile, revokes consents and schedules the deletion 30 days out, once", async () => {
+  it("hides the profile, revokes consents and schedules the deletion 30 days out and closes the account", async () => {
     const userId = randomUUID();
     const handle = `del-${userId.slice(0, 8)}`;
     await me(userId, "PATCH", { handle });
@@ -26,7 +26,7 @@ describe("DELETE /v1/me", () => {
     expect(first.status).toBe(202);
     const { deletion_scheduled_for: scheduled } = (await first.json()) as { deletion_scheduled_for: string };
     expect(Math.abs(Date.parse(scheduled) - Date.now() - DELETION_DAYS_MS)).toBeLessThan(60_000);
-    expect(await (await me(userId, "DELETE")).json()).toEqual({ deletion_scheduled_for: scheduled });
+    expect((await me(userId, "DELETE")).status).toBe(403);
 
     expect((await fetch(`${app().baseUrl}/v1/users/${handle}`)).status).toBe(404);
     const connection = connect(app().env.DATABASE_URL);

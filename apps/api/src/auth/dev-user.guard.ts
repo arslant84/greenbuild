@@ -1,5 +1,5 @@
-import { users } from "@greenbuild/db";
-import { UnauthorizedError } from "@greenbuild/shared";
+import { eq, users } from "@greenbuild/db";
+import { ForbiddenError, UnauthorizedError } from "@greenbuild/shared";
 import { type CanActivate, createParamDecorator, type ExecutionContext, Inject, Injectable, Optional } from "@nestjs/common";
 import { Reflector } from "@nestjs/core";
 import type { ServicesEnv } from "../config/services-env.js";
@@ -41,8 +41,17 @@ export class DevUserGuard implements CanActivate {
     // A dev token names a user nobody created, and attempts need the users row (task 29b). Auth.js
     // creates users at sign-in (task 30a); this goes with the dev path (task 30e).
     await this.database?.db.insert(users).values({ id: user.id }).onConflictDoNothing();
+    await this.refuseClosedAccount(user.id);
     request.user = user;
     return true;
+  }
+
+  // A banned or deleted account keeps no access, even with a token signed before it was closed.
+  private async refuseClosedAccount(userId: string): Promise<void> {
+    const [account] = (await this.database?.db.select({ status: users.status }).from(users).where(eq(users.id, userId))) ?? [];
+    if (account && account.status !== "active") {
+      throw new ForbiddenError("This account is closed");
+    }
   }
 }
 
