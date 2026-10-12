@@ -1,15 +1,15 @@
-import { cheatReviews, eq, xpLedger } from "@greenbuild/db";
+import { eq, xpLedger } from "@greenbuild/db";
 import { type AttemptFinished, isoWeek } from "@greenbuild/shared";
 import type { HandlerDeps } from "../finished-consumer.js";
 import { syncWeeklyXp } from "../leaderboards/boards.js";
+import { isVoided } from "../reviews/voided.js";
 
 // revokeVoidedXp takes back the XP of an attempt a review voided or banned (task 49c) and answers
 // whether it did. The review sends attempt.finished again, so this runs after the decision. The
 // ledger rows go, so every XP sum (profile, today, weekly boards) drops them; audit_log keeps the
 // decision.
 export async function revokeVoidedXp(deps: HandlerDeps, event: AttemptFinished): Promise<boolean> {
-  const [review] = await deps.db.select({ decision: cheatReviews.decision }).from(cheatReviews).where(eq(cheatReviews.attemptId, event.attempt_id));
-  if (!review || review.decision === "clear") {
+  if (!(await isVoided(deps.db, event.attempt_id))) {
     return false;
   }
   const removed = await deps.db.delete(xpLedger).where(eq(xpLedger.attemptId, event.attempt_id)).returning({ createdAt: xpLedger.createdAt });

@@ -26,7 +26,8 @@ export interface StreamReader {
 
 // Boards is the part of a node-redis client the leaderboard updates use (task 45a).
 export interface Boards {
-  zAdd(key: string, member: { score: number; value: string }, options?: { comparison: "LT" }): Promise<unknown>;
+  zAdd(key: string, member: { score: number; value: string }): Promise<unknown>;
+  zRem(key: string, member: string): Promise<unknown>;
 }
 
 // HandlerDeps is what a job gets: the database, Redis for the leaderboards, and the session logs when
