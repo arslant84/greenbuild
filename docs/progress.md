@@ -220,6 +220,8 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 
 Each item points to the task that resolves it, or says why it's deferred or dropped.
 
+- The first gVisor CI run since 2026-10-08 (the repository went public on 2026-10-13, so Actions runs again) found `verify-challenge.sh` copying `check.sh` and `solution.sh` with `docker cp`, which gVisor's root overlay (33b) can hide from the sandbox; `json-bom-config` failed that way. The script now writes them through `docker exec`, as the agent's `CopyIn` does.
+
 - Challenge PRs do not run Playwright, so the catalog's growth to 18 nginx challenges broke the catalog tests unnoticed (nginx-502 left the first page). Fixed 2026-10-12: the tests search for it, and repeat a Start click that lands before the button is live. Run Playwright after each challenge batch.
 
 - `pnpm play:down` now removes the sandboxes of the stack it stops: the agent takes an optional `SANDBOX_AGENT_STACK` and labels its sandboxes `greenbuild.stack=<name>`; `play-stack.sh` names its stack `play-<web port>` and removes only containers with that label, so a parallel `pnpm dev` stack's sandboxes stay. Verified: agent unit tests (the label only when set, an invalid name refused); `down` on a stack with web port 3201 removed a sandbox labelled `play-3201` and left one without a stack label and one labelled `play-3001`.
