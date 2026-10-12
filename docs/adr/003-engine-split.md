@@ -1,6 +1,6 @@
 # ADR-003: The sandbox engine is split into a control plane and node agents
 
-Status: Proposed (task 38, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 

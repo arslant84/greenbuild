@@ -1,6 +1,6 @@
 # ADR-007: Candidates are invisible until they opt in, and share per request
 
-Status: Proposed (task 38, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 

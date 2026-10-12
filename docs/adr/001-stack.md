@@ -1,6 +1,6 @@
 # ADR-001: TypeScript everywhere, Go only in the sandbox engine
 
-Status: Proposed (task 38, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 

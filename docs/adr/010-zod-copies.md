@@ -1,6 +1,6 @@
 # ADR-010: Queue types are hand-written zod copies checked against the JSON Schemas
 
-Status: Proposed (task 38, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 

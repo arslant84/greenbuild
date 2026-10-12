@@ -1,6 +1,6 @@
 # ADR-011: CSRF protection by a required request header
 
-Status: Proposed (task 38, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 

@@ -1,6 +1,6 @@
 # ADR-012: Stage 1 was built before staging
 
-Status: Proposed (task 38, awaiting the owner's approval). Accepted by the owner as deviation 1 in `architecture.md`.
+Status: Accepted (owner, 2026-10-12). Accepted by the owner as deviation 1 in `architecture.md`.
 
 ## Context
 

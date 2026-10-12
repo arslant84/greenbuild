@@ -1,6 +1,6 @@
 # ADR-009: A temporary dev user token until Auth.js
 
-Status: Proposed (task 38, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 

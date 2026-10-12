@@ -1,6 +1,6 @@
 # ADR-002: The API is a modular monolith
 
-Status: Proposed (task 38, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 

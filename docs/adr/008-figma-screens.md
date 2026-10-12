@@ -1,6 +1,6 @@
 # ADR-008: Screens follow the owner's Figma file exactly
 
-Status: Proposed (task 38, awaiting the owner's approval). Decided by the owner on 2026-10-02.
+Status: Accepted (owner, 2026-10-12). Decided by the owner on 2026-10-02.
 
 ## Context
 

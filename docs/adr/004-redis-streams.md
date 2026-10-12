@@ -1,6 +1,6 @@
 # ADR-004: Redis Streams as the queue between the API and the engine
 
-Status: Proposed (task 38, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 
