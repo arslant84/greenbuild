@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
 id: stale-pidfile
-version: 1
+version: 2
 title: "Already running, says the dead app"
 statement: "The app crashed overnight and the site answers 502. Its control script refuses to start it: it says the app is already running. Bring the app back without disturbing anything else on the host."
 difficulty: 3            # 1–10
