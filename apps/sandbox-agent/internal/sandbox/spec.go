@@ -20,6 +20,8 @@ const (
 
 	// LabelSandbox marks every container the agent creates, so orphans can be found and removed.
 	LabelSandbox = "greenbuild.sandbox"
+	// LabelStack names the local stack whose agent created the sandbox (SANDBOX_AGENT_STACK); unset on nodes.
+	LabelStack = "greenbuild.stack"
 
 	nanoCPUsPerMilliCPU = 1_000_000
 	networkNone         = "none"

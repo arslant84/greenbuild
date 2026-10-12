@@ -38,11 +38,18 @@ type Manager struct {
 	now      func() time.Time
 	// destroyed is what the agent destroyed on its own, until the control plane takes it.
 	destroyed destroyedJournal
+	// stack, when set, is put on every sandbox as LabelStack.
+	stack string
 }
 
 // NewManager returns a Manager that runs every sandbox under the given OCI runtime.
 func NewManager(docker DockerAPI, runtime string) *Manager {
 	return &Manager{docker: docker, runtime: runtime, ttlGrace: DefaultTTLGrace, now: time.Now}
+}
+
+// SetStack labels the sandboxes created from now on with the local stack's name (config.Config.Stack).
+func (m *Manager) SetStack(stack string) {
+	m.stack = stack
 }
 
 // CreateSandbox starts an isolated container for spec and returns its ID.
@@ -55,6 +62,9 @@ func (m *Manager) CreateSandbox(ctx context.Context, spec Spec) (string, error) 
 	config, hostConfig := ContainerConfig(spec, m.runtime)
 	config.Labels[LabelDeadline] = strconv.FormatInt(m.deadlineFor(spec).Unix(), 10)
 	config.Labels[LabelCPUMillis] = strconv.FormatInt(spec.CPUMillis, 10)
+	if m.stack != "" {
+		config.Labels[LabelStack] = m.stack
+	}
 	created, err := m.docker.ContainerCreate(ctx, client.ContainerCreateOptions{Config: config, HostConfig: hostConfig})
 	if err != nil {
 		return "", fmt.Errorf("create sandbox from %s: %w", spec.Image, err)

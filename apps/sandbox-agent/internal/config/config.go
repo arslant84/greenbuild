@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"regexp"
 	"time"
 )
 
@@ -16,6 +17,7 @@ const (
 	envTLSCA           = "SANDBOX_AGENT_TLS_CA"
 	envTLSCert         = "SANDBOX_AGENT_TLS_CERT"
 	envTLSKey          = "SANDBOX_AGENT_TLS_KEY"
+	envStack           = "SANDBOX_AGENT_STACK"
 
 	// RuntimeGVisor is the production runtime; RuntimeRunc is only for local development without gVisor.
 	RuntimeGVisor = "runsc"
@@ -37,7 +39,12 @@ type Config struct {
 	ShutdownTimeout time.Duration
 	Runtime         string
 	TLS             TLSFiles
+	// Stack names the local stack the agent belongs to, so its sandboxes can be told apart from another
+	// stack's on the same Docker daemon (pnpm play:down removes its own). Empty on nodes.
+	Stack string
 }
+
+var stackPattern = regexp.MustCompile(`^[a-z0-9][a-z0-9-]{0,62}$`)
 
 // TLSFiles are the PEM paths for the gRPC server. All empty means the gRPC server stays off;
 // it never runs without mTLS.
@@ -70,6 +77,10 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	if cfg.TLS, err = loadTLS(getenv); err != nil {
 		return Config{}, err
+	}
+	cfg.Stack = getenv(envStack)
+	if cfg.Stack != "" && !stackPattern.MatchString(cfg.Stack) {
+		return Config{}, fmt.Errorf("%w: %s %q: want lowercase letters, digits and dashes, at most 63", ErrInvalid, envStack, cfg.Stack)
 	}
 	return cfg, nil
 }

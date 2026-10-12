@@ -53,6 +53,7 @@ func run() error {
 	}
 	defer closeDocker(docker)
 	manager := sandbox.NewManager(docker, cfg.Runtime)
+	manager.SetStack(cfg.Stack)
 	go manager.RunReaper(ctx, reapInterval)
 	go sandbox.NewCPUWatch(manager).Run(ctx, cpuWatchInterval)
 
