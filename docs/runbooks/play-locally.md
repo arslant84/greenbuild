@@ -10,7 +10,7 @@ Docker, Go, Node 22 and pnpm, with `pnpm install` done once. Stop `pnpm dev` fir
 
 ```sh
 pnpm play:up      # builds, starts everything, prints the URL
-pnpm play:down    # stops everything
+pnpm play:down    # stops everything and removes the sandboxes this stack started
 ```
 
 Then open <http://localhost:3001>. A dev session starts on the first visit. Press **Start Challenge**, wait for the sandbox, fix the site in the terminal and press **Check Solution** (or Cmd/Ctrl+Enter). The result opens from the scorecard's link.
@@ -27,7 +27,7 @@ The first `play:up` builds the Go binaries, the dev certificates, the API and on
 | API | `127.0.0.1:3000` | dev user tokens on |
 | Worker | `127.0.0.1:3002` | relays `attempt.finished`, publishes the daily challenge |
 | Engine | `127.0.0.1:8080` | consumer on, `/attach` and `/internal` on |
-| Agent | `127.0.0.1:8081`, gRPC `9443` | runc |
+| Agent | `127.0.0.1:8081`, gRPC `9443` | runc; labels its sandboxes `greenbuild.stack=play-<web port>` |
 | Postgres | `127.0.0.1:15432` | migrated and seeded with every challenge; nginx-502 is the daily challenge on the stack's first day, the worker picks the following days |
 | Redis | `127.0.0.1:16379` | clear of a local Redis on 6379 (e.g. Memurai) |
 

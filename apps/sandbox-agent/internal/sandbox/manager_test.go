@@ -71,6 +71,25 @@ func TestCreateSandboxCreatesThenStarts(t *testing.T) {
 	}
 }
 
+func TestCreateSandboxLabelsTheStackOnlyWhenSet(t *testing.T) {
+	docker := &fakeDocker{}
+	manager := NewManager(docker, "runsc")
+
+	if _, err := manager.CreateSandbox(t.Context(), validSpec()); err != nil {
+		t.Fatalf("CreateSandbox() error = %v", err)
+	}
+	if label, ok := docker.created.Config.Labels[LabelStack]; ok {
+		t.Errorf("stack label = %q without a stack, want none", label)
+	}
+	manager.SetStack("play-3001")
+	if _, err := manager.CreateSandbox(t.Context(), validSpec()); err != nil {
+		t.Fatalf("CreateSandbox() error = %v", err)
+	}
+	if label := docker.created.Config.Labels[LabelStack]; label != "play-3001" {
+		t.Errorf("stack label = %q, want play-3001", label)
+	}
+}
+
 func TestCreateSandboxRejectsInvalidSpecWithoutCallingDocker(t *testing.T) {
 	docker := &fakeDocker{}
 

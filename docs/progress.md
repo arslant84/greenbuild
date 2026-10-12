@@ -220,7 +220,7 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 
 Each item points to the task that resolves it, or says why it's deferred or dropped.
 
-- `pnpm play:down` leaves the sandbox containers of the stack it stops (the agent stops before its TTL reaper removes them). Removing every `greenbuild.sandbox` container on `down` would also remove a parallel `pnpm dev` stack's sandboxes, so it needs a per-stack label first. No task yet.
+- `pnpm play:down` now removes the sandboxes of the stack it stops: the agent takes an optional `SANDBOX_AGENT_STACK` and labels its sandboxes `greenbuild.stack=<name>`; `play-stack.sh` names its stack `play-<web port>` and removes only containers with that label, so a parallel `pnpm dev` stack's sandboxes stay. Verified: agent unit tests (the label only when set, an invalid name refused); `down` on a stack with web port 3201 removed a sandbox labelled `play-3201` and left one without a stack label and one labelled `play-3001`.
 
 - Found in local testing (owner, 2026-10-02):
   - A dev session cookie the API rejects is never replaced. Dropped as a fix: the dev path goes in task 30e; until then the runbook explains how to reset the cookie (37c).

@@ -50,6 +50,19 @@ func TestLoadOverrides(t *testing.T) {
 	if cfg.ShutdownTimeout != 3*time.Second {
 		t.Errorf("ShutdownTimeout = %v, want 3s", cfg.ShutdownTimeout)
 	}
+	if cfg.Stack != "" {
+		t.Errorf("Stack = %q, want empty", cfg.Stack)
+	}
+}
+
+func TestLoadStack(t *testing.T) {
+	cfg, err := Load(envFrom(map[string]string{envStack: "play-3001"}))
+	if err != nil {
+		t.Fatalf("Load() error = %v", err)
+	}
+	if cfg.Stack != "play-3001" {
+		t.Errorf("Stack = %q, want play-3001", cfg.Stack)
+	}
 }
 
 func TestLoadRejectsInvalidValues(t *testing.T) {
@@ -60,6 +73,7 @@ func TestLoadRejectsInvalidValues(t *testing.T) {
 		"negative timeout":     {envShutdownTimeout: "-1s"},
 		"unknown runtime":      {envRuntime: "kata"},
 		"grpc without port":    {envGRPCAddr: "localhost"},
+		"stack with spaces":    {envStack: "my stack"},
 	}
 	for name, env := range cases {
 		t.Run(name, func(t *testing.T) {

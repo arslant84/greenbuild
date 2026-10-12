@@ -18,6 +18,9 @@ WORKER_PORT="${PLAY_WORKER_PORT:-3002}"
 ENGINE_PORT="${PLAY_ENGINE_PORT:-8080}"
 AGENT_PORT="${PLAY_AGENT_PORT:-8081}"
 AGENT_GRPC_PORT="${PLAY_AGENT_GRPC_PORT:-9443}"
+# The agent labels its sandboxes with this, so down removes this stack's and not another's on the same
+# Docker daemon; two stacks cannot share a web port.
+STACK="play-$WEB_PORT"
 
 log() { printf '[play] %s\n' "$*"; }
 
@@ -114,7 +117,7 @@ services() {
   local certs="$PLAY/certs"
   start agent SANDBOX_AGENT_RUNTIME=runc SANDBOX_AGENT_TLS_CA="$certs/ca.pem" SANDBOX_AGENT_TLS_CERT="$certs/agent.pem" \
     SANDBOX_AGENT_TLS_KEY="$certs/agent-key.pem" SANDBOX_AGENT_HEALTH_ADDR="127.0.0.1:$AGENT_PORT" \
-    SANDBOX_AGENT_GRPC_ADDR="127.0.0.1:$AGENT_GRPC_PORT" "$PLAY/bin/sandbox-agent"
+    SANDBOX_AGENT_GRPC_ADDR="127.0.0.1:$AGENT_GRPC_PORT" SANDBOX_AGENT_STACK="$STACK" "$PLAY/bin/sandbox-agent"
   wait_for agent "$AGENT_PORT"
   start engine SANDBOX_ENGINE_TLS_CA="$certs/ca.pem" SANDBOX_ENGINE_TLS_CERT="$certs/engine.pem" SANDBOX_ENGINE_TLS_KEY="$certs/engine-key.pem" \
     SANDBOX_ENGINE_ATTACH_SECRET="$ATTACH_SECRET" SANDBOX_ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" SANDBOX_ENGINE_CHALLENGES_DIR="$ROOT/challenges" \
@@ -165,6 +168,10 @@ down() {
   for pidfile in "$PLAY"/pids/web "$PLAY"/pids/worker "$PLAY"/pids/api "$PLAY"/pids/engine "$PLAY"/pids/agent; do
     if [ -f "$pidfile" ]; then stop "$pidfile"; fi
   done
+  # The agent is gone before its TTL reaper removes the sandboxes it started.
+  local sandboxes
+  sandboxes="$(docker ps -aq --filter "label=greenbuild.stack=$STACK" 2>/dev/null || true)"
+  if [ -n "$sandboxes" ]; then docker rm -f $sandboxes >/dev/null; fi
   "${COMPOSE[@]}" down >/dev/null 2>&1 || true
   log "stopped"
 }
