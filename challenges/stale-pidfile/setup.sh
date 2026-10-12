@@ -66,8 +66,15 @@ appctl start > /dev/null
 kill -9 "$(cat "/run/$app/$app.pid")"
 echo "$(date -u +%FT%TZ) $app: Killed (signal 9), out of memory" >> "/var/log/$app/crash.log"
 su -s /bin/sh backup -c "nohup nightly-backup > /dev/null 2>&1 & echo \$! > /tmp/backup.pid"
-pgrep -u backup -f nightly-backup > "/run/$app/$app.pid"
+backup_pid=$(cat /tmp/backup.pid)
 rm -f /tmp/backup.pid
+# nohup becomes the backup script once it execs it; wait for that, so the pid file names the backup
+# itself and the start below is refused (under gVisor the exec can take a moment).
+for _ in $(seq 50); do
+  grep -q nightly-backup "/proc/$backup_pid/cmdline" 2> /dev/null && break
+  sleep 0.1
+done
+echo "$backup_pid" > "/run/$app/$app.pid"
 appctl start > /dev/null || true
 
 nginx
