@@ -15,6 +15,9 @@ const (
 	fillMiB = "2048"
 	// Writing the fill takes a few seconds; the budget only stops a hung sandbox.
 	fillTimeout = 2 * time.Minute
+	// fillMemoryBytes is above the cap: the overlay's pages count partly against the sandbox's memory,
+	// and with 256 MiB a 2 GiB write gets the sandbox OOM-killed before the cap is reached.
+	fillMemoryBytes = 4 << 30
 )
 
 // architecture.md, task 33b: under gVisor a sandbox's writable root is capped, so filling it fails
@@ -22,7 +25,7 @@ const (
 // gVisor CI job (-run OnRunsc); runc sandboxes are not capped.
 func TestSandboxRootfsWriteLimitOnRunsc(t *testing.T) {
 	manager := NewManager(newDockerClient(t), "runsc")
-	spec := Spec{Image: integrationImage, Command: []string{"sleep", "300"}, CPUMillis: 500, MemoryBytes: 256 << 20, TTL: 5 * time.Minute}
+	spec := Spec{Image: integrationImage, Command: []string{"sleep", "300"}, CPUMillis: 500, MemoryBytes: fillMemoryBytes, TTL: 5 * time.Minute}
 	id, err := manager.CreateSandbox(t.Context(), spec)
 	if err != nil {
 		t.Fatalf("CreateSandbox() error = %v", err)
