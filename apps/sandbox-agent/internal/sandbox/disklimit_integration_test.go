@@ -4,38 +4,42 @@ package sandbox
 
 import (
 	"context"
-	"strings"
 	"testing"
 	"time"
+
+	"github.com/moby/moby/client"
 )
 
-const (
-	// fillMiB is well above the 1 GiB root overlay cap runsc gets in .github/scripts/install-gvisor.sh,
-	// and small enough that an uncapped runner writes it quickly and fails the test.
-	fillMiB = "2048"
-	// Writing the fill takes a few seconds; the budget only stops a hung sandbox.
-	fillTimeout = 2 * time.Minute
-)
+// Experiment (never merged): why does filling the root overlay kill the sandbox under runsc?
 
-// architecture.md, task 33b: under gVisor a sandbox's writable root is capped, so filling it fails
-// with ENOSPC instead of filling the node's disk. The cap is a runsc flag, so this runs only in the
-// gVisor CI job (-run OnRunsc); runc sandboxes are not capped.
-func TestSandboxRootfsWriteLimitOnRunsc(t *testing.T) {
-	manager := NewManager(newDockerClient(t), "runsc")
-	spec := Spec{Image: integrationImage, Command: []string{"sleep", "300"}, CPUMillis: 500, MemoryBytes: 256 << 20, TTL: 5 * time.Minute}
+func TestDiskFillExperimentOnRunsc(t *testing.T) {
+	for _, memory := range []int64{256 << 20, 4 << 30} {
+		for _, fill := range []string{"100", "400", "2048"} {
+			t.Run("mem"+time.Duration(memory).String()+"-fill"+fill, func(t *testing.T) {
+				fillExperiment(t, memory, fill)
+			})
+		}
+	}
+}
+
+func fillExperiment(t *testing.T, memory int64, fillMiB string) {
+	docker := newDockerClient(t)
+	manager := NewManager(docker, "runsc")
+	spec := Spec{Image: integrationImage, Command: []string{"sleep", "300"}, CPUMillis: 500, MemoryBytes: memory, TTL: 5 * time.Minute}
 	id, err := manager.CreateSandbox(t.Context(), spec)
 	if err != nil {
 		t.Fatalf("CreateSandbox() error = %v", err)
 	}
-	t.Cleanup(func() {
-		if err := manager.Destroy(context.Background(), id); err != nil {
-			t.Logf("cleanup destroy %s: %v", id, err)
-		}
-	})
+	t.Cleanup(func() { _ = manager.Destroy(context.Background(), id) })
 
-	fill := []string{"dd", "if=/dev/zero", "of=/fill", "bs=1M", "count=" + fillMiB}
-	result, err := manager.Run(t.Context(), id, Command{Argv: fill, Timeout: fillTimeout})
-	if err != nil || result.ExitCode == 0 || !strings.Contains(result.OutputTail, "No space left on device") {
-		t.Errorf("writing %s MiB = %+v, %v; want ENOSPC (No space left on device)", fillMiB, result, err)
+	fill := []string{"sh", "-c", "dd if=/dev/zero of=/fill bs=1M count=" + fillMiB + " 2>&1; echo dd=$?; df -m / 2>&1; ls -la / | head -3"}
+	result, err := manager.Run(t.Context(), id, Command{Argv: fill, Timeout: 2 * time.Minute})
+	t.Logf("fill %s MiB, memory %d MiB: err=%v exit=%d output=%q", fillMiB, memory>>20, err, result.ExitCode, result.OutputTail)
+	inspected, err := docker.ContainerInspect(t.Context(), id, client.ContainerInspectOptions{})
+	if err != nil {
+		t.Logf("inspect: %v", err)
+		return
 	}
+	state := inspected.Container.State
+	t.Logf("state: running=%v oomKilled=%v exitCode=%d error=%q", state.Running, state.OOMKilled, state.ExitCode, state.Error)
 }
