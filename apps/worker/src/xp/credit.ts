@@ -3,6 +3,7 @@ import { type AttemptFinished, solveXp, XP_MEDIAN_MIN_SOLVES } from "@greenbuild
 import { z } from "zod";
 import type { FinishedHandler } from "../finished-consumer.js";
 import { syncWeeklyXp } from "../leaderboards/boards.js";
+import { revokeVoidedXp } from "./revoke.js";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
@@ -103,6 +104,9 @@ export const xpHandler: FinishedHandler = {
   group: "worker-xp",
   name: "credit XP",
   handle: async (deps, event) => {
+    if (await revokeVoidedXp(deps, event)) {
+      return;
+    }
     await creditSolve(deps.db, event);
     if (event.status === "solved") {
       await syncWeeklyXp(deps, event.user_id, new Date());

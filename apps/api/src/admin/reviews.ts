@@ -7,7 +7,7 @@ import { DatabaseClient } from "../infra/services.js";
 const QUEUE_LIMIT = 100;
 
 // Reviews decides on flagged attempts (architecture.md, "Наказания", task 49c): clear sends the attempt
-// back to be rated, void keeps it out of the rating, ban also bans the account. Each decision is
+// back to be rated, void keeps it out of the rating and takes back its XP, ban also bans the account. Each decision is
 // written to audit_log in the same transaction.
 @Injectable()
 export class Reviews {
@@ -65,14 +65,15 @@ interface Decision {
   decision: ReviewRequest["decision"];
 }
 
-// apply carries out a decision: clear unflags the attempt and sends attempt.finished again so the
-// worker rates it; void leaves it flagged; ban leaves it flagged and bans the account.
+// apply carries out a decision: clear unflags the attempt; void leaves it flagged; ban leaves it
+// flagged and bans the account. Each sends attempt.finished again, so the worker rates a cleared
+// attempt and takes back a voided one's XP.
 async function apply(tx: Transaction, { attemptId, userId, decision }: Decision, events: AttemptEvents): Promise<void> {
   if (decision === "clear") {
     await tx.update(attempts).set({ flagged: false }).where(eq(attempts.id, attemptId));
-    await events.republishFinished(tx, attemptId);
   }
   if (decision === "ban") {
     await tx.update(users).set({ status: "banned" }).where(eq(users.id, userId));
   }
+  await events.republishFinished(tx, attemptId);
 }

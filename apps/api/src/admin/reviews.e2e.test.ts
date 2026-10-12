@@ -90,6 +90,9 @@ describe("admin reviews", () => {
     await withDatabase(async (db) => {
       expect((await db.select().from(users).where(eq(users.id, banned.userId)))[0]?.status).toBe("banned");
       expect(await db.select().from(cheatReviews).where(eq(cheatReviews.attemptId, voided.attemptId))).toHaveLength(1);
+      // The worker takes back a voided attempt's XP when its attempt.finished comes again.
+      const events = await db.select().from(outbox);
+      expect(events.some((event) => (event.payload as { attempt_id?: string }).attempt_id === voided.attemptId)).toBe(true);
     });
   });
 
