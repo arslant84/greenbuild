@@ -1,6 +1,6 @@
 # ADR-013: A thin Auth.js adapter in packages/db
 
-Status: Proposed (task 29c, awaiting the owner's approval)
+Status: Accepted (owner, 2026-10-12)
 
 ## Context
 
