@@ -9,6 +9,8 @@ import { runRelay } from "./outbox/relay.js";
 import { type FinishedHandler, runFinishedConsumer } from "./finished-consumer.js";
 import { dailyBoardHandler } from "./leaderboards/boards.js";
 import { runLeakCheck } from "./leaks/check.js";
+import { BlobArchiveStore, smtpMailer } from "./privacy/export-delivery.js";
+import { runDataExports } from "./privacy/export-job.js";
 import { runPrivacyPurge } from "./privacy/purge.js";
 import { ratingHandler } from "./rating/rate.js";
 import { BlobSessionLogs } from "./signals/logs.js";
@@ -31,7 +33,7 @@ async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
   const stops = [await startRelay(env)];
-  for (const [name, job] of DATABASE_JOBS) {
+  for (const [name, job] of [...DATABASE_JOBS, ...exportJob(env)]) {
     stops.push(startDatabaseJob(env, name, job));
   }
   for (const handler of FINISHED_HANDLERS) {
@@ -92,6 +94,18 @@ async function startFinishedConsumer(env: Env, handler: FinishedHandler): Promis
 }
 
 type DatabaseJob = (db: Database, signal: AbortSignal) => Promise<void>;
+
+// exportJob is the data export job (task 50a) when its settings are there.
+function exportJob(env: Env): [string, DatabaseJob][] {
+  const { EXPORT_BLOB_CONNECTION_STRING: blob, EMAIL_SERVER: server, EMAIL_FROM: from, WEB_URL: webUrl } = env;
+  if (!blob || !server || !from || !webUrl) {
+    logger.warn("data export disabled; set EXPORT_BLOB_CONNECTION_STRING, EMAIL_SERVER, EMAIL_FROM and WEB_URL");
+    return [];
+  }
+  const archives = new BlobArchiveStore(blob);
+  const mail = smtpMailer(server, from);
+  return [["data export", (db, signal) => runDataExports({ db, archives, mail, webUrl: webUrl.replace(/\/$/, "") }, signal)]];
+}
 
 // startDatabaseJob runs a job that needs only the database, when the worker has one.
 function startDatabaseJob(env: Env, name: string, job: DatabaseJob): Stop {

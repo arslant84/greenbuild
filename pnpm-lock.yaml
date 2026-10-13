@@ -179,6 +179,9 @@ importers:
       '@greenbuild/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      nodemailer:
+        specifier: 8.0.11
+        version: 8.0.11
       redis:
         specifier: ^6.3.0
         version: 6.3.0
@@ -195,6 +198,9 @@ importers:
       '@types/node':
         specifier: ^22.20.4
         version: 22.20.4
+      '@types/nodemailer':
+        specifier: 8.0.2
+        version: 8.0.2
       eslint:
         specifier: ^10.11.0
         version: 10.11.0(jiti@2.7.0)

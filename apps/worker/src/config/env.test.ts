@@ -34,4 +34,17 @@ describe("loadEnv", () => {
     expect(message).toContain("REDIS_URL");
     expect(message).not.toContain("secret");
   });
+
+  it("reads the data export settings only all together", () => {
+    const exportSettings = {
+      EXPORT_BLOB_CONNECTION_STRING: "AccountName=x;AccountKey=key-secret",
+      EMAIL_SERVER: "smtp://127.0.0.1:11025",
+      EMAIL_FROM: "exports@greenbuild.dev",
+      WEB_URL: "http://localhost:3001",
+    };
+
+    expect(loadEnv(exportSettings)).toMatchObject(exportSettings);
+    expect(() => loadEnv({ ...exportSettings, WEB_URL: "" })).toThrow();
+    expect(() => loadEnv({ ...exportSettings, EMAIL_SERVER: "http://mail" })).toThrow();
+  });
 });

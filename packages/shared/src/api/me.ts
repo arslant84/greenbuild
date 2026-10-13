@@ -67,3 +67,8 @@ export type DeletionResponse = z.infer<typeof deletionResponseSchema>;
 export const exportRequestResponseSchema = z.object({ request_id: z.uuid(), requested_at: z.iso.datetime() });
 
 export type ExportRequestResponse = z.infer<typeof exportRequestResponseSchema>;
+
+// An export archive's link works for this many days after the email (task 50a).
+export const EXPORT_LINK_DAYS = 7;
+// The Blob container export archives are kept in, named by their request id (task 50a).
+export const EXPORTS_BLOB_CONTAINER = "privacy-exports";
