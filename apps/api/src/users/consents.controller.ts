@@ -1,7 +1,7 @@
 import type { ConsentHistory } from "@greenbuild/shared";
 import { Controller, Get } from "@nestjs/common";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
-import { CurrentUser } from "../auth/dev-user.guard.js";
+import { CurrentUser } from "../auth/session.guard.js";
 import { Consents } from "./consents.js";
 
 @Controller("v1/me/consents")

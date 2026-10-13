@@ -2,7 +2,7 @@ import type { AttemptResponse } from "@greenbuild/shared";
 import { Controller, HttpCode, HttpStatus, Param, Post } from "@nestjs/common";
 import { z } from "zod";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
-import { CurrentUser } from "../auth/dev-user.guard.js";
+import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
 import { AbandonService } from "./abandon.service.js";
 

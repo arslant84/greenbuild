@@ -34,6 +34,21 @@ describe("loadServicesEnv", () => {
     expect(JSON.stringify((error as ValidationError).toResponse())).not.toMatch(/db-password|short-secret/);
   });
 
+  it("accepts the web app's public key and requires it in production", () => {
+    const publicJwk = JSON.stringify({ kty: "EC", crv: "P-256", x: "x-coordinate", y: "y-coordinate" });
+
+    expect(loadServicesEnv({ ...valid, API_TOKEN_PUBLIC_KEY: publicJwk }).API_TOKEN_PUBLIC_KEY).toBe(publicJwk);
+    expect(() => loadServicesEnv({ ...valid, NODE_ENV: "production" })).toThrow(ValidationError);
+  });
+
+  it.each([
+    ["a private key", JSON.stringify({ kty: "EC", crv: "P-256", x: "x", y: "y", d: "private" })],
+    ["another curve", JSON.stringify({ kty: "EC", crv: "P-384", x: "x", y: "y" })],
+    ["no JSON", "-----BEGIN PUBLIC KEY-----"],
+  ])("refuses %s as the API token key", (_case, key) => {
+    expect(() => loadServicesEnv({ ...valid, API_TOKEN_PUBLIC_KEY: key })).toThrow(ValidationError);
+  });
+
   it.each(["DATABASE_URL", "REDIS_URL", "ATTACH_SECRET", "ENGINE_INTERNAL_URL", "ENGINE_INTERNAL_TOKEN"])("requires %s", (name) => {
     expect(() => loadServicesEnv({ ...valid, [name]: undefined })).toThrow(ValidationError);
   });

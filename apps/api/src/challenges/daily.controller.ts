@@ -1,7 +1,7 @@
 import { type DailyResponse, dailyQuerySchema } from "@greenbuild/shared";
 import { Controller, Get, Query } from "@nestjs/common";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
-import { CurrentUser } from "../auth/dev-user.guard.js";
+import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
 import { DailyChallenges } from "./daily.js";
 
