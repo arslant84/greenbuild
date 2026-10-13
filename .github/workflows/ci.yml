@@ -176,8 +176,11 @@ jobs:
 
       - run: pnpm --filter @greenbuild/web exec playwright install --with-deps chromium
 
-      # The same stack as `pnpm play:up`: Postgres, Redis, agent (runc), engine, API and web.
+      # The same stack as `pnpm play:up`: Postgres, Redis, agent (runc), engine, API and web, with the
+      # test sign-in Playwright uses (task 30d).
       - run: bash scripts/play-stack.sh up
+        env:
+          GREENBUILD_E2E_AUTH: "1"
 
       # A player starts nginx-502, fails a check, fixes the site in the terminal and reads the debrief.
       - run: pnpm --filter @greenbuild/web test:e2e

@@ -20,6 +20,12 @@ describe("loadAuthConfig", () => {
     expect(loadAuthConfig({ ...ENV, AUTH_GITHUB_ID: "id", AUTH_GITHUB_SECRET: "secret" })?.github).toEqual({ clientId: "id", clientSecret: "secret" });
   });
 
+  it("turns the test sign-in on only with GREENBUILD_E2E_AUTH=1, and never in production", () => {
+    expect(loadAuthConfig(ENV)?.e2eSignIn).toBe(false);
+    expect(loadAuthConfig({ ...ENV, GREENBUILD_E2E_AUTH: "1" })?.e2eSignIn).toBe(true);
+    expect(() => loadAuthConfig({ ...ENV, GREENBUILD_E2E_AUTH: "1", NODE_ENV: "production" })).toThrow("never runs in production");
+  });
+
   it.each([
     { AUTH_SECRET: "short" },
     { DATABASE_URL: "mysql://db" },

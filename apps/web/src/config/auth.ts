@@ -28,11 +28,17 @@ export interface AuthConfig {
   apiTokenPrivateKey: string;
   // Sign-in with GitHub needs an OAuth app; without one only the email link is offered.
   github: { clientId: string; clientSecret: string } | null;
+  // The test sign-in for Playwright (task 30d): GREENBUILD_E2E_AUTH=1, never in production.
+  e2eSignIn: boolean;
 }
 
 // loadAuthConfig answers null when AUTH_SECRET is unset, so local runs without sign-in keep the dev
 // session (task 30e removes it); in production sign-in is required.
 export function loadAuthConfig(env: Record<string, string | undefined> = process.env): AuthConfig | null {
+  const e2eSignIn = env.GREENBUILD_E2E_AUTH === "1";
+  if (e2eSignIn && env.NODE_ENV === "production") {
+    throw new Error("GREENBUILD_E2E_AUTH: the test sign-in never runs in production");
+  }
   if (!env.AUTH_SECRET) {
     if (env.NODE_ENV === "production") {
       throw new Error("AUTH_SECRET: required in production");
@@ -56,6 +62,7 @@ export function loadAuthConfig(env: Record<string, string | undefined> = process
     emailFrom: parsed.EMAIL_FROM,
     apiTokenPrivateKey: parsed.API_TOKEN_PRIVATE_KEY,
     github: clientId && clientSecret ? { clientId, clientSecret } : null,
+    e2eSignIn,
   };
 }
 
