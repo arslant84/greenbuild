@@ -1,6 +1,8 @@
 import { expect, type Page, test } from "@playwright/test";
+import { signInForTest } from "./test-player";
 
-// architecture.md, task 16: Start → wait for ready → terminal → Check → result, on the real stack.
+// architecture.md, task 16: Start → wait for ready → terminal → Check → result, on the real stack, as a
+// signed-in player (task 30d).
 // The fix is nginx-502's reference solution typed into the terminal, as a player would.
 const FIX =
   '. /srv/app/app.env && sed -i "s#proxy_pass http://127.0.0.1:[0-9]*;#proxy_pass http://127.0.0.1:${PORT};#" /etc/nginx/conf.d/site.conf && nginx -s reload && sleep 1 && echo fixed-$((40+2))\n';
@@ -24,6 +26,7 @@ async function check(page: Page): Promise<void> {
 }
 
 test("a player solves nginx-502 from the Daily screen to the debrief", async ({ page }) => {
+  await signInForTest(page);
   await startChallenge(page);
 
   await check(page);

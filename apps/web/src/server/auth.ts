@@ -1,6 +1,7 @@
 import { authAdapter, connect } from "@greenbuild/db/auth";
 import NextAuth, { type NextAuthConfig, type NextAuthResult } from "next-auth";
 import GitHub from "next-auth/providers/github";
+import { e2eSignIn } from "./e2e-sign-in";
 import { emailSignIn } from "./email-sign-in";
 import { type AuthConfig, loadAuthConfig } from "../config/auth";
 
@@ -17,13 +18,17 @@ export function authInstance(): NextAuthResult | null {
 }
 
 function authOptions(config: AuthConfig): NextAuthConfig {
+  const adapter = authAdapter(connect(config.databaseUrl).db);
   const providers: NextAuthConfig["providers"] = [emailSignIn({ server: config.emailServer, from: config.emailFrom })];
   if (config.github) {
     providers.push(GitHub({ clientId: config.github.clientId, clientSecret: config.github.clientSecret }));
   }
+  if (config.e2eSignIn) {
+    providers.push(e2eSignIn(adapter));
+  }
   return {
     secret: config.secret,
-    adapter: authAdapter(connect(config.databaseUrl).db),
+    adapter,
     session: { strategy: "jwt" },
     providers,
     callbacks: {
