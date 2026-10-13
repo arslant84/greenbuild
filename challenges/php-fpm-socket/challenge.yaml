@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
 id: php-fpm-socket
-version: 1
+version: 2
 title: "Hardened into a 502"
 statement: "The security team hardened the PHP-FPM pool yesterday. Since then the site answers 502. Bring it back without undoing the hardening."
 difficulty: 4            # 1–10
