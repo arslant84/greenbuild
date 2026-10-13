@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { check, index, pgEnum, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { check, index, pgEnum, pgTable, primaryKey, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 import { idColumn, timestampColumns } from "./columns.js";
 
 export const userRole = pgEnum("user_role", ["player", "admin"]);
@@ -17,6 +17,8 @@ export const users = pgTable(
     displayName: text("display_name"),
     // Lowercase for the same reason; a GitHub account may not share an email.
     email: text("email").unique(),
+    // When the player proved they own the email by following a sign-in link (task 30a).
+    emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     avatarUrl: text("avatar_url"),
     // ISO 3166-1 alpha-2; only a filter companies switch on, never part of the rating.
     country: text("country"),
@@ -52,4 +54,17 @@ export const authAccounts = pgTable(
     ...timestampColumns(),
   },
   (table) => [unique("auth_accounts_provider_user").on(table.provider, table.providerUserId), index("auth_accounts_user").on(table.userId)],
+);
+
+// One pending email sign-in link (task 30a, ADR-013). Auth.js hashes the token before it reaches the
+// adapter, so the link itself is never stored; a used token is deleted.
+export const verificationTokens = pgTable(
+  "verification_tokens",
+  {
+    // The email the link was sent to.
+    identifier: text("identifier").notNull(),
+    token: text("token").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.identifier, table.token] })],
 );

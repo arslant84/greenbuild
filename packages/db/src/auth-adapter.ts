@@ -1,28 +1,18 @@
-import type { Adapter, AdapterAccount, AdapterUser } from "@auth/core/adapters";
+import type { Adapter, AdapterAccount, AdapterUser, VerificationToken } from "@auth/core/adapters";
 import { ValidationError } from "@greenbuild/shared";
 import { and, eq } from "drizzle-orm";
 import type { Database } from "./client.js";
-import { authAccounts, authProvider, users } from "./schema/users.js";
+import { authAccounts, authProvider, users, verificationTokens } from "./schema/users.js";
 
 type UserRow = typeof users.$inferSelect;
 type Provider = (typeof authProvider.enumValues)[number];
 
-// authAdapter is the thin Auth.js adapter of ADR-013: JWT sessions, so only the user and account
-// methods. It maps Auth.js's name and image to our columns, stores emails lowercase and keeps only
-// the provider's user id, never OAuth tokens. The email-link methods come with an email provider
-// (D6; architecture.md, deviation 29).
+// authAdapter is the thin Auth.js adapter of ADR-013: JWT sessions, so only the user, account and
+// email-link methods. It maps Auth.js's name, image and emailVerified to our columns, stores emails
+// lowercase and keeps only the provider's user id, never OAuth tokens.
 export function authAdapter(db: Database): Adapter {
   return {
-    async createUser(user) {
-      const [row] = await db
-        .insert(users)
-        .values({ email: lowercaseEmail(user.email), displayName: user.name ?? null, avatarUrl: user.image ?? null })
-        .returning();
-      if (!row) {
-        throw new Error("auth adapter: the new user row was not returned");
-      }
-      return toAdapterUser(row);
-    },
+    createUser: (user) => createUser(db, user),
     async getUser(id) {
       const [row] = await db.select().from(users).where(eq(users.id, id));
       return row ? toAdapterUser(row) : null;
@@ -43,7 +33,32 @@ export function authAdapter(db: Database): Adapter {
         .values({ userId: account.userId, provider: knownProvider(account.provider), providerUserId: account.providerAccountId })
         .onConflictDoNothing();
     },
+    async createVerificationToken({ identifier, token, expires }) {
+      await db.insert(verificationTokens).values({ identifier: identifier.toLowerCase(), token, expiresAt: expires });
+      return { identifier, token, expires };
+    },
+    useVerificationToken: (params) => useVerificationToken(db, params),
   };
+}
+
+async function createUser(db: Database, user: AdapterUser): Promise<AdapterUser> {
+  const [row] = await db
+    .insert(users)
+    .values({ email: lowercaseEmail(user.email), emailVerifiedAt: user.emailVerified, displayName: user.name ?? null, avatarUrl: user.image ?? null })
+    .returning();
+  if (!row) {
+    throw new Error("auth adapter: the new user row was not returned");
+  }
+  return toAdapterUser(row);
+}
+
+// useVerificationToken deletes the token and answers it, so a link signs in once; Auth.js checks expiry.
+async function useVerificationToken(db: Database, { identifier, token }: { identifier: string; token: string }): Promise<VerificationToken | null> {
+  const [row] = await db
+    .delete(verificationTokens)
+    .where(and(eq(verificationTokens.identifier, identifier.toLowerCase()), eq(verificationTokens.token, token)))
+    .returning();
+  return row ? { identifier: row.identifier, token: row.token, expires: row.expiresAt } : null;
 }
 
 async function getUserByAccount(db: Database, { provider, providerAccountId }: Pick<AdapterAccount, "provider" | "providerAccountId">): Promise<AdapterUser | null> {
@@ -60,6 +75,7 @@ async function updateUser(db: Database, user: Partial<AdapterUser> & Pick<Adapte
   if (user.email !== undefined) changes.email = lowercaseEmail(user.email);
   if (user.name !== undefined) changes.displayName = user.name;
   if (user.image !== undefined) changes.avatarUrl = user.image;
+  if (user.emailVerified !== undefined) changes.emailVerifiedAt = user.emailVerified;
   const [row] =
     Object.keys(changes).length === 0
       ? await db.select().from(users).where(eq(users.id, user.id))
@@ -72,7 +88,7 @@ async function updateUser(db: Database, user: Partial<AdapterUser> & Pick<Adapte
 
 // Auth.js types email as a string; a GitHub account without a public email has none in our row.
 function toAdapterUser(row: UserRow): AdapterUser {
-  return { id: row.id, email: row.email ?? "", emailVerified: null, name: row.displayName, image: row.avatarUrl };
+  return { id: row.id, email: row.email ?? "", emailVerified: row.emailVerifiedAt, name: row.displayName, image: row.avatarUrl };
 }
 
 function lowercaseEmail(email: string | null | undefined): string | null {
