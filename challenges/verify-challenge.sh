@@ -114,17 +114,14 @@ verify_seed() {
 case "${challenge_dir}" in
   *zombie-reports*)
     docker build -q -t "${image}" "${challenge_dir}" > /dev/null
-    for limit in 256 1024; do
-      container_id=$(docker run -d --runtime "${runtime}" --network none --cap-drop ALL "${cap_add_flags[@]}" \
-        --security-opt no-new-privileges --pids-limit "${limit}" --cpus "${cpus}" --memory "${docker_memory}" "${image}")
-      echo "EXP pids-limit ${limit}"
-      docker exec "${container_id}" sh -c 'printf "DISPATCHED_JOBS=101\n" > /etc/report-scheduler.conf; su -s /bin/sh reports -c "nohup report-scheduler > /dev/null 2>&1 &"' && echo "EXP A ok" || echo "EXP A failed $?"
-      docker exec "${container_id}" sh -c 'sleep 4; echo EXP B processes $(ps -o stat | wc -l) zombies $(ps -o stat | grep -c ^Z)' 2>&1 || echo "EXP B failed $?"
-      docker exec "${container_id}" sh -c 'su -s /bin/sh reports -c nightly-report; echo EXP C status $?' 2>&1 | tail -2 || echo "EXP C failed"
-      docker exec "${container_id}" sh -c 'echo EXP D processes $(ps -o stat | wc -l) zombies $(ps -o stat | grep -c ^Z)' 2>&1 || echo "EXP D failed $?"
-      docker inspect -f 'EXP state running={{.State.Running}} exit={{.State.ExitCode}}' "${container_id}"
-      docker rm -f "${container_id}" > /dev/null
-    done
+    container_id=$(docker run -d --runtime "${runtime}" --network none --cap-drop ALL "${cap_add_flags[@]}" \
+      --security-opt no-new-privileges --pids-limit 1024 --cpus "${cpus}" --memory "${docker_memory}" "${image}")
+    docker exec "${container_id}" sh -c 'printf "DISPATCHED_JOBS=101\n" > /etc/report-scheduler.conf; su -s /bin/sh reports -c "ulimit -u 200; nohup report-scheduler > /dev/null 2>&1 &"' && echo "EXP A ok" || echo "EXP A failed $?"
+    docker exec "${container_id}" sh -c 'sleep 4; echo EXP B processes $(ps -o stat | wc -l) zombies $(ps -o stat | grep -c ^Z)' 2>&1 || echo "EXP B failed $?"
+    docker exec "${container_id}" sh -c 'su -s /bin/sh reports -c "ulimit -u 200; nightly-report"; echo EXP C status $?; tail -3 /var/log/reports/nightly.log' 2>&1 | sed "s/^/EXP C: /" | tail -5
+    docker exec "${container_id}" sh -c 'pkill -f "tail -f /var/log/reports/queue.log"; sleep 2; su -s /bin/sh reports -c "ulimit -u 200; nightly-report"; echo EXP E status after fix $?' 2>&1 | sed "s/^/EXP E: /" | tail -3
+    docker inspect -f 'EXP state running={{.State.Running}} exit={{.State.ExitCode}}' "${container_id}"
+    docker rm -f "${container_id}" > /dev/null
     exit 0 ;;
   *challenges/*) echo "EXP skip ${challenge_dir}"; exit 0 ;;
 esac
