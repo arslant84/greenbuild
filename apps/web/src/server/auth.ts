@@ -1,6 +1,7 @@
 import { authAdapter, connect } from "@greenbuild/db/auth";
 import NextAuth, { type NextAuthConfig, type NextAuthResult } from "next-auth";
 import GitHub from "next-auth/providers/github";
+import Google from "next-auth/providers/google";
 import { e2eSignIn } from "./e2e-sign-in";
 import { emailSignIn } from "./email-sign-in";
 import { type AuthConfig, loadAuthConfig } from "../config/auth";
@@ -22,6 +23,9 @@ function authOptions(config: AuthConfig): NextAuthConfig {
   const providers: NextAuthConfig["providers"] = [emailSignIn({ server: config.emailServer, from: config.emailFrom })];
   if (config.github) {
     providers.push(GitHub({ clientId: config.github.clientId, clientSecret: config.github.clientSecret }));
+  }
+  if (config.google) {
+    providers.push(Google({ clientId: config.google.clientId, clientSecret: config.google.clientSecret }));
   }
   if (config.e2eSignIn) {
     providers.push(e2eSignIn(adapter));

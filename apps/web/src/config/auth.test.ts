@@ -15,6 +15,12 @@ describe("loadAuthConfig", () => {
     expect(() => loadAuthConfig({ NODE_ENV: "production" })).toThrow("AUTH_SECRET: required in production");
   });
 
+  it("offers Google only with both of its settings", () => {
+    expect(loadAuthConfig(ENV)?.google).toBeNull();
+    expect(loadAuthConfig({ ...ENV, AUTH_GOOGLE_ID: "id", AUTH_GOOGLE_SECRET: "secret" })?.google).toEqual({ clientId: "id", clientSecret: "secret" });
+    expect(() => loadAuthConfig({ ...ENV, AUTH_GOOGLE_SECRET: "secret" })).toThrow();
+  });
+
   it("offers GitHub only with both of its settings", () => {
     expect(loadAuthConfig(ENV)?.github).toBeNull();
     expect(loadAuthConfig({ ...ENV, AUTH_GITHUB_ID: "id", AUTH_GITHUB_SECRET: "secret" })?.github).toEqual({ clientId: "id", clientSecret: "secret" });

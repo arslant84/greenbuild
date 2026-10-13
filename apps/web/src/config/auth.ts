@@ -13,10 +13,21 @@ const authEnvSchema = z
     API_TOKEN_PRIVATE_KEY: z.string().refine(isPrivateP256Jwk, "must be an EC P-256 private JWK"),
     AUTH_GITHUB_ID: z.string().min(1).optional(),
     AUTH_GITHUB_SECRET: z.string().min(1).optional(),
+    AUTH_GOOGLE_ID: z.string().min(1).optional(),
+    AUTH_GOOGLE_SECRET: z.string().min(1).optional(),
   })
   .refine((env) => (env.AUTH_GITHUB_ID === undefined) === (env.AUTH_GITHUB_SECRET === undefined), {
     message: "set both AUTH_GITHUB_ID and AUTH_GITHUB_SECRET, or neither",
+  })
+  .refine((env) => (env.AUTH_GOOGLE_ID === undefined) === (env.AUTH_GOOGLE_SECRET === undefined), {
+    message: "set both AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET, or neither",
   });
+
+// An OAuth app's client id and secret; sign-in with that provider is offered only when both are set.
+export interface OAuthApp {
+  clientId: string;
+  clientSecret: string;
+}
 
 export interface AuthConfig {
   // Signs and encrypts the session; never log it.
@@ -26,8 +37,9 @@ export interface AuthConfig {
   emailFrom: string;
   // Never log it.
   apiTokenPrivateKey: string;
-  // Sign-in with GitHub needs an OAuth app; without one only the email link is offered.
-  github: { clientId: string; clientSecret: string } | null;
+  // Sign-in with GitHub and Google needs an OAuth app each (Google: task 54).
+  github: OAuthApp | null;
+  google: OAuthApp | null;
   // The test sign-in for Playwright (task 30d): GREENBUILD_E2E_AUTH=1, never in production.
   e2eSignIn: boolean;
 }
@@ -53,17 +65,23 @@ export function loadAuthConfig(env: Record<string, string | undefined> = process
     API_TOKEN_PRIVATE_KEY: env.API_TOKEN_PRIVATE_KEY,
     AUTH_GITHUB_ID: env.AUTH_GITHUB_ID || undefined,
     AUTH_GITHUB_SECRET: env.AUTH_GITHUB_SECRET || undefined,
+    AUTH_GOOGLE_ID: env.AUTH_GOOGLE_ID || undefined,
+    AUTH_GOOGLE_SECRET: env.AUTH_GOOGLE_SECRET || undefined,
   });
-  const { AUTH_GITHUB_ID: clientId, AUTH_GITHUB_SECRET: clientSecret } = parsed;
   return {
     secret: parsed.AUTH_SECRET,
     databaseUrl: parsed.DATABASE_URL,
     emailServer: parsed.EMAIL_SERVER,
     emailFrom: parsed.EMAIL_FROM,
     apiTokenPrivateKey: parsed.API_TOKEN_PRIVATE_KEY,
-    github: clientId && clientSecret ? { clientId, clientSecret } : null,
+    github: oauthApp(parsed.AUTH_GITHUB_ID, parsed.AUTH_GITHUB_SECRET),
+    google: oauthApp(parsed.AUTH_GOOGLE_ID, parsed.AUTH_GOOGLE_SECRET),
     e2eSignIn,
   };
+}
+
+function oauthApp(clientId: string | undefined, clientSecret: string | undefined): OAuthApp | null {
+  return clientId && clientSecret ? { clientId, clientSecret } : null;
 }
 
 const privateP256JwkSchema = z.looseObject({ kty: z.literal("EC"), crv: z.literal("P-256"), x: z.string(), y: z.string(), d: z.string() });
