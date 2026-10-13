@@ -15,5 +15,5 @@ test("opens the standings from the catalog and switches boards", async ({ page }
 
   await page.getByRole("link", { name: /By Skill/ }).click();
   await expect(page).toHaveURL(/\/leaderboard\?tab=skill$/);
-  await expect(page.getByText("SKILL RATING")).toBeVisible();
+  await expect(page.getByText("SKILL RATING", { exact: true })).toBeVisible();
 });
