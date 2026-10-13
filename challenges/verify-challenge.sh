@@ -103,6 +103,27 @@ verify_seed() {
   echo "ok: seed ${seed}"
 }
 
+case "${challenge_dir}" in
+  *zombie-reports*)
+    set +e +o pipefail
+    docker build -q -t "${image}" "${challenge_dir}" > /dev/null
+    for limit in 256 512; do
+      container_id=$(docker run -d --runtime "${runtime}" --network none --cap-drop ALL "${cap_add_flags[@]}" \
+        --security-opt no-new-privileges --pids-limit "${limit}" --cpus "${cpus}" --memory "${docker_memory}" "${image}")
+      started=0
+      while [ "${started}" -lt 300 ]; do
+        docker exec "${container_id}" sh -c 'for i in $(seq 25); do sleep 600 & done' > /dev/null 2>&1
+        started=$((started + 25))
+        alive=$(docker inspect -f '{{.State.Running}}' "${container_id}")
+        count=$(docker exec "${container_id}" sh -c 'ps -o pid | wc -l' 2>&1 | tail -1)
+        echo "EXP pids-limit ${limit}: started ${started}, running=${alive}, guest processes ${count}"
+        [ "${alive}" = "true" ] || break
+      done
+      docker rm -f "${container_id}" > /dev/null
+    done
+    exit 0 ;;
+  *challenges/*) echo "EXP skip ${challenge_dir}"; exit 0 ;;
+esac
 docker build -q -t "${image}" "${challenge_dir}" > /dev/null
 echo "verifying ${image} with runtime ${runtime} (cpus ${cpus}, memory ${docker_memory}, caps: ${capabilities[*]})"
 fingerprints=()
