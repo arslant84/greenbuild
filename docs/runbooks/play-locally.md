@@ -41,6 +41,15 @@ Everything else lives in `.play/` (git-ignored): binaries, dev certificates, thr
 - Every API call carries the dev user token from the session cookie; the browser never sees it, and writes also need the `x-greenbuild-request` header.
 - Dev sessions exist only outside production and only with `DEV_AUTH_SECRET`. Auth.js login replaces them.
 
+## Signing in
+
+The stack also runs Auth.js sign-in (tasks 30a, 54), alongside the dev session until task 30e. Open <http://localhost:3001/api/auth/signin> (Auth.js's own page until the sign-in screens, task 30b):
+
+- **Email link:** the email goes to Mailpit, not to a real mailbox. Read it at <http://localhost:18025>.
+- **GitHub or Google:** offered only when an OAuth app's id and secret are set in the shell before `pnpm play:up` (`AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET`, `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`). The app's callback URL is `http://localhost:3001/api/auth/callback/github` or `.../google`. Never commit these values.
+
+A signed-in player calls the API as themselves; without signing in, the dev session is used.
+
 ## A rejected dev session
 
 The dev session cookie (`gb_dev_session`) is signed with `DEV_AUTH_SECRET`. If the secret changes (for example after deleting `.play/`), the old cookie is refused: the screens show the service error and API calls answer 401, and the web app does not replace a cookie that is present. Delete the cookie and reload: in the browser's developer tools, Application (Chrome) or Storage (Firefox) › Cookies › `http://localhost:3001` › `gb_dev_session`; or use a private window. Auth.js sign-in replaces dev sessions (task 30e).
