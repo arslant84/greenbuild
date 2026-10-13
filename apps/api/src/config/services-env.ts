@@ -17,6 +17,8 @@ const servicesEnvSchema = z.object({
   DEV_AUTH_SECRET: z.string().min(MIN_SECRET_LENGTH).optional(),
   // The web app's public key for API tokens (task 30c): an EC P-256 JWK on one line, never the private key.
   API_TOKEN_PUBLIC_KEY: z.string().refine(isPublicP256Jwk).optional(),
+  // Where the worker stores data export archives (task 50a); holds a key.
+  EXPORT_BLOB_CONNECTION_STRING: z.string().min(1).optional(),
 }).refine((env) => env.NODE_ENV !== "production" || env.API_TOKEN_PUBLIC_KEY !== undefined, {
   path: ["API_TOKEN_PUBLIC_KEY"],
   message: "required in production",
@@ -41,6 +43,7 @@ export function loadServicesEnv(source: Record<string, string | undefined>): Ser
     ...source,
     DEV_AUTH_SECRET: source.DEV_AUTH_SECRET || undefined,
     API_TOKEN_PUBLIC_KEY: source.API_TOKEN_PUBLIC_KEY || undefined,
+    EXPORT_BLOB_CONNECTION_STRING: source.EXPORT_BLOB_CONNECTION_STRING || undefined,
   });
   if (!result.success) {
     const variables = [...new Set(result.error.issues.map((issue) => String(issue.path[0])))];

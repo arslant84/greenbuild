@@ -30,3 +30,10 @@ services:
     ports:
       - "127.0.0.1:11025:1025"
       - "127.0.0.1:18025:8025"
+
+  # Blob Storage for data export archives (task 50a), with Azurite's documented development account.
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.37.0
+    command: ["azurite-blob", "--blobHost", "0.0.0.0", "--skipApiVersionCheck"]
+    ports:
+      - "127.0.0.1:11000:10000"

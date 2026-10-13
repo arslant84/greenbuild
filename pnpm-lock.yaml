@@ -17,6 +17,9 @@ importers:
 
   apps/api:
     dependencies:
+      '@azure/storage-blob':
+        specifier: ^12.34.0
+        version: 12.34.0
       '@greenbuild/db':
         specifier: workspace:*
         version: link:../../packages/db

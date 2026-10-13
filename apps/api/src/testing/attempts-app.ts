@@ -3,6 +3,7 @@ import { applyMigrations, connect, seedChallenges } from "@greenbuild/db";
 import { API_TOKEN_ALGORITHM, API_TOKEN_AUDIENCE, API_TOKEN_ISSUER, API_TOKEN_LIFETIME_SEC } from "@greenbuild/shared";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { BlobServiceClient } from "@azure/storage-blob";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import postgres from "postgres";
 import { createClient } from "redis";
@@ -60,6 +61,25 @@ async function startPostgres(): Promise<Container> {
   });
 }
 
+// Azurite's documented development account, for the data export archives (task 50a).
+const AZURITE_ACCOUNT = "devstoreaccount1";
+const AZURITE_KEY = "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
+
+export function azuriteConnection(address: string): string {
+  return `DefaultEndpointsProtocol=http;AccountName=${AZURITE_ACCOUNT};AccountKey=${AZURITE_KEY};BlobEndpoint=http://${address}/${AZURITE_ACCOUNT};`;
+}
+
+async function startAzurite(): Promise<Container> {
+  return startContainer({
+    image: "mcr.microsoft.com/azure-storage/azurite",
+    port: 10000,
+    args: ["azurite-blob", "--blobHost", "0.0.0.0", "--skipApiVersionCheck"],
+    ready: async (address) => {
+      await BlobServiceClient.fromConnectionString(azuriteConnection(address)).listContainers().next();
+    },
+  });
+}
+
 async function startRedis(): Promise<Container> {
   return startContainer({
     image: "redis:8-alpine",
@@ -73,12 +93,13 @@ async function startRedis(): Promise<Container> {
   });
 }
 
-// useAttemptsApp runs the API with its real services: migrated and seeded PostgreSQL 16, and Redis.
-export function useAttemptsApp(): () => AttemptsApp {
+// useAttemptsApp runs the API with its real services: migrated and seeded PostgreSQL 16, and Redis;
+// with exportArchives also Azurite, where data export archives are read from (task 50a).
+export function useAttemptsApp(options: { exportArchives?: boolean } = {}): () => AttemptsApp {
   const started: { app?: INestApplication; containers: Container[]; engine?: FakeEngine; ready?: AttemptsApp } = { containers: [] };
   beforeAll(async () => {
-    const [database, redis] = await Promise.all([startPostgres(), startRedis()]);
-    started.containers.push(database, redis);
+    const [database, redis, azurite] = await Promise.all([startPostgres(), startRedis(), ...(options.exportArchives ? [startAzurite()] : [])]);
+    started.containers.push(...[database, redis, azurite].filter((container) => container !== undefined));
     const engine = await startFakeEngine();
     started.engine = engine;
     const apiToken = await apiTokenKeys();
@@ -91,6 +112,7 @@ export function useAttemptsApp(): () => AttemptsApp {
       ENGINE_INTERNAL_TOKEN: TEST_ENGINE_TOKEN,
       DEV_AUTH_SECRET: TEST_DEV_AUTH_SECRET,
       API_TOKEN_PUBLIC_KEY: apiToken.publicJwk,
+      ...(azurite ? { EXPORT_BLOB_CONNECTION_STRING: azuriteConnection(azurite.address) } : {}),
     };
     await applyMigrations(env.DATABASE_URL);
     const seeding = connect(env.DATABASE_URL);

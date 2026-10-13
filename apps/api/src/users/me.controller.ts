@@ -1,5 +1,6 @@
 import { type DeletionResponse, type ExportRequestResponse, type MeResponse, updateMeRequestSchema } from "@greenbuild/shared";
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post } from "@nestjs/common";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, StreamableFile } from "@nestjs/common";
+import { z } from "zod";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
 import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
@@ -37,5 +38,12 @@ export class MeController {
   @HttpCode(HttpStatus.ACCEPTED)
   requestExport(@CurrentUser() user: AuthenticatedUser): Promise<ExportRequestResponse> {
     return this.dataExport.request(user.id);
+  }
+
+  // The archive as a file, for the emailed link (proxied by the web app with the owner's session).
+  @Get("export/:id")
+  async downloadExport(@CurrentUser() user: AuthenticatedUser, @Param("id") id: string): Promise<StreamableFile> {
+    const { filename, archive } = await this.dataExport.download(user.id, parseInput(z.uuid(), id), new Date());
+    return new StreamableFile(archive, { type: "application/json", disposition: `attachment; filename="${filename}"` });
   }
 }

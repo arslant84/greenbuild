@@ -47,6 +47,15 @@ describe("proxyToApi", () => {
     expect(api).not.toHaveBeenCalled();
   });
 
+  it("keeps the API's attachment header, so a data export downloads as a file", async () => {
+    const disposition = 'attachment; filename="greenbuild-export-2026-12-01.json"';
+    api.mockResolvedValue(new Response('{"format":1}', { status: 200, headers: { "content-type": "application/json", "content-disposition": disposition } }));
+
+    const response = await proxyToApi(pageRequest({ session: "dev-token" }), { method: "GET", path: "/v1/me/export/e1" });
+    expect(response.headers.get("content-disposition")).toBe(disposition);
+    expect(await response.text()).toBe('{"format":1}');
+  });
+
   it("answers 503 when the API cannot be reached", async () => {
     api.mockRejectedValue(new TypeError("fetch failed"));
     vi.spyOn(console, "error").mockImplementation(() => undefined);
