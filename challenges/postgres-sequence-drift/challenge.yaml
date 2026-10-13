@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: postgres-sequence-drift
+version: 1
+title: "Every new order is a duplicate"
+statement: "Yesterday we moved the old shop's orders into our database. Since then no new order can be placed: every attempt fails. Let customers order again, and keep every order we have."
+difficulty: 4            # 1–10
+skills: { postgresql: 0.8, linux: 0.2 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# PostgreSQL runs as its own user; root starts it and runs the app's script.
+capabilities: [CHOWN, DAC_OVERRIDE, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  database: { pick: [shop, crm, billing] }
+  imported: { range: [200, 299] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
