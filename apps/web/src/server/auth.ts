@@ -1,4 +1,4 @@
-import { authAdapter, connect } from "@greenbuild/db";
+import { authAdapter, connect } from "@greenbuild/db/auth";
 import NextAuth, { type NextAuthConfig, type NextAuthResult } from "next-auth";
 import GitHub from "next-auth/providers/github";
 import { emailSignIn } from "./email-sign-in";
