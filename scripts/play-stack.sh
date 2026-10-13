@@ -133,10 +133,13 @@ services() {
   wait_for engine "$ENGINE_PORT"
   start api NODE_ENV=development PORT="$API_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" ATTACH_SECRET="$ATTACH_SECRET" \
     ENGINE_INTERNAL_URL="http://127.0.0.1:$ENGINE_PORT" ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" \
-    API_TOKEN_PUBLIC_KEY="$API_TOKEN_PUBLIC_KEY" node apps/api/dist/main.js
+    API_TOKEN_PUBLIC_KEY="$API_TOKEN_PUBLIC_KEY" EXPORT_BLOB_CONNECTION_STRING="$EXPORT_BLOB" node apps/api/dist/main.js
   wait_for api "$API_PORT"
   # The worker relays attempt.finished and publishes the daily challenge (task 41a).
-  start worker NODE_ENV=development PORT="$WORKER_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" node apps/worker/dist/main.js
+  # Data exports (task 50a): archives go to Azurite, the link to Mailpit.
+  start worker NODE_ENV=development PORT="$WORKER_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" \
+    EXPORT_BLOB_CONNECTION_STRING="$EXPORT_BLOB" EMAIL_SERVER="smtp://127.0.0.1:11025" EMAIL_FROM="exports@greenbuild.dev" \
+    WEB_URL="http://localhost:$WEB_PORT" node apps/worker/dist/main.js
   wait_for worker "$WORKER_PORT"
   # next dev, not next start: the dev session exists only outside production builds.
   # Sign-in (tasks 30a, 54): email links go to Mailpit; GitHub and Google only when AUTH_GITHUB_ID/SECRET
@@ -170,6 +173,8 @@ up() {
   secrets
   DATABASE_URL="postgres://postgres:play@127.0.0.1:15432/greenbuild"
   REDIS_URL="redis://127.0.0.1:16379"
+  # Azurite's documented development account; not a secret.
+  EXPORT_BLOB="DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://127.0.0.1:11000/devstoreaccount1;"
   build
   database
   services

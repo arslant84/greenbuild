@@ -34,7 +34,10 @@ export async function proxyToApi(request: NextRequest, options: ProxyOptions): P
       ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
       signal: AbortSignal.timeout(PROXY_TIMEOUT_MS),
     });
-    return new Response(await upstream.text(), { status: upstream.status, headers: { "content-type": "application/json" } });
+    // A download (the data export) keeps the API's attachment header, so the browser saves a file.
+    const disposition = upstream.headers.get("content-disposition");
+    const headers = { "content-type": "application/json", ...(disposition ? { "content-disposition": disposition } : {}) };
+    return new Response(await upstream.text(), { status: upstream.status, headers });
   } catch (error) {
     logger.error("api unreachable", { path: options.path, error });
     return failure(new UnavailableError("The service is unavailable"));
