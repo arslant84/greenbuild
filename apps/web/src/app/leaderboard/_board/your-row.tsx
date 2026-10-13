@@ -24,6 +24,7 @@ export function YourRow({ tab, handle, me, listed, streak }: YourRowProps) {
         <span className="flex items-center gap-1">
           <span className="flex size-6 items-center justify-center rounded-full bg-accent-soft font-mono text-[10px] leading-4.5 font-bold text-[#00363e]">{initials(handle)}</span>
           <span className="font-mono text-[13px] leading-4.5 font-bold text-ink">@{handle ?? "—"}</span>
+          <span className="type-label text-ink-subtle">· —</span>
         </span>
       </div>
       <div className="flex items-center gap-5">

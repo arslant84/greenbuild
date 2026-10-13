@@ -2,13 +2,14 @@ import Link from "next/link";
 import { SortChevronIcon } from "../../../ui/icons-leaderboard";
 import { type BoardTab, boardHref } from "./board-view";
 
-const TABS: { tab: BoardTab | null; label: string; badge: string | null }[] = [
+// Badges without data show "—": the number of skill domains, the daily challenge's number, friends online.
+const TABS: { tab: BoardTab | null; label: string; badge: string | null; badgeColor?: string }[] = [
   { tab: "weekly", label: "Weekly", badge: "LIVE" },
   { tab: "country", label: "Country", badge: null },
-  { tab: "skill", label: "By Skill", badge: null },
-  { tab: "daily", label: "Daily Challenge", badge: null },
+  { tab: "skill", label: "By Skill", badge: "— DOMAINS" },
+  { tab: "daily", label: "Daily Challenge", badge: "#—", badgeColor: "text-warn" },
   // No friends yet (lb:friends is not stored): the tab is shown, disabled.
-  { tab: null, label: "Friends", badge: "—" },
+  { tab: null, label: "Friends", badge: "— ONLINE" },
 ];
 
 // Role filters, search and sort have no data behind them yet; they are shown as in the frame, disabled.
@@ -19,8 +20,8 @@ export function BoardTabs({ current }: { current: BoardTab }) {
   return (
     <div className="flex flex-col bg-surface">
       <nav className="flex">
-        {TABS.map(({ tab, label, badge }) => (
-          <TabButton key={label} tab={tab} label={label} badge={badge} active={tab === current} />
+        {TABS.map(({ tab, label, badge, badgeColor }) => (
+          <TabButton key={label} tab={tab} label={label} badge={badge} badgeColor={badgeColor ?? "text-ink-subtle"} active={tab === current} />
         ))}
       </nav>
       <div className="flex items-center justify-between bg-canvas p-2">
@@ -52,12 +53,20 @@ export function BoardTabs({ current }: { current: BoardTab }) {
   );
 }
 
-function TabButton({ tab, label, badge, active }: { tab: BoardTab | null; label: string; badge: string | null; active: boolean }) {
+interface TabButtonProps {
+  tab: BoardTab | null;
+  label: string;
+  badge: string | null;
+  badgeColor: string;
+  active: boolean;
+}
+
+function TabButton({ tab, label, badge, badgeColor, active }: TabButtonProps) {
   const look = `relative flex items-center gap-1 px-3 py-2 type-body ${active ? "bg-surface-raised font-medium text-ink" : "text-ink-muted"}`;
   const content = (
     <>
       {label}
-      {badge && <span className={`rounded px-1 type-label ${active ? "bg-accent text-[#005763]" : "bg-line text-ink-subtle"}`}>{badge}</span>}
+      {badge && <span className={`rounded px-1 type-label ${active ? "bg-accent text-[#005763]" : `bg-line ${badgeColor}`}`}>{badge}</span>}
       {active && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" />}
     </>
   );
