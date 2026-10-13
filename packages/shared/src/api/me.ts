@@ -62,3 +62,8 @@ export const ACCOUNT_DELETION_DAYS = 30;
 export const deletionResponseSchema = z.object({ deletion_scheduled_for: z.iso.datetime() });
 
 export type DeletionResponse = z.infer<typeof deletionResponseSchema>;
+
+// POST /v1/me/export answers the export request (task 50a); the archive arrives by email.
+export const exportRequestResponseSchema = z.object({ request_id: z.uuid(), requested_at: z.iso.datetime() });
+
+export type ExportRequestResponse = z.infer<typeof exportRequestResponseSchema>;

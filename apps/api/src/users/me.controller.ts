@@ -1,8 +1,9 @@
-import { type DeletionResponse, type MeResponse, updateMeRequestSchema } from "@greenbuild/shared";
-import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch } from "@nestjs/common";
+import { type DeletionResponse, type ExportRequestResponse, type MeResponse, updateMeRequestSchema } from "@greenbuild/shared";
+import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch, Post } from "@nestjs/common";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
 import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
+import { DataExport } from "./data-export.js";
 import { AccountDeletion } from "./deletion.js";
 import { MeService } from "./me.service.js";
 
@@ -11,6 +12,7 @@ export class MeController {
   constructor(
     private readonly me: MeService,
     private readonly deletion: AccountDeletion,
+    private readonly dataExport: DataExport,
   ) {}
 
   @Get()
@@ -28,5 +30,12 @@ export class MeController {
   @HttpCode(HttpStatus.ACCEPTED)
   remove(@CurrentUser() user: AuthenticatedUser): Promise<DeletionResponse> {
     return this.deletion.request(user.id);
+  }
+
+  // 202: the archive is built and emailed later.
+  @Post("export")
+  @HttpCode(HttpStatus.ACCEPTED)
+  requestExport(@CurrentUser() user: AuthenticatedUser): Promise<ExportRequestResponse> {
+    return this.dataExport.request(user.id);
   }
 }
