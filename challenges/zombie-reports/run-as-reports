@@ -1,0 +1,5 @@
+#!/bin/sh
+# run-as-reports <command>: runs a command as the reports user under its process limit, as
+# /etc/security/limits.d/reports.conf sets on the report servers (reports hard nproc 200).
+ulimit -u 200
+exec su -s /bin/sh reports -c "$*"

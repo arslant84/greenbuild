@@ -9,7 +9,6 @@ set -euo pipefail
 export MSYS_NO_PATHCONV=1
 
 readonly ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-readonly PIDS_LIMIT=256
 # The agent's NofileLimit (apps/sandbox-agent/internal/sandbox/spec.go), soft and hard.
 readonly NOFILE_LIMIT=8192
 # Different remainders mod 3, so seed-dependent picks (e.g. nginx-502-upstream's app_user) all get exercised.
@@ -22,6 +21,9 @@ seeds=("$@")
 
 image="greenbuild-challenge/$(basename "${challenge_dir}"):verify"
 runtime="${SANDBOX_TEST_RUNTIME:-runc}"
+# The agent's PidsLimitFor (apps/sandbox-agent/internal/sandbox/spec.go): 512 under runsc, 256 otherwise.
+pids_limit=256
+[ "${runtime}" != runsc ] || pids_limit=512
 container_id=""
 
 fail() {
@@ -58,7 +60,7 @@ done
 
 start_sandbox() {
   docker run -d --runtime "${runtime}" --network none --cap-drop ALL "${cap_add_flags[@]}" \
-    --security-opt no-new-privileges --pids-limit "${PIDS_LIMIT}" --ulimit "nofile=${NOFILE_LIMIT}:${NOFILE_LIMIT}" \
+    --security-opt no-new-privileges --pids-limit "${pids_limit}" --ulimit "nofile=${NOFILE_LIMIT}:${NOFILE_LIMIT}" \
     --cpus "${cpus}" --memory "${docker_memory}" --memory-swap "${docker_memory}" "${image}"
 }
 
@@ -77,8 +79,13 @@ environment_fingerprint() {
     -o -path /etc/hostname -o -path /etc/hosts -o -path /etc/resolv.conf \) -prune -o -type f -exec sha256sum {} + | sort | sha256sum'
 }
 
+# copy_in writes a script into the sandbox through exec, as the agent does (CopyIn): under gVisor's root
+# overlay, a file docker cp puts into the container's rootfs can stay invisible inside the sandbox.
+copy_in() {
+  docker exec -i "${container_id}" sh -c 'mkdir -p /opt/greenbuild && cat > "/opt/greenbuild/$1"' sh "$1" < "${challenge_dir}/$1"
+}
+
 run_script() {
-  docker cp "${challenge_dir}/$1" "${container_id}:/opt/greenbuild/$1"
   docker exec "${container_id}" sh "/opt/greenbuild/$1"
 }
 
@@ -92,9 +99,12 @@ verify_seed() {
   if docker exec "${container_id}" test -e /opt/greenbuild/setup.sh; then
     fail "seed ${seed}: setup.sh is still in the container"
   fi
+  # Copied before the if, so a failed copy stops the run instead of counting as a failing check.
+  copy_in check.sh
   if run_script check.sh; then
     fail "seed ${seed}: check passes before the fix, so the environment is not broken"
   fi
+  copy_in solution.sh
   run_script solution.sh
   run_script check.sh || fail "seed ${seed}: check fails after solution.sh"
 

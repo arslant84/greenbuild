@@ -59,8 +59,11 @@ func TestContainerConfigAppliesLimits(t *testing.T) {
 	if host.MemorySwap != host.Memory {
 		t.Errorf("MemorySwap = %d, want %d (no swap)", host.MemorySwap, host.Memory)
 	}
-	if host.PidsLimit == nil || *host.PidsLimit != PidsLimit {
-		t.Errorf("PidsLimit = %v, want %d", host.PidsLimit, PidsLimit)
+	if host.PidsLimit == nil || *host.PidsLimit != PidsLimitGVisor {
+		t.Errorf("PidsLimit = %v, want %d under runsc", host.PidsLimit, PidsLimitGVisor)
+	}
+	if _, runc := ContainerConfig(validSpec(), "runc"); runc.PidsLimit == nil || *runc.PidsLimit != PidsLimit {
+		t.Errorf("PidsLimit = %v, want %d under runc", runc.PidsLimit, PidsLimit)
 	}
 	if len(host.Ulimits) != 1 || *host.Ulimits[0] != (container.Ulimit{Name: "nofile", Soft: NofileLimit, Hard: NofileLimit}) {
 		t.Errorf("Ulimits = %v, want nofile %d (soft and hard)", host.Ulimits, NofileLimit)

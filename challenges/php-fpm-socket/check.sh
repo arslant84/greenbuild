@@ -15,8 +15,14 @@ expected=$(printf '%s' "$page_seed" | sha256sum | cut -d' ' -f1)
 socket="/run/php-fpm/$app.sock"
 
 if [ -f /run/php-fpm/php-fpm.pid ]; then
-  kill "$(cat /run/php-fpm/php-fpm.pid)" 2> /dev/null
-  sleep 1
+  old_master=$(cat /run/php-fpm/php-fpm.pid)
+  kill "$old_master" 2> /dev/null
+  # The old master must be gone before a new one can take the socket; under gVisor that can take
+  # more than a second, so wait for it, up to 10 s.
+  for _ in $(seq 50); do
+    kill -0 "$old_master" 2> /dev/null || break
+    sleep 0.2
+  done
 fi
 if ! php-fpm84 > /dev/null 2>&1 || [ ! -S "$socket" ]; then
   echo "PHP-FPM does not start from its configuration"
