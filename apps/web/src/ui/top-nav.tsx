@@ -4,7 +4,7 @@ import { AvatarIcon, BrandMarkIcon, SettingsIcon, StreakIcon } from "./icons-cat
 // Sections without a screen yet are shown as in Figma but are not links.
 const SECTIONS = [
   { label: "Challenges", href: "/challenges" },
-  { label: "Leaderboard", href: null },
+  { label: "Leaderboard", href: "/leaderboard" },
   { label: "Marketplace", href: null },
   { label: "Inbox", href: null },
   { label: "Settings", href: null },
