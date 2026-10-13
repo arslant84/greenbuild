@@ -33,8 +33,15 @@ secrets() {
       echo "$name=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')" >> "$PLAY/secrets.env"
     fi
   done
+  # The API token key pair (task 30c): the web app signs with the private JWK, the API verifies with
+  # the public one, which is the same JWK without its private part "d".
+  if ! grep -q "^API_TOKEN_PRIVATE_KEY=" "$PLAY/secrets.env"; then
+    echo "API_TOKEN_PRIVATE_KEY='$(node -e 'const { generateKeyPairSync } = require("node:crypto");
+console.log(JSON.stringify(generateKeyPairSync("ec", { namedCurve: "P-256" }).privateKey.export({ format: "jwk" })))')'" >> "$PLAY/secrets.env"
+  fi
   # shellcheck disable=SC1091
   source "$PLAY/secrets.env"
+  API_TOKEN_PUBLIC_KEY="$(node -e 'const { d, ...publicJwk } = JSON.parse(process.argv[1]); console.log(JSON.stringify(publicJwk))' "$API_TOKEN_PRIVATE_KEY")"
 }
 
 build() {
@@ -126,7 +133,7 @@ services() {
   wait_for engine "$ENGINE_PORT"
   start api NODE_ENV=development PORT="$API_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" ATTACH_SECRET="$ATTACH_SECRET" \
     ENGINE_INTERNAL_URL="http://127.0.0.1:$ENGINE_PORT" ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" \
-    node apps/api/dist/main.js
+    API_TOKEN_PUBLIC_KEY="$API_TOKEN_PUBLIC_KEY" node apps/api/dist/main.js
   wait_for api "$API_PORT"
   # The worker relays attempt.finished and publishes the daily challenge (task 41a).
   start worker NODE_ENV=development PORT="$WORKER_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" node apps/worker/dist/main.js
@@ -135,7 +142,7 @@ services() {
   # Sign-in (task 30a): email links go to Mailpit; GitHub only when AUTH_GITHUB_ID/SECRET are set.
   start web API_URL="http://127.0.0.1:$API_PORT" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" ENGINE_ATTACH_URL="ws://127.0.0.1:$ENGINE_PORT/attach" \
     AUTH_SECRET="$AUTH_SECRET" AUTH_URL="http://localhost:$WEB_PORT" DATABASE_URL="$DATABASE_URL" \
-    EMAIL_SERVER="smtp://127.0.0.1:11025" EMAIL_FROM="sign-in@greenbuild.dev" \
+    EMAIL_SERVER="smtp://127.0.0.1:11025" EMAIL_FROM="sign-in@greenbuild.dev" API_TOKEN_PRIVATE_KEY="$API_TOKEN_PRIVATE_KEY" \
     bash -c "cd apps/web && exec ./node_modules/.bin/next dev --port $WEB_PORT"
   wait_for web "$WEB_PORT"
 }

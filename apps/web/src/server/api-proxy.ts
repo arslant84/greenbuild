@@ -1,6 +1,7 @@
 import { AppError, ForbiddenError, UnauthorizedError, UnavailableError, ValidationError } from "@greenbuild/shared";
 import type { NextRequest } from "next/server";
 import { loadApiConfig } from "../config/api";
+import { apiBearer } from "./api-bearer";
 import { DEV_SESSION_COOKIE } from "./dev-session";
 import { logger } from "./logger";
 
@@ -22,7 +23,7 @@ export async function proxyToApi(request: NextRequest, options: ProxyOptions): P
   if (options.method !== "GET" && request.headers.get(WRITE_HEADER) !== "1") {
     return failure(new ForbiddenError("Missing request header"));
   }
-  const token = request.cookies.get(DEV_SESSION_COOKIE)?.value;
+  const token = await apiBearer(request.cookies.get(DEV_SESSION_COOKIE)?.value);
   if (!token) {
     return failure(new UnauthorizedError());
   }
