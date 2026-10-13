@@ -1,0 +1,48 @@
+import { leaderboardResponseSchema, meResponseSchema } from "@greenbuild/shared";
+import { apiGet } from "../../server/api";
+import { ServiceError } from "../play/service-error";
+import { BoardHeading } from "./_board/board-heading";
+import { BoardTable } from "./_board/board-table";
+import { BoardTabs } from "./_board/board-tabs";
+import { boardApiPath, readBoardParams } from "./_board/board-view";
+import { ContextCards, StandingsFooter } from "./_board/context-cards";
+import { StandingsHeader } from "./_board/standings-header";
+import { YourRow } from "./_board/your-row";
+
+export const dynamic = "force-dynamic";
+
+// The frame shows twelve rows.
+const ROWS = 12;
+
+// Figma "Hotfix — Global Engineering Standings & Leaderboards" (3:3639), task 45b.
+export default async function LeaderboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const params = readBoardParams(await searchParams);
+  const me = await apiGet("/v1/me", meResponseSchema);
+  const path = boardApiPath(params, me?.country ?? null, ROWS);
+  const board = path ? await apiGet(path, leaderboardResponseSchema) : { kind: "weekly" as const, entries: [], me: null };
+  const now = new Date();
+  const handle = me?.handle ?? null;
+  const streak = me ? me.streak.current : null;
+  return (
+    <div className="min-h-screen bg-[#131314]">
+      {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
+      <div className="mx-auto flex min-h-screen w-7xl flex-col">
+        <StandingsHeader handle={handle} streak={streak} />
+        <main className="flex flex-1 flex-col gap-5 px-8 py-5">
+          <BoardHeading tab={params.tab} now={now} />
+          <BoardTabs current={params.tab} />
+          {board ? (
+            <>
+              <BoardTable tab={params.tab} entries={board.entries} emptyText={path ? "No players on this board yet." : "Set your country to see its board."} />
+              <YourRow tab={params.tab} handle={handle} me={board.me} listed={board.me !== null && board.me.rank <= board.entries.length} streak={streak} />
+            </>
+          ) : (
+            <ServiceError retryHref="/leaderboard" />
+          )}
+          <ContextCards />
+        </main>
+        <StandingsFooter />
+      </div>
+    </div>
+  );
+}
