@@ -1,7 +1,9 @@
 import "reflect-metadata";
 import { applyMigrations, connect, seedChallenges } from "@greenbuild/db";
+import { API_TOKEN_ALGORITHM, API_TOKEN_AUDIENCE, API_TOKEN_ISSUER, API_TOKEN_LIFETIME_SEC } from "@greenbuild/shared";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
+import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import postgres from "postgres";
 import { createClient } from "redis";
 import { afterAll, beforeAll } from "vitest";
@@ -21,6 +23,25 @@ export interface AttemptsApp {
   env: ServicesEnv;
   engine: FakeEngine;
   nest: INestApplication;
+  // signApiToken signs what the web app issues for a signed-in user (task 30c).
+  signApiToken: (userId: string) => Promise<string>;
+}
+
+type ApiTokenSigner = AttemptsApp["signApiToken"];
+
+// apiTokenKeys stands in for the web app's key pair: the API gets the public key, tests sign with the private one.
+async function apiTokenKeys(): Promise<{ publicJwk: string; sign: ApiTokenSigner }> {
+  const { publicKey, privateKey } = await generateKeyPair(API_TOKEN_ALGORITHM);
+  const sign: ApiTokenSigner = (userId) =>
+    new SignJWT({})
+      .setProtectedHeader({ alg: API_TOKEN_ALGORITHM })
+      .setIssuer(API_TOKEN_ISSUER)
+      .setAudience(API_TOKEN_AUDIENCE)
+      .setSubject(userId)
+      .setIssuedAt()
+      .setExpirationTime(`${API_TOKEN_LIFETIME_SEC}s`)
+      .sign(privateKey);
+  return { publicJwk: JSON.stringify(await exportJWK(publicKey)), sign };
 }
 
 async function startPostgres(): Promise<Container> {
@@ -60,6 +81,7 @@ export function useAttemptsApp(): () => AttemptsApp {
     started.containers.push(database, redis);
     const engine = await startFakeEngine();
     started.engine = engine;
+    const apiToken = await apiTokenKeys();
     const env: ServicesEnv = {
       NODE_ENV: "test",
       DATABASE_URL: `postgres://postgres:test@${database.address}/postgres`,
@@ -68,6 +90,7 @@ export function useAttemptsApp(): () => AttemptsApp {
       ENGINE_INTERNAL_URL: engine.url,
       ENGINE_INTERNAL_TOKEN: TEST_ENGINE_TOKEN,
       DEV_AUTH_SECRET: TEST_DEV_AUTH_SECRET,
+      API_TOKEN_PUBLIC_KEY: apiToken.publicJwk,
     };
     await applyMigrations(env.DATABASE_URL);
     const seeding = connect(env.DATABASE_URL);
@@ -76,7 +99,7 @@ export function useAttemptsApp(): () => AttemptsApp {
     const moduleRef = await Test.createTestingModule({ imports: [AppModule.forRoot(env)] }).compile();
     started.app = moduleRef.createNestApplication({ logger: false });
     await started.app.listen(0);
-    started.ready = { baseUrl: await started.app.getUrl(), env, engine, nest: started.app };
+    started.ready = { baseUrl: await started.app.getUrl(), env, engine, nest: started.app, signApiToken: apiToken.sign };
   }, STARTUP_TIMEOUT_MS);
   afterAll(async () => {
     await started.app?.close();

@@ -2,7 +2,7 @@ import { LEADERBOARD_KINDS, type LeaderboardResponse, leaderboardQuerySchema } f
 import { Controller, Get, Param, Query } from "@nestjs/common";
 import { z } from "zod";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
-import { CurrentUser } from "../auth/dev-user.guard.js";
+import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
 import { Leaderboards } from "./leaderboards.js";
 

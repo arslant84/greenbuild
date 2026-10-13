@@ -1,7 +1,7 @@
 import { type DeletionResponse, type MeResponse, updateMeRequestSchema } from "@greenbuild/shared";
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Patch } from "@nestjs/common";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
-import { CurrentUser } from "../auth/dev-user.guard.js";
+import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
 import { AccountDeletion } from "./deletion.js";
 import { MeService } from "./me.service.js";

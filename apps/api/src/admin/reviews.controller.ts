@@ -2,7 +2,7 @@ import { type ReviewQueue, type ReviewResponse, reviewRequestSchema } from "@gre
 import { Body, Controller, Get, Param, Post, UseGuards } from "@nestjs/common";
 import { z } from "zod";
 import type { AuthenticatedUser } from "../auth/dev-user-token.js";
-import { CurrentUser } from "../auth/dev-user.guard.js";
+import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
 import { AdminGuard } from "./admin.guard.js";
 import { Reviews } from "./reviews.js";

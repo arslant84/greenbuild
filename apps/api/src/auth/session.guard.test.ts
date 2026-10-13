@@ -8,7 +8,7 @@ import type { ServicesEnv } from "../config/services-env.js";
 import { AppErrorFilter } from "../errors/app-error.filter.js";
 import { SERVICES_ENV } from "../infra/services.js";
 import { type AuthenticatedUser, DEV_USER_AUDIENCE, signDevUserToken } from "./dev-user-token.js";
-import { CurrentUser, DevUserGuard } from "./dev-user.guard.js";
+import { CurrentUser, SessionGuard } from "./session.guard.js";
 
 const SECRET = "dev-auth-secret-dev-auth-secret-32";
 const USER_ID = "0199a5c4-7b2e-7c3a-9f10-2b3c4d5e6f70";
@@ -17,7 +17,7 @@ const USER_ID = "0199a5c4-7b2e-7c3a-9f10-2b3c4d5e6f70";
 const NEST_BOOT_TIMEOUT_MS = 20_000;
 
 @Controller("whoami")
-@UseGuards(DevUserGuard)
+@UseGuards(SessionGuard)
 class WhoAmIController {
   @Get()
   whoAmI(@CurrentUser() user: AuthenticatedUser): AuthenticatedUser {
@@ -30,7 +30,7 @@ let app: INestApplication | undefined;
 async function serve(env: Partial<ServicesEnv>): Promise<string> {
   const moduleRef = await Test.createTestingModule({
     controllers: [WhoAmIController],
-    providers: [{ provide: SERVICES_ENV, useValue: env }, { provide: APP_FILTER, useClass: AppErrorFilter }, DevUserGuard],
+    providers: [{ provide: SERVICES_ENV, useValue: env }, { provide: APP_FILTER, useClass: AppErrorFilter }, SessionGuard],
   }).compile();
   app = moduleRef.createNestApplication({ logger: false });
   await app.listen(0);
@@ -52,7 +52,7 @@ afterEach(async () => {
   await app?.close();
 });
 
-describe("DevUserGuard", { timeout: NEST_BOOT_TIMEOUT_MS }, () => {
+describe("SessionGuard", { timeout: NEST_BOOT_TIMEOUT_MS }, () => {
   it("admits a dev user token and passes the user on", async () => {
     const url = await serve({ NODE_ENV: "development", DEV_AUTH_SECRET: SECRET });
     const response = await call(url, await signDevUserToken(SECRET, USER_ID));
