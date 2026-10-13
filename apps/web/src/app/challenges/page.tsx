@@ -18,7 +18,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   return (
     <div className="min-h-screen bg-[#131314]">
       {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
-      <div className="mx-auto flex min-h-screen w-[1280px] flex-col">
+      <div className="mx-auto flex min-h-screen w-7xl flex-col">
         <TopNav current="Challenges" />
         <main className="flex-1 px-4 pt-5 pb-5">
           <CatalogHeader catalog={list?.catalog ?? null} />
