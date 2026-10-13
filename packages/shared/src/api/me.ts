@@ -29,6 +29,8 @@ export const meResponseSchema = z.object({
   id: z.uuid(),
   handle: z.string().nullable(),
   display_name: z.string().nullable(),
+  // ISO 3166-1 alpha-2, or null; the country leaderboard is this one (task 45b).
+  country: z.string().nullable(),
   timezone: z.string(),
   // When the timezone may change again; null when it may change now.
   timezone_locked_until: z.iso.datetime().nullable(),
