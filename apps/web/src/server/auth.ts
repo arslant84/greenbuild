@@ -26,5 +26,14 @@ function authOptions(config: AuthConfig): NextAuthConfig {
     adapter: authAdapter(connect(config.databaseUrl).db),
     session: { strategy: "jwt" },
     providers,
+    callbacks: {
+      // The JWT's subject is our user id (the adapter's); the API token names it (task 30c).
+      session({ session, token }) {
+        if (token.sub) {
+          session.user.id = token.sub;
+        }
+        return session;
+      },
+    },
   };
 }
