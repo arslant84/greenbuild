@@ -1,0 +1,30 @@
+import { authAdapter, connect } from "@greenbuild/db/auth";
+import NextAuth, { type NextAuthConfig, type NextAuthResult } from "next-auth";
+import GitHub from "next-auth/providers/github";
+import { emailSignIn } from "./email-sign-in";
+import { type AuthConfig, loadAuthConfig } from "../config/auth";
+
+// Sign-in with GitHub and an email link (architecture.md, task 30a): the thin adapter of ADR-013 and JWT
+// sessions, so no session table. Built on the first request, so `next build` needs no settings.
+let instance: NextAuthResult | null | undefined;
+
+export function authInstance(): NextAuthResult | null {
+  if (instance === undefined) {
+    const config = loadAuthConfig();
+    instance = config ? NextAuth(authOptions(config)) : null;
+  }
+  return instance;
+}
+
+function authOptions(config: AuthConfig): NextAuthConfig {
+  const providers: NextAuthConfig["providers"] = [emailSignIn({ server: config.emailServer, from: config.emailFrom })];
+  if (config.github) {
+    providers.push(GitHub({ clientId: config.github.clientId, clientSecret: config.github.clientSecret }));
+  }
+  return {
+    secret: config.secret,
+    adapter: authAdapter(connect(config.databaseUrl).db),
+    session: { strategy: "jwt" },
+    providers,
+  };
+}

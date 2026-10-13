@@ -23,3 +23,10 @@ services:
       test: ["CMD", "redis-cli", "ping"]
       interval: 1s
       retries: 60
+
+  # Catches the sign-in emails (task 30a): SMTP on 11025, its web UI and API on 18025.
+  mailpit:
+    image: axllent/mailpit:v1.31.3
+    ports:
+      - "127.0.0.1:11025:1025"
+      - "127.0.0.1:18025:8025"
