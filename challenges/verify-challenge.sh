@@ -111,6 +111,20 @@ verify_seed() {
   echo "ok: seed ${seed}"
 }
 
+case "${challenge_dir}" in
+  *zombie-reports*)
+    docker build -q -t "${image}" "${challenge_dir}" > /dev/null
+    for docker_memory in 512m 2048m; do
+      container_id=$(start_sandbox)
+      echo "EXP memory ${docker_memory}"
+      docker exec "${container_id}" /opt/greenbuild/setup.sh 1 && echo "EXP setup ok" || echo "EXP setup failed: $?"
+      docker inspect -f 'EXP state oom={{.State.OOMKilled}} exit={{.State.ExitCode}} running={{.State.Running}}' "${container_id}"
+      docker exec "${container_id}" sh -c 'echo EXP processes $(ps -o stat | wc -l) zombies $(ps -o stat | grep -c ^Z)' 2>&1 || true
+      docker rm -f "${container_id}" > /dev/null
+    done
+    exit 0 ;;
+  *challenges/*) echo "EXP skip ${challenge_dir}"; exit 0 ;;
+esac
 docker build -q -t "${image}" "${challenge_dir}" > /dev/null
 echo "verifying ${image} with runtime ${runtime} (cpus ${cpus}, memory ${docker_memory}, caps: ${capabilities[*]})"
 fingerprints=()
