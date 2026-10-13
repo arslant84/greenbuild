@@ -29,8 +29,10 @@ export async function signInLink(request: APIRequestContext, email: string): Pro
 export async function requestSignInLink(page: Page): Promise<{ email: string; link: string }> {
   const email = `player-${randomUUID()}@example.com`;
   await page.goto("/api/auth/signin");
-  await page.getByLabel("Email").fill(email);
-  await page.getByRole("button", { name: "Sign in with Email" }).click();
+  // The email-link form; with the test sign-in on, the page has a second email field.
+  const form = page.locator("form", { has: page.getByRole("button", { name: "Sign in with Email" }) });
+  await form.getByLabel("Email").fill(email);
+  await form.getByRole("button", { name: "Sign in with Email" }).click();
   await expect(page).toHaveURL(/\/api\/auth\/verify-request/);
   return { email, link: await signInLink(page.request, email) };
 }
