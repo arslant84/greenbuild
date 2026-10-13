@@ -8,11 +8,18 @@ import (
 	"time"
 
 	"github.com/moby/moby/api/types/container"
+
+	"github.com/arslant84/greenbuild/apps/sandbox-agent/internal/config"
 )
 
 const (
 	// PidsLimit caps processes per sandbox (architecture.md: PID limit 256) so a fork bomb cannot exhaust the node.
 	PidsLimit int64 = 256
+	// PidsLimitGVisor is the cap under runsc. Docker applies it to gVisor's host process, whose threads
+	// grow with the sandbox's processes, so 256 left a sandbox about 115 processes and exceeding them
+	// ends the sandbox; 512 leaves about 270, close to what 256 means under runc (architecture.md,
+	// deviation 31; measured in CI, #210).
+	PidsLimitGVisor int64 = 512
 
 	// NofileLimit caps open files per sandbox (soft and hard), so one sandbox cannot exhaust the node's
 	// file descriptors; challenges stay well inside it (app-open-files gives its app 4096).
@@ -84,10 +91,18 @@ func (s Spec) Validate() error {
 	return nil
 }
 
+// PidsLimitFor is the process cap a sandbox gets under the OCI runtime.
+func PidsLimitFor(runtime string) int64 {
+	if runtime == config.RuntimeGVisor {
+		return PidsLimitGVisor
+	}
+	return PidsLimit
+}
+
 // ContainerConfig returns the Docker configuration for spec under the given OCI runtime.
 // Every sandbox gets the same isolation; only the image, command and limits vary.
 func ContainerConfig(spec Spec, runtime string) (*container.Config, *container.HostConfig) {
-	pidsLimit := PidsLimit
+	pidsLimit := PidsLimitFor(runtime)
 	config := &container.Config{
 		Image:  spec.Image,
 		Cmd:    spec.Command,

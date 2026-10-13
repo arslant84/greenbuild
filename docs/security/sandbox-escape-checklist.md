@@ -15,7 +15,7 @@ Every sandbox gets the same isolation from the agent (`apps/sandbox-agent/intern
 | Read kernel memory | read 16 bytes of `/proc/kcore` | Docker masks it with `/dev/null`; under gVisor `/proc` is the sentry's own, not the host's |
 | Reach the Docker socket | `test -S /var/run/docker.sock` | Nothing is mounted from the host |
 | Open a raw socket | `arping -I lo 127.0.0.1` (`AF_PACKET`) | No `CAP_NET_RAW` |
-| Fork bomb | start 300 processes | PID limit 256 |
+| Fork bomb | start 44 processes past the cap | PID limit 256 (runc) or 512 (runsc, where the cap also counts gVisor's own threads and going past it ends the sandbox) |
 | Exhaust memory | buffer 200 MiB in a 64 MiB sandbox | Memory limit with no swap: the process is OOM-killed |
 
 ## Covered by other tests

@@ -142,7 +142,7 @@ func assertLimits(t *testing.T, host *container.HostConfig, spec Spec) {
 		t.Errorf("NanoCPUs = %d, Memory = %d, want %d and %d",
 			host.NanoCPUs, host.Memory, spec.CPUMillis*nanoCPUsPerMilliCPU, spec.MemoryBytes)
 	}
-	if host.PidsLimit == nil || *host.PidsLimit != PidsLimit {
-		t.Errorf("PidsLimit = %v, want %d", host.PidsLimit, PidsLimit)
+	if want := PidsLimitFor(runtimeUnderTest()); host.PidsLimit == nil || *host.PidsLimit != want {
+		t.Errorf("PidsLimit = %v, want %d", host.PidsLimit, want)
 	}
 }
