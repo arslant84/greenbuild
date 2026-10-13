@@ -15,9 +15,9 @@ const STEPS: { command: string; output: string; color: string }[] = [
 // Figma (Landing) › Right Column: Interactive Terminal Viewport (an illustration, not a live session).
 export function HeroTerminal() {
   return (
-    <div className="flex h-[396px] flex-col overflow-hidden rounded-xl bg-canvas shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]" aria-hidden="true">
+    <div className="flex h-99 flex-col overflow-hidden rounded-xl bg-canvas shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]" aria-hidden="true">
       <TitleBar />
-      <div className="flex flex-1 flex-col justify-between p-5 font-mono text-[13px] leading-[21px]">
+      <div className="flex flex-1 flex-col justify-between p-5 font-mono text-[13px] leading-5.25">
         <div className="flex flex-col gap-2">
           {STEPS.map((step) => (
             <div key={step.command}>

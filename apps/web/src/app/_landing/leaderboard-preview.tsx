@@ -14,11 +14,11 @@ export function LeaderboardPreview() {
   return (
     <section className="flex flex-col gap-5 py-8">
       <div className="flex items-end justify-between">
-        <div className="flex flex-col gap-[5px] pt-[3px]">
-          <span className="font-mono text-[11px] leading-[14px] font-semibold tracking-[1.1px] text-accent-soft uppercase">Global SRE standings</span>
-          <h2 className="text-2xl leading-[30px] font-bold tracking-[-0.6px] text-ink">Weekly Leaderboard</h2>
+        <div className="flex flex-col gap-1.25 pt-0.75">
+          <span className="font-mono text-[11px] leading-3.5 font-semibold tracking-[1.1px] text-accent-soft uppercase">Global SRE standings</span>
+          <h2 className="text-2xl leading-7.5 font-bold tracking-[-0.6px] text-ink">Weekly Leaderboard</h2>
         </div>
-        <span className="flex items-center gap-1 text-[13px] leading-[18px] font-medium text-accent-soft opacity-60" aria-disabled="true">
+        <span className="flex items-center gap-1 text-[13px] leading-4.5 font-medium text-accent-soft opacity-60" aria-disabled="true">
           View all ranked engineers
           <ViewAllArrowIcon />
         </span>
@@ -31,7 +31,7 @@ export function LeaderboardPreview() {
             </span>
           ))}
         </div>
-        <p className="type-body px-3 py-[14px] text-center text-ink-subtle">No rankings yet</p>
+        <p className="type-body px-3 py-3.5 text-center text-ink-subtle">No rankings yet</p>
       </div>
     </section>
   );

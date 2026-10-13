@@ -20,12 +20,12 @@ export function SampleScenario() {
           <span className="type-label rounded bg-surface px-2 py-0.5 text-ink-muted">Target: media.env</span>
         </div>
         <div className="flex flex-col gap-5 p-5">
-          <div className="flex flex-col gap-1 pl-[71px] font-mono text-[13px] leading-[18px]">
+          <div className="flex flex-col gap-1 pl-17.75 font-mono text-[13px] leading-4.5">
             <DiffRow line={REMOVED.line} text={REMOVED.text} look="rounded bg-[#93000a33] text-danger" />
             <DiffRow line={ADDED.line} text={ADDED.text} look="rounded bg-[#64f88a1a] font-semibold text-ok" />
           </div>
           <div className="flex items-center justify-between rounded-lg bg-surface p-3">
-            <span className="flex items-center gap-2 font-mono text-[13px] leading-[18px] text-ok">
+            <span className="flex items-center gap-2 font-mono text-[13px] leading-4.5 text-ok">
               <ChecksPassedIcon />
               Check PASSED: the app is back.
             </span>
@@ -49,11 +49,11 @@ function DiffRow({ line, text, look }: { line: number; text: string; look: strin
 function ScenarioHeading() {
   return (
     <div className="flex items-end justify-between">
-      <div className="flex flex-col gap-[5px]">
-        <span className="font-mono text-[11px] leading-[14px] font-semibold tracking-[1.1px] text-warn uppercase">Sample scenario preview</span>
-        <h2 className="text-2xl leading-[30px] font-bold tracking-[-0.6px] text-ink">Too many customers</h2>
+      <div className="flex flex-col gap-1.25">
+        <span className="font-mono text-[11px] leading-3.5 font-semibold tracking-[1.1px] text-warn uppercase">Sample scenario preview</span>
+        <h2 className="text-2xl leading-7.5 font-bold tracking-[-0.6px] text-ink">Too many customers</h2>
       </div>
-      <span className="flex gap-2 font-mono text-[11px] leading-[14px] font-medium tracking-[0.44px]">
+      <span className="flex gap-2 font-mono text-[11px] leading-3.5 font-medium tracking-[0.44px]">
         <span className="rounded bg-surface-raised px-2 py-1 text-ink-subtle">Difficulty: 4/10</span>
         <span className="rounded bg-surface-raised px-2 py-1 text-warn">Linux</span>
         <span className="rounded bg-surface-raised px-2 py-1 text-ok">nginx</span>

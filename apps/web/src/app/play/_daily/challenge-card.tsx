@@ -17,7 +17,7 @@ export function ChallengeCard({ card }: { card: Card }) {
         </span>
         <span className="type-label rounded bg-control px-2 py-0.5 text-[#2fd9f4]">SEV-1 SIMULATION</span>
       </div>
-      <div className="flex flex-col gap-[3px]">
+      <div className="flex flex-col gap-0.75">
         <h1 className="text-[32px] leading-10 font-bold tracking-[-0.8px] text-ink">{card.title}</h1>
         <p className="text-[15px] leading-6 text-ink-muted">{card.statement}</p>
       </div>
@@ -64,7 +64,7 @@ function MetadataRow({ card }: { card: Card }) {
 // The Figma preview shows sample output; until challenges ship a teaser, it shows the prompt only.
 function TerminalPreview({ slug }: { slug: string }) {
   return (
-    <div className="flex h-[105px] flex-col gap-1.5 rounded-lg bg-canvas p-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
+    <div className="flex h-26.25 flex-col gap-1.5 rounded-lg bg-canvas p-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
       <div className="flex h-4 items-center gap-1.5 pb-1">
         <span className="size-2.5 rounded-full bg-danger" />
         <span className="size-2.5 rounded-full bg-warn" />
@@ -72,7 +72,7 @@ function TerminalPreview({ slug }: { slug: string }) {
         <span className="type-label pl-2 text-ink-muted">sandbox-env // {slug}</span>
       </div>
       <div className="flex items-center gap-2">
-        <span className="font-mono text-[13px] leading-[18px] font-semibold text-accent">$</span>
+        <span className="font-mono text-[13px] leading-4.5 font-semibold text-accent">$</span>
         <span className="h-4 w-2 animate-pulse bg-ink-muted" />
       </div>
     </div>
