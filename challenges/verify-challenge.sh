@@ -114,12 +114,15 @@ verify_seed() {
 case "${challenge_dir}" in
   *zombie-reports*)
     docker build -q -t "${image}" "${challenge_dir}" > /dev/null
-    for docker_memory in 512m 2048m; do
-      container_id=$(start_sandbox)
-      echo "EXP memory ${docker_memory}"
-      docker exec "${container_id}" /opt/greenbuild/setup.sh 1 && echo "EXP setup ok" || echo "EXP setup failed: $?"
-      docker inspect -f 'EXP state oom={{.State.OOMKilled}} exit={{.State.ExitCode}} running={{.State.Running}}' "${container_id}"
-      docker exec "${container_id}" sh -c 'echo EXP processes $(ps -o stat | wc -l) zombies $(ps -o stat | grep -c ^Z)' 2>&1 || true
+    for limit in 256 1024; do
+      container_id=$(docker run -d --runtime "${runtime}" --network none --cap-drop ALL "${cap_add_flags[@]}" \
+        --security-opt no-new-privileges --pids-limit "${limit}" --cpus "${cpus}" --memory "${docker_memory}" "${image}")
+      echo "EXP pids-limit ${limit}"
+      docker exec "${container_id}" sh -c 'printf "DISPATCHED_JOBS=101\n" > /etc/report-scheduler.conf; su -s /bin/sh reports -c "nohup report-scheduler > /dev/null 2>&1 &"' && echo "EXP A ok" || echo "EXP A failed $?"
+      docker exec "${container_id}" sh -c 'sleep 4; echo EXP B processes $(ps -o stat | wc -l) zombies $(ps -o stat | grep -c ^Z)' 2>&1 || echo "EXP B failed $?"
+      docker exec "${container_id}" sh -c 'su -s /bin/sh reports -c nightly-report; echo EXP C status $?' 2>&1 | tail -2 || echo "EXP C failed"
+      docker exec "${container_id}" sh -c 'echo EXP D processes $(ps -o stat | wc -l) zombies $(ps -o stat | grep -c ^Z)' 2>&1 || echo "EXP D failed $?"
+      docker inspect -f 'EXP state running={{.State.Running}} exit={{.State.ExitCode}}' "${container_id}"
       docker rm -f "${container_id}" > /dev/null
     done
     exit 0 ;;

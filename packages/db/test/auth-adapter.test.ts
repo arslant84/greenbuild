@@ -14,12 +14,16 @@ function newUser(email: string): AdapterUser {
   return { id: "auth-js-id", email, emailVerified: null, name: "Ada Lovelace", image: "https://avatars.example/ada.png" };
 }
 
-function adapter(): Required<Pick<Adapter, "createUser" | "getUser" | "getUserByEmail" | "getUserByAccount" | "updateUser" | "linkAccount">> {
-  const { createUser, getUser, getUserByEmail, getUserByAccount, updateUser, linkAccount } = authAdapter(database().db);
-  if (!createUser || !getUser || !getUserByEmail || !getUserByAccount || !updateUser || !linkAccount) {
-    throw new Error("the adapter lacks a method JWT sessions need");
+const NEEDED = ["createUser", "getUser", "getUserByEmail", "getUserByAccount", "updateUser", "linkAccount", "createVerificationToken", "useVerificationToken"] as const;
+type Needed = Required<Pick<Adapter, (typeof NEEDED)[number]>>;
+
+function adapter(): Needed {
+  const methods = authAdapter(database().db);
+  const missing = NEEDED.filter((name) => !methods[name]);
+  if (missing.length > 0) {
+    throw new Error(`the adapter lacks ${missing.join(", ")}, which JWT sessions and the email link need`);
   }
-  return { createUser, getUser, getUserByEmail, getUserByAccount, updateUser, linkAccount };
+  return methods as Needed;
 }
 
 function githubAccount(userId: string): { userId: string; type: "oauth"; provider: string; providerAccountId: string; access_token: string } {
@@ -27,7 +31,7 @@ function githubAccount(userId: string): { userId: string; type: "oauth"; provide
   return { userId, type: "oauth", provider: "github", providerAccountId: String(githubIds), access_token: "gho_secret" };
 }
 
-describe("authAdapter", () => {
+describe("authAdapter for users and accounts", () => {
   it("creates a user with our id and a lowercase email, and finds it by id and by email in any case", async () => {
     const created = await adapter().createUser(newUser("Ada@Example.COM"));
 
@@ -69,5 +73,26 @@ describe("authAdapter", () => {
 
     expect(await adapter().updateUser({ id: user.id, name: "Margaret Hamilton" })).toEqual({ ...user, name: "Margaret Hamilton" });
     expect(await adapter().updateUser({ id: user.id, email: "M.Hamilton@Example.com" })).toMatchObject({ email: "m.hamilton@example.com", image: user.image });
+  });
+});
+
+describe("authAdapter for the email link", () => {
+  it("keeps when an email was verified, at sign-up and later", async () => {
+    const verifiedAt = new Date("2026-10-13T09:00:00Z");
+    const viaLink = await adapter().createUser({ ...newUser("barbara@example.com"), emailVerified: verifiedAt });
+    const viaGithub = await adapter().createUser(newUser("frances@example.com"));
+
+    expect(viaLink.emailVerified).toEqual(verifiedAt);
+    expect(viaGithub.emailVerified).toBeNull();
+    expect((await adapter().updateUser({ id: viaGithub.id, emailVerified: verifiedAt })).emailVerified).toEqual(verifiedAt);
+  });
+
+  it("answers a sign-in token once, for the email in any case, and nothing for an unknown one", async () => {
+    const expires = new Date("2026-10-13T10:00:00Z");
+    await adapter().createVerificationToken({ identifier: "Katherine@Example.com", token: "hashed-token", expires });
+
+    expect(await adapter().useVerificationToken({ identifier: "katherine@example.com", token: "other" })).toBeNull();
+    expect(await adapter().useVerificationToken({ identifier: "KATHERINE@example.com", token: "hashed-token" })).toEqual({ identifier: "katherine@example.com", token: "hashed-token", expires });
+    expect(await adapter().useVerificationToken({ identifier: "katherine@example.com", token: "hashed-token" })).toBeNull();
   });
 });

@@ -27,6 +27,7 @@ const TABLES = [
   "user_settings",
   "user_skills",
   "users",
+  "verification_tokens",
   "xp_ledger",
 ];
 
