@@ -24,15 +24,15 @@ STACK="play-$WEB_PORT"
 
 log() { printf '[play] %s\n' "$*"; }
 
-# secrets writes three random secrets once, so restarts keep sessions and tokens valid.
+# secrets writes each random secret once, so restarts keep sessions and tokens valid; a secret added
+# later (AUTH_SECRET, task 30a) is appended to an older secrets.env.
 secrets() {
-  if [ ! -f "$PLAY/secrets.env" ]; then
-    {
-      echo "ATTACH_SECRET=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-      echo "INTERNAL_TOKEN=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-      echo "DEV_AUTH_SECRET=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')"
-    } > "$PLAY/secrets.env"
-  fi
+  touch "$PLAY/secrets.env"
+  for name in ATTACH_SECRET INTERNAL_TOKEN DEV_AUTH_SECRET AUTH_SECRET; do
+    if ! grep -q "^$name=" "$PLAY/secrets.env"; then
+      echo "$name=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')" >> "$PLAY/secrets.env"
+    fi
+  done
   # shellcheck disable=SC1091
   source "$PLAY/secrets.env"
 }
@@ -132,7 +132,10 @@ services() {
   start worker NODE_ENV=development PORT="$WORKER_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" node apps/worker/dist/main.js
   wait_for worker "$WORKER_PORT"
   # next dev, not next start: the dev session exists only outside production builds.
+  # Sign-in (task 30a): email links go to Mailpit; GitHub only when AUTH_GITHUB_ID/SECRET are set.
   start web API_URL="http://127.0.0.1:$API_PORT" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" ENGINE_ATTACH_URL="ws://127.0.0.1:$ENGINE_PORT/attach" \
+    AUTH_SECRET="$AUTH_SECRET" AUTH_URL="http://localhost:$WEB_PORT" DATABASE_URL="$DATABASE_URL" \
+    EMAIL_SERVER="smtp://127.0.0.1:11025" EMAIL_FROM="sign-in@greenbuild.dev" \
     bash -c "cd apps/web && exec ./node_modules/.bin/next dev --port $WEB_PORT"
   wait_for web "$WEB_PORT"
 }
