@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
 id: zombie-reports
-version: 1
+version: 2
 title: "The undead and the busy"
 statement: "The nightly report job fails with \"can't fork\", the process list is full of <defunct> entries, and one CPU never rests. Make nightly-report run again."
 difficulty: 4            # 1–10
@@ -14,7 +14,7 @@ network: none            # none | allowlist
 # The services run as their own users; root must be able to signal them, as on a server.
 capabilities: [KILL, SETUID, SETGID]
 randomize:               # applied by setup.sh from the attempt seed
-  dispatched_jobs: { range: [100, 110] }
+  dispatched_jobs: { range: [60, 70] }
 check:
   command: /opt/greenbuild/check.sh
   timeout_sec: 20
