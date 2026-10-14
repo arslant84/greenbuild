@@ -39,10 +39,11 @@ test("a player's public profile opens without signing in after a solve", async (
   await expect(anonymous).toHaveTitle(`@${handle} · greenbuild`);
   await expect(anonymous.getByRole("heading", { level: 1 })).toHaveText(`@${handle}`);
   await expect(anonymous.getByText(/^Level \d+$/)).toBeVisible();
-  // nginx-502 rates nginx and linux; a skill row shows its name, its rating and its interval.
+  // nginx-502 rates nginx and linux; a skill row shows its name, its rating and its interval, whose low
+  // end can be under 1,000 after a first game.
   await expect(anonymous.getByText("nginx", { exact: true }).first()).toBeVisible();
   await expect(anonymous.getByText(/^\d,\d{3}$/).first()).toBeVisible();
-  await expect(anonymous.getByText(/^95% CI: \[\d,\d{3} – \d,\d{3}\] · 1 attempt$/).first()).toBeVisible();
+  await expect(anonymous.getByText(/^95% CI: \[[\d,]+ – [\d,]+\] · 1 attempt$/).first()).toBeVisible();
 });
 
 test("a hidden profile and an unknown handle get the same not-found page", async ({ page, browser }) => {
