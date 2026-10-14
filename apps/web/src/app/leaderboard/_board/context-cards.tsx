@@ -42,14 +42,17 @@ export function ContextCards() {
   );
 }
 
+// The status footer stays at the window's bottom (owner, 2026-10-14).
 export function StandingsFooter() {
   return (
-    <footer className="flex h-7 items-center justify-between bg-canvas px-6">
-      <span className="flex items-center gap-2">
-        <span className="size-2 rounded-full bg-ok" />
-        <span className="type-label tracking-[0.5px] text-ok">ALL BOARDS IN UTC</span>
-      </span>
-      <span className="type-label text-ink-subtle">© 2026 GREENBUILD</span>
+    <footer className="sticky bottom-0 z-10 bg-canvas">
+      <div className="frame flex h-7 items-center justify-between px-6">
+        <span className="flex items-center gap-2">
+          <span className="size-2 rounded-full bg-ok" />
+          <span className="type-label tracking-[0.5px] text-ok">ALL BOARDS IN UTC</span>
+        </span>
+        <span className="type-label text-ink-subtle">© 2026 GREENBUILD</span>
+      </div>
     </footer>
   );
 }

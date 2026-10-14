@@ -2,7 +2,8 @@ import { LABEL_BADGE, LABEL_CODE } from "./type";
 
 // Frame 3:4532 › profile footnote and page footer. The evaluation time, build and system status have no
 // data yet ("—"); reporting a profile has no feature yet (text). The frame's SOC2 audit, protocol RFC and
-// proof engine are not true for greenbuild and are left out of the labels.
+// proof engine are not true for greenbuild and are left out of the labels. The page footer stays at the
+// window's bottom (owner, 2026-10-14).
 export function ProfileFooter() {
   return (
     <>
@@ -19,7 +20,7 @@ export function ProfileFooter() {
           <span className="text-ink-muted">greenbuild beta</span>
         </span>
       </footer>
-      <footer className="mt-8 flex items-center justify-between gap-3 bg-canvas px-6 py-8">
+      <footer className="sticky bottom-0 z-10 mt-8 flex items-center justify-between gap-3 bg-canvas px-6 py-8">
         <span className="flex items-center gap-3">
           <span className={`${LABEL_CODE} text-ink-muted`}>&gt;_ GREENBUILD</span>
           <span className="type-label text-ink-subtle">SHA: —</span>

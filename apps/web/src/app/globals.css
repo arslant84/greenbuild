@@ -33,6 +33,12 @@ body {
 }
 
 /* Text styles that repeat across the Figma frames. */
+/* The screens' content column: the whole window, with no side margins at any width (owner, 2026-10-14).
+   Below 1280 px the body keeps its minimum width and scrolls sideways until responsive frames exist (task 56). */
+@utility frame {
+  width: 100%;
+}
+
 @utility type-label {
   font-family: var(--font-mono);
   font-size: 10px;

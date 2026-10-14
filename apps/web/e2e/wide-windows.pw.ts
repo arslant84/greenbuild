@@ -1,8 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
-// architecture.md, task 22 (until decision D5): screens are at least 1280 px wide, centered on wider
-// windows, and nothing on the sandbox screen is cut off.
+// architecture.md, task 22 (until decision D5): screens are at least 1280 px wide, span wider windows
+// (owner, 2026-10-14), keep their footers at the window's bottom, and nothing on the sandbox screen is cut off.
 const SANDBOX_START_TIMEOUT_MS = 90_000;
+// How close to the window's edge content counts as spanning it: the screens' own side padding.
+const EDGE_PX = 32;
 const VIEWPORTS = [
   { width: 1280, height: 1024 },
   { width: 1440, height: 900 },
@@ -35,13 +37,22 @@ for (const viewport of VIEWPORTS) {
   });
 }
 
-test("the Daily frame is centered on a 1920 px window", async ({ page }) => {
+test("the Daily screen spans a 1920 px window", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 });
   await page.goto("/play");
 
   const brand = await page.getByText(">_ greenbuild").boundingBox();
-  expect(brand?.x).toBeGreaterThanOrEqual((1920 - 1280) / 2);
-  expect(brand?.x).toBeLessThan((1920 - 1280) / 2 + 32);
+  const rightColumn = await page.locator("aside").last().boundingBox();
+  expect(brand?.x).toBeLessThan(EDGE_PX);
+  expect((rightColumn?.x ?? 0) + (rightColumn?.width ?? 0)).toBeGreaterThan(1920 - EDGE_PX);
+});
+
+test("the landing's footer stays at the bottom of the window", async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 800 });
+  await page.goto("/");
+
+  const footer = await page.locator("footer").boundingBox();
+  expect((footer?.y ?? 0) + (footer?.height ?? 0)).toBeCloseTo(800, 0);
 });
 
 test("the debrief header lines up with its content on a 1920 px window", async ({ page }) => {
