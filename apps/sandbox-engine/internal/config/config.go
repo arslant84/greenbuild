@@ -69,11 +69,13 @@ type Config struct {
 	SessionBlobConnectionString string
 }
 
-// AgentConfig is how the engine reaches a sandbox agent. Without TLS files the engine does not
+// AgentConfig is how the engine reaches the sandbox agents. Without TLS files the engine does not
 // talk to agents at all: it never connects without mTLS.
 type AgentConfig struct {
-	Addr string
-	// ServerName must match a name in the agent's certificate.
+	Nodes []AgentNode
+	// Slots is how many sandboxes each node may hold.
+	Slots int
+	// ServerName must match a name in every agent's certificate.
 	ServerName string
 	TLS        TLSFiles
 }
@@ -103,11 +105,7 @@ func Load(getenv func(string) string) (Config, error) {
 	if cfg.IdleTimeout, err = loadDuration(getenv, envIdleTimeout, defaultIdleTimeout); err != nil {
 		return Config{}, err
 	}
-	if cfg.Agent.Addr, err = loadAddr(getenv, envAgentAddr, defaultAgentAddr); err != nil {
-		return Config{}, err
-	}
-	cfg.Agent.ServerName = valueOr(getenv(envAgentServerName), defaultAgentServerName)
-	if cfg.Agent.TLS, err = loadTLS(getenv); err != nil {
+	if cfg.Agent, err = loadAgent(getenv); err != nil {
 		return Config{}, err
 	}
 	if cfg.AttachSecret, err = loadSecret(getenv, envAttachSecret); err != nil {

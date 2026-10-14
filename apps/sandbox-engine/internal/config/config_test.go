@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -70,8 +71,9 @@ func TestLoadAgentDefaults(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
-	if cfg.Agent.Addr != defaultAgentAddr || cfg.Agent.ServerName != defaultAgentServerName {
-		t.Errorf("Agent = %+v, want %s and %s", cfg.Agent, defaultAgentAddr, defaultAgentServerName)
+	want := []AgentNode{{Name: "node-1", Addr: defaultAgentAddr}}
+	if !slices.Equal(cfg.Agent.Nodes, want) || cfg.Agent.Slots != 64 || cfg.Agent.ServerName != defaultAgentServerName {
+		t.Errorf("Agent = %+v, want nodes %v, 64 slots and %s", cfg.Agent, want, defaultAgentServerName)
 	}
 	if cfg.Agent.TLS.Enabled() {
 		t.Error("agent TLS enabled without certificate paths")
@@ -87,7 +89,8 @@ func TestLoadAgentOverridesAndTLS(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Load() error = %v", err)
 	}
-	if cfg.Agent.Addr != "10.1.0.5:9443" || cfg.Agent.ServerName != "sandbox-agent" || !cfg.Agent.TLS.Enabled() {
+	single := []AgentNode{{Name: "node-1", Addr: "10.1.0.5:9443"}}
+	if !slices.Equal(cfg.Agent.Nodes, single) || cfg.Agent.ServerName != "sandbox-agent" || !cfg.Agent.TLS.Enabled() {
 		t.Errorf("Agent = %+v, want the overrides with TLS enabled", cfg.Agent)
 	}
 

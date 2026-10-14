@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/agentclient"
+	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/agentpool"
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/config"
 	"github.com/arslant84/greenbuild/packages/devpki"
 )
@@ -43,22 +43,22 @@ func routePattern(t *testing.T, server *http.Server, path string) string {
 	return pattern
 }
 
-// configured returns a config with agent TLS and a live (not yet connected) agent client.
-func configured(t *testing.T) (config.Config, *agentclient.Client) {
+// configured returns a config with agent TLS and a live (not yet connected) agent pool.
+func configured(t *testing.T) (config.Config, *agentpool.Pool) {
 	t.Helper()
-	cfg := config.Config{Agent: config.AgentConfig{Addr: "127.0.0.1:9443", ServerName: "localhost", TLS: agentTLS(t)}}
-	client, release, err := dialAgent(cfg)
+	cfg := config.Config{Agent: config.AgentConfig{Nodes: []config.AgentNode{{Name: "node-1", Addr: "127.0.0.1:9443"}}, Slots: 1, ServerName: "localhost", TLS: agentTLS(t)}}
+	agents, release, err := dialAgents(cfg)
 	if err != nil {
 		t.Fatalf("dialAgent() error = %v", err)
 	}
 	t.Cleanup(release)
-	return cfg, client
+	return cfg, agents
 }
 
 func TestOptionalRoutesStayOffWithoutTheirSecrets(t *testing.T) {
-	cfg, client := configured(t)
-	attachHandler, attachErr := buildAttach(cfg, client, nil)
-	internalHandler, internalErr := buildInternal(cfg, client, nil)
+	cfg, agents := configured(t)
+	attachHandler, attachErr := buildAttach(cfg, agents, nil)
+	internalHandler, internalErr := buildInternal(cfg, agents, nil)
 	if attachHandler != nil || internalHandler != nil || attachErr != nil || internalErr != nil {
 		t.Fatalf("got %v %v %v %v; want both off without errors", attachHandler, internalHandler, attachErr, internalErr)
 	}
@@ -75,21 +75,21 @@ func TestOptionalRoutesRefuseIncompleteConfig(t *testing.T) {
 	if _, err := buildInternal(config.Config{InternalToken: attachSecret}, nil, nil); !errors.Is(err, errNeedsAgent) {
 		t.Errorf("internal without agent: %v, want errNeedsAgent", err)
 	}
-	cfg, client := configured(t)
+	cfg, agents := configured(t)
 	cfg.InternalToken = attachSecret
-	if _, err := buildInternal(cfg, client, nil); !errors.Is(err, errNeedsChallengesDir) {
+	if _, err := buildInternal(cfg, agents, nil); !errors.Is(err, errNeedsChallengesDir) {
 		t.Errorf("internal without challenges dir: %v, want errNeedsChallengesDir", err)
 	}
 }
 
 func TestOptionalRoutesAreServedWhenConfigured(t *testing.T) {
-	cfg, client := configured(t)
+	cfg, agents := configured(t)
 	cfg.AttachSecret, cfg.InternalToken, cfg.ChallengesDir = attachSecret, attachSecret, t.TempDir()
-	attachHandler, err := buildAttach(cfg, client, nil)
+	attachHandler, err := buildAttach(cfg, agents, nil)
 	if err != nil {
 		t.Fatalf("buildAttach() error = %v", err)
 	}
-	internalHandler, err := buildInternal(cfg, client, nil)
+	internalHandler, err := buildInternal(cfg, agents, nil)
 	if err != nil {
 		t.Fatalf("buildInternal() error = %v", err)
 	}
