@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: nginx-spa-fallback
+version: 1
+title: "Only the home page works"
+statement: "Last night the web app moved to a new web server. Customers can click around from the home page, but any link they open directly, or any page they refresh, answers 404. Make every page of the app load again."
+difficulty: 2            # 1–10
+skills: { nginx: 0.7, linux: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 256Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache at start and its workers switch users.
+capabilities: [CHOWN, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [shop, crm, admin] }
+  api_port: { range: [9000, 9999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
