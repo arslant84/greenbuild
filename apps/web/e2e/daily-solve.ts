@@ -7,6 +7,10 @@ export const FIX =
 const SANDBOX_START_TIMEOUT_MS = 90_000;
 export const CHECK_TIMEOUT_MS = 60_000;
 const KEY_DELAY_MS = 5;
+// The probe's output differs from its input, so seeing it proves the shell ran the command.
+const PROBE = "echo probe-$((20+1))\n";
+const PROBE_TIMEOUT_MS = 2_000;
+const TERMINAL_READY_TIMEOUT_MS = 30_000;
 
 // startChallenge opens today's challenge from the landing and waits for its sandbox.
 export async function startChallenge(page: Page): Promise<void> {
@@ -23,11 +27,15 @@ export async function check(page: Page): Promise<void> {
   await page.getByRole("button", { name: /Check Solution/ }).click();
 }
 
-// typeFix types the fix into the sandbox's terminal and waits until it has run. It waits for the shell's
-// prompt first and types key by key with a short pause, as keys sent in a burst were seen lost.
+// typeFix types the fix into the sandbox's terminal and waits until it has run. Keys typed right after the
+// terminal attaches can be lost even once the prompt shows, so a probe command goes first, typed again until
+// its output appears; keys go one by one with a short pause.
 export async function typeFix(page: Page): Promise<void> {
-  await expect(page.locator(".xterm-rows")).toContainText("/ #");
   await page.locator(".xterm").click();
+  await expect(async () => {
+    await page.keyboard.type(PROBE, { delay: KEY_DELAY_MS });
+    await expect(page.locator(".xterm-rows")).toContainText("probe-21", { timeout: PROBE_TIMEOUT_MS });
+  }).toPass({ timeout: TERMINAL_READY_TIMEOUT_MS });
   await page.keyboard.type(FIX, { delay: KEY_DELAY_MS });
   await expect(page.locator(".xterm-rows")).toContainText("fixed-42");
 }
