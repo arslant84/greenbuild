@@ -13,7 +13,7 @@ const PROXY_TIMEOUT_MS = 35_000;
 const STATUS_BY_CODE = { validation_failed: 400, unauthorized: 401, forbidden: 403, unavailable: 503 } as const;
 
 export interface ProxyOptions {
-  method: "GET" | "POST";
+  method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   path: string;
   body?: unknown;
 }
@@ -47,6 +47,11 @@ export async function proxyToApi(request: NextRequest, options: ProxyOptions): P
 // invalidPath answers a malformed id or slug before anything reaches the API.
 export function invalidPath(): Response {
   return failure(new ValidationError("Invalid path"));
+}
+
+// invalidBody answers a request body the API would refuse, before it reaches the API.
+export function invalidBody(): Response {
+  return failure(new ValidationError("Invalid request body"));
 }
 
 function failure(error: AppError): Response {
