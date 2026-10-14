@@ -25,3 +25,12 @@ test("the catalog's Settings link opens the settings", async ({ page }) => {
   await expect(page).toHaveURL(/\/settings$/);
   await expect(page.getByText("Settings / Config")).toBeVisible();
 });
+
+test("the Account section shows the email and notifications stay off", async ({ page }) => {
+  const email = await signInForTest(page);
+  await page.goto("/settings");
+
+  await expect(page.getByLabel("Primary email address")).toHaveValue(email);
+  await expect(page.getByLabel("Weekly engineering digest")).toBeDisabled();
+  await expect(page.getByLabel("Weekly engineering digest")).not.toBeChecked();
+});
