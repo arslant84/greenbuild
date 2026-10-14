@@ -1,8 +1,8 @@
 import { RefreshIcon, WarningIcon } from "../../ui/icons";
 
 // Figma "Global Error, Edge States & Resilience Console" › E2: 500 Server Error.
-// retryHref reloads the screen that failed.
-export function ServiceError({ retryHref = "/play" }: { retryHref?: string }) {
+// retryHref reloads the screen that failed; message says what could not be loaded.
+export function ServiceError({ retryHref = "/play", message = "The challenge could not be loaded." }: { retryHref?: string; message?: string }) {
   return (
     <section className="mx-auto flex w-[392px] flex-col rounded-xl border border-control bg-surface p-5 shadow-[0_8px_10px_-6px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1)]">
       <div className="flex items-center justify-between">
@@ -16,7 +16,7 @@ export function ServiceError({ retryHref = "/play" }: { retryHref?: string }) {
           <WarningIcon />
         </span>
         <h2 className="pb-1 text-lg leading-6 font-semibold tracking-[-0.18px] text-ink">Something broke on our end</h2>
-        <p className="type-body px-[5px] text-ink-muted">The challenge could not be loaded. Try again in a moment.</p>
+        <p className="type-body px-[5px] text-ink-muted">{message} Try again in a moment.</p>
       </div>
       <div className="flex flex-col gap-1 pt-3">
         <a href={retryHref} className="type-body flex h-[34px] items-center justify-center gap-1.5 rounded-lg bg-accent px-3 py-2 font-semibold text-[#00363e]">
