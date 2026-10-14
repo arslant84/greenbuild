@@ -38,8 +38,8 @@ export default async function ProfilePage({ params }: Params) {
   const me = await apiGet("/v1/me", meResponseSchema);
   return (
     <div className="min-h-screen bg-[#131314]">
-      {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
-      <div className="mx-auto flex min-h-screen w-7xl flex-col">
+      {/* The content and its bars span the whole window (owner, 2026-10-14). */}
+      <div className="frame flex min-h-screen flex-col">
         <ProfileTopNav ownHref={me?.handle ? `/u/${me.handle}` : null} />
         <CredentialHeader profile={profile} />
         <TrustStrip />
