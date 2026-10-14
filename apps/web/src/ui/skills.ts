@@ -1,4 +1,4 @@
-// How each skill looks in the catalog, from the HotFix Figma frame (7:10962): the filter dot, and the
+// How each skill looks, from the catalog's HotFix Figma frame (7:10962): the filter dot, and the
 // tag's text and background. Skills the frame does not show get its neutral grey tag.
 interface SkillStyle {
   label: string;

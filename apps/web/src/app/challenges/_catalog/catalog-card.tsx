@@ -2,7 +2,7 @@ import type { CatalogEntry } from "@greenbuild/shared";
 import { FailedIcon, InProgressIcon, SolvedIcon } from "../../../ui/icons-catalog";
 import { CardButton } from "./card-button";
 import { cardAction, slaLabel, solveTime } from "./card-labels";
-import { skillStyle } from "./skills";
+import { skillStyle } from "../../../ui/skills";
 
 const DIFFICULTY_STEPS = 10;
 
