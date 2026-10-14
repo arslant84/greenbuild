@@ -6,6 +6,8 @@ import { signInForTest } from "./test-player";
 
 // architecture.md, task 46b: the public profile (Figma 3:4532, state V5) renders from GET /v1/users/{handle}
 // for anyone, without a session.
+// The worker rates the solve within seconds of attempt.finished.
+const RATING_TIMEOUT_MS = 30_000;
 
 function newHandle(): string {
   return `p-${randomUUID().slice(0, 8)}`;
@@ -24,11 +26,23 @@ test("a player's public profile opens without signing in after a solve", async (
   await setHandle(email, handle);
 
   const anonymous = await visitor(browser);
-  await anonymous.goto(`/u/${handle}`);
+  await expect
+    .poll(
+      async () => {
+        await anonymous.goto(`/u/${handle}`);
+        return anonymous.getByText(/^95% CI:/).count();
+      },
+      { timeout: RATING_TIMEOUT_MS },
+    )
+    .toBeGreaterThan(0);
 
   await expect(anonymous).toHaveTitle(`@${handle} · greenbuild`);
   await expect(anonymous.getByRole("heading", { level: 1 })).toHaveText(`@${handle}`);
   await expect(anonymous.getByText(/^Level \d+$/)).toBeVisible();
+  // nginx-502 rates nginx and linux; a skill row shows its name, its rating and its interval.
+  await expect(anonymous.getByText("nginx", { exact: true }).first()).toBeVisible();
+  await expect(anonymous.getByText(/^\d,\d{3}$/).first()).toBeVisible();
+  await expect(anonymous.getByText(/^95% CI: \[\d,\d{3} – \d,\d{3}\] · 1 attempt$/).first()).toBeVisible();
 });
 
 test("a hidden profile and an unknown handle get the same not-found page", async ({ page, browser }) => {

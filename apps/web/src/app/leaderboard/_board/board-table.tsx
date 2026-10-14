@@ -1,11 +1,12 @@
 import type { LeaderboardResponse } from "@greenbuild/shared";
+import Link from "next/link";
 import { avatarColor, type BoardTab, formatScore, initials, rankLabel, rankStyle, SCORE_HEADER } from "./board-view";
 
 type Entry = LeaderboardResponse["entries"][number];
 
 // Figma (Global Standings) › Telemetry Table. Rank, handle and score are real; org, region, solves,
 // streak and the week's rank change have no data yet and show "—". A player whose game profile is not
-// public is listed without a name.
+// public is listed without a name; a public one's handle links to their profile (task 46b).
 export function BoardTable({ tab, entries, emptyText }: { tab: BoardTab; entries: Entry[]; emptyText: string }) {
   return (
     <div className="flex flex-col bg-surface shadow-[0_4px_12px_#00000040]">
@@ -45,7 +46,13 @@ function BoardRow({ tab, entry }: { tab: BoardTab; entry: Entry }) {
           {initials(entry.handle)}
         </span>
         <span className="flex flex-col">
-          <span className="font-mono text-[13px] leading-4.5 font-bold text-ink">{entry.handle ? `@${entry.handle}` : "Hidden player"}</span>
+          {entry.handle ? (
+            <Link href={`/u/${entry.handle}`} className="font-mono text-[13px] leading-4.5 font-bold text-ink hover:text-accent-soft">
+              @{entry.handle}
+            </Link>
+          ) : (
+            <span className="font-mono text-[13px] leading-4.5 font-bold text-ink">Hidden player</span>
+          )}
           <span className="font-mono text-[10px] leading-4.5 text-ink-subtle">{entry.display_name ?? "—"}</span>
         </span>
       </span>
