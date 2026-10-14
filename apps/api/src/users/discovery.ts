@@ -12,6 +12,19 @@ type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 export class Discovery {
   constructor(private readonly database: DatabaseClient) {}
 
+  // get answers the player's current choice; a player without settings is hidden and shares nothing.
+  async get(userId: string): Promise<DiscoveryResponse> {
+    const [found] = await this.database.db
+      .select({ ageConfirmed18At: users.ageConfirmed18At, mode: userSettings.discoveryMode, revealedFields: userSettings.revealedFields })
+      .from(users)
+      .leftJoin(userSettings, eq(userSettings.userId, users.id))
+      .where(eq(users.id, userId));
+    if (!found) {
+      throw new NotFoundError("User not found");
+    }
+    return { mode: found.mode ?? "hidden", revealed_fields: found.revealedFields ?? [], age_confirmed_18: found.ageConfirmed18At !== null };
+  }
+
   async set(userId: string, request: DiscoveryRequest): Promise<DiscoveryResponse> {
     return this.database.db.transaction(async (tx) => {
       const confirmed = await confirmAge(tx, userId, request);

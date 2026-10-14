@@ -84,6 +84,7 @@ function toResponse(user: UserRow, { xp, streak }: Progress): MeResponse {
     id: user.id,
     handle: user.handle,
     display_name: user.displayName,
+    email: user.email,
     country: user.country,
     timezone: user.timezone,
     timezone_locked_until: timezoneLockedUntil(user)?.toISOString() ?? null,
