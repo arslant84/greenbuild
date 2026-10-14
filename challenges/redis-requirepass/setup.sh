@@ -36,7 +36,14 @@ def redis(*command):
     commands = ([("AUTH", settings["REDIS_PASSWORD"])] if settings.get("REDIS_PASSWORD") else []) + [command]
     with socket.create_connection((settings["REDIS_HOST"], int(settings["REDIS_PORT"])), timeout=3) as conn:
         conn.sendall(b"".join(encode(parts) for parts in commands))
-        replies = conn.recv(4096).decode().split("\r\n")
+        # Each reply here is one line; they may arrive in separate packets.
+        received = b""
+        while received.count(b"\r\n") < len(commands):
+            chunk = conn.recv(4096)
+            if not chunk:
+                break
+            received += chunk
+        replies = received.decode().split("\r\n")
     errors = [reply for reply in replies if reply.startswith("-")]
     if errors:
         raise RuntimeError(errors[0][1:])
