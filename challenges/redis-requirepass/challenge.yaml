@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: redis-requirepass
+version: 1
+title: "Locked out of its own cache"
+statement: "Last night security protected the app's cache with a password. Since then every page that counts visits fails. Get the pages working again without unlocking the cache."
+difficulty: 3            # 1–10
+skills: { redis: 0.6, linux: 0.4 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# Redis and the app run as their own users; root restarts the app and fixes its settings' owner.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [catalog, booking, survey] }
+  port: { range: [8000, 8999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
