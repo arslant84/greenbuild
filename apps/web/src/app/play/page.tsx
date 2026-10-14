@@ -15,11 +15,11 @@ export default async function DailyPage() {
   const [daily, player] = await Promise.all([apiGet("/v1/daily", dailyResponseSchema), apiGet("/v1/me", meResponseSchema)]);
   return (
     <div className="min-h-screen bg-canvas">
-      {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
-      <div className="mx-auto flex w-[1280px]">
+      {/* The content spans the window up to 1920 px (owner, 2026-10-14); the asides keep their width. */}
+      <div className="frame flex">
         <Sidebar streak={player ? player.streak.current : 0} />
-        <div className="flex w-[1040px] justify-between pb-8">
-          <main className="flex w-[760px] flex-col gap-5 px-3 pt-5">
+        <div className="flex min-w-0 flex-1 justify-between pb-8">
+          <main className="flex min-w-0 flex-1 flex-col gap-5 px-3 pt-5">
             <StatusBar player={player} />
             {daily ? <ChallengeCard card={daily.challenge} /> : <ServiceError />}
             <RecentAttempts />

@@ -46,7 +46,7 @@ export function CardGrid(props: CardGridProps) {
         <span className="type-label text-ink-muted">{entries.length > 0 ? `Displaying 1–${entries.length} of ${total}` : `Displaying 0 of ${total}`}</span>
       </div>
       {entries.length > 0 ? (
-        <div className="grid grid-cols-3 gap-3 py-2">
+        <div className="grid grid-cols-[repeat(auto-fill,minmax(296px,1fr))] gap-3 py-2">
           {entries.map((entry) => (
             <CatalogCard key={entry.slug} entry={entry} />
           ))}

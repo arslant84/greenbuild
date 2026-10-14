@@ -10,19 +10,17 @@ import { SampleScenario } from "./_landing/sample-scenario";
 export default function LandingPage() {
   return (
     <div className="min-h-screen bg-[#131314]">
-      {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
-      <div className="mx-auto w-[1280px]">
-        <LandingHeader />
-        <main className="px-8">
-          <Hero />
-          <MetricsStrip />
-          <HowItWorks />
-          <SampleScenario />
-          <LeaderboardPreview />
-          <ForCompanies />
-        </main>
-        <LandingFooter />
-      </div>
+      <LandingHeader />
+      {/* The content spans the window up to 1920 px, centered; the header and footer bars span it all (owner, 2026-10-14). */}
+      <main className="frame px-8">
+        <Hero />
+        <MetricsStrip />
+        <HowItWorks />
+        <SampleScenario />
+        <LeaderboardPreview />
+        <ForCompanies />
+      </main>
+      <LandingFooter />
     </div>
   );
 }

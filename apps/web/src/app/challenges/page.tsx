@@ -16,24 +16,22 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   const params = readCatalogParams(await searchParams);
   const list = await apiGet(`/v1/challenges${apiQuery(params)}`, challengeListSchema);
   return (
-    <div className="min-h-screen bg-[#131314]">
-      {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
-      <div className="mx-auto flex min-h-screen w-7xl flex-col">
-        <TopNav current="Challenges" />
-        <main className="flex-1 px-4 pt-5 pb-5">
-          <CatalogHeader catalog={list?.catalog ?? null} />
-          <Toolbar params={params} />
-          <div className="flex gap-5">
-            <FilterPanel params={params} summary={list?.catalog ?? null} total={list?.total ?? null} />
-            <div className="flex min-w-0 flex-1 flex-col gap-3">
-              <ActiveFilters params={params} />
-              {/* A new key per filter set restarts "Load more" from the first page. */}
-              {list ? <CardGrid key={apiQuery(params)} params={params} first={list} /> : <ServiceError retryHref="/challenges" />}
-            </div>
+    <div className="flex min-h-screen flex-col bg-[#131314]">
+      <TopNav current="Challenges" />
+      {/* The content spans the window up to 1920 px, centered; the header and footer bars span it all (owner, 2026-10-14). */}
+      <main className="frame flex-1 px-4 pt-5 pb-5">
+        <CatalogHeader catalog={list?.catalog ?? null} />
+        <Toolbar params={params} />
+        <div className="flex gap-5">
+          <FilterPanel params={params} summary={list?.catalog ?? null} total={list?.total ?? null} />
+          <div className="flex min-w-0 flex-1 flex-col gap-3">
+            <ActiveFilters params={params} />
+            {/* A new key per filter set restarts "Load more" from the first page. */}
+            {list ? <CardGrid key={apiQuery(params)} params={params} first={list} /> : <ServiceError retryHref="/challenges" />}
           </div>
-        </main>
-        <RuntimeFooter />
-      </div>
+        </div>
+      </main>
+      <RuntimeFooter />
     </div>
   );
 }
@@ -41,13 +39,15 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
 // Figma › Footer. Runtime telemetry has no data yet.
 function RuntimeFooter() {
   return (
-    <footer className="type-label flex items-center justify-between bg-canvas px-4 py-3 text-ink-subtle">
-      <span>GREENBUILD RUNTIME // —</span>
-      <span className="flex gap-3">
-        <span>LATENCY: —</span>
-        <span>STATUS: —</span>
-        <span>SYSVER: —</span>
-      </span>
+    <footer className="bg-canvas">
+      <div className="type-label frame flex items-center justify-between px-4 py-3 text-ink-subtle">
+        <span>GREENBUILD RUNTIME // —</span>
+        <span className="flex gap-3">
+          <span>LATENCY: —</span>
+          <span>STATUS: —</span>
+          <span>SYSVER: —</span>
+        </span>
+      </div>
     </footer>
   );
 }

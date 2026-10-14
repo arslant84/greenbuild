@@ -2,7 +2,7 @@ import { ViewAllArrowIcon } from "../../ui/icons-landing";
 
 const COLUMNS = [
   { label: "Rank", width: "w-[77px]", align: "" },
-  { label: "Engineer", width: "w-[489px]", align: "" },
+  { label: "Engineer", width: "min-w-[489px] flex-1", align: "" },
   { label: "Today's solve time", width: "w-[196px]", align: "" },
   { label: "Active streak", width: "w-[151px]", align: "" },
   { label: "Glicko-2 rating", width: "flex-1", align: "text-right" },

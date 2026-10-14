@@ -12,41 +12,44 @@ const SECTIONS = [
 
 type Section = (typeof SECTIONS)[number]["label"];
 
-// Figma (Browse Challenge Catalog) › Header. Currency, level, streak and the handle have no data yet.
+// Figma (Browse Challenge Catalog) › Header. Currency, level, streak and the handle have no data yet. The bar
+// spans the window; its content spans it up to 1920 px (owner, 2026-10-14).
 export function TopNav({ current }: { current: Section }) {
   return (
-    <header className="flex h-14 items-center justify-between bg-[#131314e5] px-4 backdrop-blur">
-      <div className="flex items-center gap-8">
-        <Link href="/play" className="flex items-center gap-1 text-accent-soft">
-          <BrandMarkIcon />
-          <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[0.65px] text-ink uppercase">greenbuild</span>
-        </Link>
-        <nav className="flex items-center gap-1">
-          {SECTIONS.map((section) => (
-            <NavItem key={section.label} label={section.label} href={section.href} active={section.label === current} />
-          ))}
-        </nav>
-      </div>
-      <div className="flex items-center gap-3">
-        <span className="flex items-center gap-1 rounded bg-surface px-3 py-1">
-          <span className="font-mono text-[11px] leading-[14px] font-semibold tracking-[0.44px] text-warn">— GLK</span>
-          <span className="type-label text-ink-subtle">/</span>
-          <span className="font-mono text-[11px] leading-[14px] font-medium tracking-[0.44px] text-accent-soft">LVL —</span>
-          <span className="type-label text-ink-subtle">/</span>
-          <span className="flex items-center gap-0.5 text-ok">
-            <StreakIcon />
-            <span className="font-mono text-[11px] leading-[14px] font-medium tracking-[0.44px]">—</span>
+    <header className="bg-[#131314e5] backdrop-blur">
+      <div className="frame flex h-14 items-center justify-between px-4">
+        <div className="flex items-center gap-8">
+          <Link href="/play" className="flex items-center gap-1 text-accent-soft">
+            <BrandMarkIcon />
+            <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[0.65px] text-ink uppercase">greenbuild</span>
+          </Link>
+          <nav className="flex items-center gap-1">
+            {SECTIONS.map((section) => (
+              <NavItem key={section.label} label={section.label} href={section.href} active={section.label === current} />
+            ))}
+          </nav>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1 rounded bg-surface px-3 py-1">
+            <span className="font-mono text-[11px] leading-[14px] font-semibold tracking-[0.44px] text-warn">— GLK</span>
+            <span className="type-label text-ink-subtle">/</span>
+            <span className="font-mono text-[11px] leading-[14px] font-medium tracking-[0.44px] text-accent-soft">LVL —</span>
+            <span className="type-label text-ink-subtle">/</span>
+            <span className="flex items-center gap-0.5 text-ok">
+              <StreakIcon />
+              <span className="font-mono text-[11px] leading-[14px] font-medium tracking-[0.44px]">—</span>
+            </span>
           </span>
-        </span>
-        <span className="flex items-center gap-2 pl-1">
-          <span className="font-mono text-[13px] leading-[18px] text-ink-muted">@—</span>
-          <span className="flex size-[27px] items-center justify-center rounded text-ink-muted">
-            <SettingsIcon />
+          <span className="flex items-center gap-2 pl-1">
+            <span className="font-mono text-[13px] leading-[18px] text-ink-muted">@—</span>
+            <span className="flex size-[27px] items-center justify-center rounded text-ink-muted">
+              <SettingsIcon />
+            </span>
+            <span className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
+              <AvatarIcon />
+            </span>
           </span>
-          <span className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
-            <AvatarIcon />
-          </span>
-        </span>
+        </div>
       </div>
     </header>
   );

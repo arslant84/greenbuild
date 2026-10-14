@@ -24,25 +24,23 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   const handle = me?.handle ?? null;
   const streak = me ? me.streak.current : null;
   return (
-    <div className="min-h-screen bg-[#131314]">
-      {/* The 1280 px frame, centered on wider windows (owner, 2026-10-05). */}
-      <div className="mx-auto flex min-h-screen w-7xl flex-col">
-        <StandingsHeader handle={handle} streak={streak} />
-        <main className="flex flex-1 flex-col gap-5 px-8 py-5">
-          <BoardHeading tab={params.tab} now={now} />
-          <BoardTabs current={params.tab} />
-          {board ? (
-            <>
-              <BoardTable tab={params.tab} entries={board.entries} emptyText={path ? "No players on this board yet." : "Set your country to see its board."} />
-              <YourRow tab={params.tab} handle={handle} me={board.me} listed={board.me !== null && board.me.rank <= board.entries.length} streak={streak} />
-            </>
-          ) : (
-            <ServiceError retryHref="/leaderboard" />
-          )}
-          <ContextCards />
-        </main>
-        <StandingsFooter />
-      </div>
+    <div className="flex min-h-screen flex-col bg-[#131314]">
+      <StandingsHeader handle={handle} streak={streak} />
+      {/* The content spans the window up to 1920 px, centered; the header and footer bars span it all (owner, 2026-10-14). */}
+      <main className="frame flex flex-1 flex-col gap-5 px-8 py-5">
+        <BoardHeading tab={params.tab} now={now} />
+        <BoardTabs current={params.tab} />
+        {board ? (
+          <>
+            <BoardTable tab={params.tab} entries={board.entries} emptyText={path ? "No players on this board yet." : "Set your country to see its board."} />
+            <YourRow tab={params.tab} handle={handle} me={board.me} listed={board.me !== null && board.me.rank <= board.entries.length} streak={streak} />
+          </>
+        ) : (
+          <ServiceError retryHref="/leaderboard" />
+        )}
+        <ContextCards />
+      </main>
+      <StandingsFooter />
     </div>
   );
 }

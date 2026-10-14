@@ -6,7 +6,7 @@ import { EnterpriseIcon, ExternalArrowIcon, TickIcon } from "../../ui/icons-land
 export function ForCompanies() {
   return (
     <section className="pt-8 pb-16">
-      <div className="grid grid-cols-[760px_1fr] gap-6 rounded-2xl bg-surface p-8">
+      <div className="grid grid-cols-[minmax(760px,2fr)_1fr] gap-6 rounded-2xl bg-surface p-8">
         <div className="flex flex-col gap-1.75">
           <span className="flex w-fit items-center gap-1.5 rounded bg-surface-raised px-2.5 py-1 font-mono text-[11px] leading-3.5 font-medium tracking-[0.44px] text-accent-soft">
             <EnterpriseIcon />
