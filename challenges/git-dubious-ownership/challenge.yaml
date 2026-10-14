@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: git-dubious-ownership
+version: 1
+title: "Merged, but not live"
+statement: "This morning's release was merged and pushed, and the deploy job has run every 5 minutes since, but the site still shows the old release. Make new releases go live through the deploy job again."
+difficulty: 3            # 1–10
+skills: { git: 0.6, linux: 0.4 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# The site's checkout belongs to the deploy user; root runs the deploy job and serves the site as deploy.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  site: { pick: [docs, status, handbook] }
+  release: { range: [2, 8] }
+  port: { range: [8000, 8999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 30
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
