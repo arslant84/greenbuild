@@ -2,7 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { loadApiConfig } from "./config/api";
 import { DEV_SESSION_COOKIE, DEV_SESSION_MAX_AGE_SEC, signDevSession } from "./server/dev-session";
 
-// Until Auth.js login exists, a visit to the play screens, the catalog or the leaderboard without a session starts one as a new
+// Until Auth.js login exists, a visit to the play screens, the catalog, the leaderboard or the settings without a session starts one as a new
 // dev user. Nothing happens in production or without DEV_AUTH_SECRET.
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { devAuthSecret } = loadApiConfig();
@@ -23,4 +23,4 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   return response;
 }
 
-export const config = { matcher: ["/play", "/play/:path*", "/challenges", "/leaderboard"] };
+export const config = { matcher: ["/play", "/play/:path*", "/challenges", "/leaderboard", "/settings"] };

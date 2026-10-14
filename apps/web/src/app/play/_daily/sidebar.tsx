@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 import { BadgeIcon, CatalogIcon, FlameIcon, LeaderboardIcon, PersonIcon, TerminalIcon, TuneIcon } from "../../../ui/icons";
 
@@ -72,9 +73,9 @@ function SidebarFooter({ streak }: { streak: number }) {
             <span className="type-label text-ink-muted">—</span>
           </span>
         </span>
-        <span className="rounded px-1 pt-1 pb-2 text-ink-muted" aria-hidden="true">
+        <Link href="/settings" aria-label="Settings" className="rounded px-1 pt-1 pb-2 text-ink-muted hover:text-ink">
           <TuneIcon />
-        </span>
+        </Link>
       </div>
     </div>
   );

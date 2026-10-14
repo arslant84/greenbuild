@@ -7,7 +7,7 @@ const SECTIONS = [
   { label: "Leaderboard", href: "/leaderboard" },
   { label: "Marketplace", href: null },
   { label: "Inbox", href: null },
-  { label: "Settings", href: null },
+  { label: "Settings", href: "/settings" },
 ] as const;
 
 type Section = (typeof SECTIONS)[number]["label"];
@@ -42,9 +42,9 @@ export function TopNav({ current }: { current: Section }) {
           </span>
           <span className="flex items-center gap-2 pl-1">
             <span className="font-mono text-[13px] leading-[18px] text-ink-muted">@—</span>
-            <span className="flex size-[27px] items-center justify-center rounded text-ink-muted">
+            <Link href="/settings" aria-label="Settings" className="flex size-[27px] items-center justify-center rounded text-ink-muted hover:text-ink">
               <SettingsIcon />
-            </span>
+            </Link>
             <span className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
               <AvatarIcon />
             </span>
