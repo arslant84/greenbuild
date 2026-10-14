@@ -59,8 +59,9 @@ describe("skillRows", () => {
 });
 
 describe("page metadata", () => {
-  it("titles the page with the player's name and handle", () => {
+  it("titles the page with the player's name and handle, or the handle alone", () => {
     expect(profileTitle(arslan)).toBe("Arslan Berdiyev (@arslan) · greenbuild");
+    expect(profileTitle({ ...arslan, display_name: null })).toBe("@arslan · greenbuild");
   });
 
   it("describes the player with real data only", () => {

@@ -12,7 +12,7 @@ export const SKILLS_SHOWN = 5;
 const TRACK_MIN = 1000;
 const TRACK_MAX = 2200;
 // The level ring's circle has r = 20 in the frame's 48 × 48 view box.
-const RING_CIRCUMFERENCE = 2 * Math.PI * 20;
+export const RING_CIRCUMFERENCE = 2 * Math.PI * 20;
 const PERCENT = 100;
 
 export function profileName(profile: PublicProfile): string {
@@ -88,7 +88,8 @@ export function skillRows(profile: PublicProfile, expanded: boolean): SkillRow[]
 }
 
 export function profileTitle(profile: PublicProfile): string {
-  return `${profileName(profile)} (@${profile.handle}) · greenbuild`;
+  const name = profile.display_name ? `${profile.display_name} (@${profile.handle})` : `@${profile.handle}`;
+  return `${name} · greenbuild`;
 }
 
 // profileDescription is the page's search snippet: level, solves and the strongest skill, all real data.
