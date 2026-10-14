@@ -36,10 +36,10 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   );
 }
 
-// Figma › Footer. Runtime telemetry has no data yet.
+// Figma › Footer. Runtime telemetry has no data yet. It stays at the window's bottom (owner, 2026-10-14).
 function RuntimeFooter() {
   return (
-    <footer className="bg-canvas">
+    <footer className="sticky bottom-0 z-10 bg-canvas">
       <div className="type-label frame flex items-center justify-between px-4 py-3 text-ink-subtle">
         <span>GREENBUILD RUNTIME // —</span>
         <span className="flex gap-3">

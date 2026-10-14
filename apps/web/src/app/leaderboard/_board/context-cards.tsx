@@ -42,9 +42,10 @@ export function ContextCards() {
   );
 }
 
+// The status footer stays at the window's bottom (owner, 2026-10-14).
 export function StandingsFooter() {
   return (
-    <footer className="bg-canvas">
+    <footer className="sticky bottom-0 z-10 bg-canvas">
       <div className="frame flex h-7 items-center justify-between px-6">
         <span className="flex items-center gap-2">
           <span className="size-2 rounded-full bg-ok" />
