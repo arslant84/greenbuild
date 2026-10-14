@@ -50,3 +50,18 @@ test("after a timezone change the next one shows when it unlocks", async ({ page
   await expect(page.getByLabel("Assigned Ledger Timezone")).toHaveValue("Asia/Ashgabat");
   await expect(page.getByText("LOCKED", { exact: true })).toBeVisible();
 });
+
+test("being found by companies needs the 18+ confirmation", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/settings");
+  const toggle = page.getByLabel("Open to offers");
+
+  await toggle.click({ force: true });
+  await expect(page.getByRole("alert")).toHaveText("Confirm you are 18 or older to be found by companies.");
+  await expect(toggle).not.toBeChecked();
+
+  await page.getByLabel(/I am 18 or older/).check();
+  await toggle.click({ force: true });
+  await expect(page.getByText("ACTIVE: VISIBLE TO VERIFIED COMPANIES")).toBeVisible();
+  await expect(toggle).toBeChecked();
+});
