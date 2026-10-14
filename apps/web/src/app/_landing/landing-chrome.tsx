@@ -30,10 +30,10 @@ export function LandingHeader() {
 }
 
 // Figma (Landing) › Footer. Terms, privacy, code and community pages do not exist yet. Like the header,
-// the bar spans the window.
+// the bar spans the window, and it stays at the window's bottom (owner, 2026-10-14).
 export function LandingFooter() {
   return (
-    <footer className="border-t border-[#3c494c66] bg-canvas">
+    <footer className="sticky bottom-0 z-10 border-t border-[#3c494c66] bg-canvas">
       <div className="type-label frame flex items-center justify-between px-8 py-5 text-ink-subtle">
         <span className="flex items-center gap-3">
           <span>&gt;_ greenbuild © 2026</span>
