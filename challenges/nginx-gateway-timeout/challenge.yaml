@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: nginx-gateway-timeout
+version: 1
+title: "The report that never arrives"
+statement: "Finance's monthly report page answers with an error every time, while the rest of the site works. The report itself is fine: it simply takes a while to build. Get the report to finance through the site."
+difficulty: 3            # 1–10
+skills: { nginx: 0.8, linux: 0.2 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache and writes its own directories as root; its workers and the app switch users.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  port: { range: [8000, 8999] }
+  report_seconds: { range: [8, 12] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 30
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
