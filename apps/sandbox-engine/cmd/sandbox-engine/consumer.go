@@ -7,7 +7,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/agentclient"
+	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/agentpool"
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/config"
 	"github.com/arslant84/greenbuild/apps/sandbox-engine/internal/consumer"
 	"github.com/arslant84/greenbuild/packages/queue"
@@ -16,12 +16,12 @@ import (
 
 // buildConsumer returns the sandbox.create consumer and a release for its Redis client,
 // or a nil consumer when no Redis URL is set.
-func buildConsumer(cfg config.Config, client *agentclient.Client) (*consumer.Consumer, func(), error) {
+func buildConsumer(cfg config.Config, agents *agentpool.Pool) (*consumer.Consumer, func(), error) {
 	if cfg.Redis == nil {
 		slog.Warn("queue consumer disabled; set SANDBOX_ENGINE_REDIS_URL to start sandboxes from sandbox.create")
 		return nil, func() {}, nil
 	}
-	if client == nil {
+	if agents == nil {
 		return nil, nil, fmt.Errorf("queue consumer: %w", errNeedsAgent)
 	}
 	codec, err := queue.NewCodec()
@@ -39,7 +39,7 @@ func buildConsumer(cfg config.Config, client *agentclient.Client) (*consumer.Con
 			slog.Warn("close redis client", "error", err)
 		}
 	}
-	queueConsumer := consumer.New(consumer.Options{Redis: redisClient, Agent: client, Codec: codec, Name: name, IdleTimeout: cfg.IdleTimeout})
+	queueConsumer := consumer.New(consumer.Options{Redis: redisClient, Agent: agents, Codec: codec, Name: name, IdleTimeout: cfg.IdleTimeout})
 	return queueConsumer, release, nil
 }
 

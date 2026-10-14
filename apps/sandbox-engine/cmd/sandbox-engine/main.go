@@ -38,12 +38,12 @@ func run() error {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	client, release, err := dialAgent(cfg)
+	agents, release, err := dialAgents(cfg)
 	if err != nil {
 		return err
 	}
 	defer release()
-	queueConsumer, releaseRedis, err := buildConsumer(cfg, client)
+	queueConsumer, releaseRedis, err := buildConsumer(cfg, agents)
 	if err != nil {
 		return err
 	}
@@ -53,11 +53,11 @@ func run() error {
 	if queueConsumer != nil {
 		activity = queueConsumer
 	}
-	attachHandler, err := buildAttach(cfg, client, activity)
+	attachHandler, err := buildAttach(cfg, agents, activity)
 	if err != nil {
 		return err
 	}
-	internalHandler, err := buildInternal(cfg, client, activity)
+	internalHandler, err := buildInternal(cfg, agents, activity)
 	if err != nil {
 		return err
 	}
