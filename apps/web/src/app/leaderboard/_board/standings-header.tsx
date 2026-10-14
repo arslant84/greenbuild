@@ -3,7 +3,7 @@ import { PlayerIcon, SearchIcon } from "../../../ui/icons-leaderboard";
 
 // Figma (Global Standings, 3:3639) › Header. Runbooks has no page, so it is text; the search box is not
 // built (no search yet) and shows as in the frame, disabled. The bar spans the window; its content spans it
-// up to 1920 px (owner, 2026-10-14).
+// too (owner, 2026-10-14).
 export function StandingsHeader({ handle, streak }: { handle: string | null; streak: number | null }) {
   return (
     <header className="bg-[#131314e5] shadow-[0_1px_0_#2a2a2b] backdrop-blur">

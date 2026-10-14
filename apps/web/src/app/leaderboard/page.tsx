@@ -26,7 +26,7 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   return (
     <div className="flex min-h-screen flex-col bg-[#131314]">
       <StandingsHeader handle={handle} streak={streak} />
-      {/* The content spans the window up to 1920 px, centered; the header and footer bars span it all (owner, 2026-10-14). */}
+      {/* The content and its header and footer bars span the whole window (owner, 2026-10-14). */}
       <main className="frame flex flex-1 flex-col gap-5 px-8 py-5">
         <BoardHeading tab={params.tab} now={now} />
         <BoardTabs current={params.tab} />

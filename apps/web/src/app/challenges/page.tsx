@@ -18,7 +18,7 @@ export default async function CatalogPage({ searchParams }: { searchParams: Prom
   return (
     <div className="flex min-h-screen flex-col bg-[#131314]">
       <TopNav current="Challenges" />
-      {/* The content spans the window up to 1920 px, centered; the header and footer bars span it all (owner, 2026-10-14). */}
+      {/* The content and its header and footer bars span the whole window (owner, 2026-10-14). */}
       <main className="frame flex-1 px-4 pt-5 pb-5">
         <CatalogHeader catalog={list?.catalog ?? null} />
         <Toolbar params={params} />

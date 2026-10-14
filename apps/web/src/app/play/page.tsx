@@ -15,7 +15,7 @@ export default async function DailyPage() {
   const [daily, player] = await Promise.all([apiGet("/v1/daily", dailyResponseSchema), apiGet("/v1/me", meResponseSchema)]);
   return (
     <div className="min-h-screen bg-canvas">
-      {/* The content spans the window up to 1920 px (owner, 2026-10-14); the asides keep their width. */}
+      {/* The content spans the whole window (owner, 2026-10-14); the asides keep their width. */}
       <div className="frame flex">
         <Sidebar streak={player ? player.streak.current : 0} />
         <div className="flex min-w-0 flex-1 justify-between pb-8">

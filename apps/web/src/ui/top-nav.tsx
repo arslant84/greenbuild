@@ -13,7 +13,7 @@ const SECTIONS = [
 type Section = (typeof SECTIONS)[number]["label"];
 
 // Figma (Browse Challenge Catalog) › Header. Currency, level, streak and the handle have no data yet. The bar
-// spans the window; its content spans it up to 1920 px (owner, 2026-10-14).
+// spans the window; its content spans it too (owner, 2026-10-14).
 export function TopNav({ current }: { current: Section }) {
   return (
     <header className="bg-[#131314e5] backdrop-blur">

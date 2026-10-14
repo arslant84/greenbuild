@@ -2,7 +2,7 @@ import Link from "next/link";
 import { CodeHostIcon, CommunityIcon, GuestAvatarIcon } from "../../ui/icons-landing";
 
 // Figma (Landing) › Header. Leaderboard and sign-in have no screens yet, so they are not links. The bar
-// spans the window; its content spans it up to 1920 px (owner, 2026-10-14).
+// spans the window; its content spans it too (owner, 2026-10-14).
 export function LandingHeader() {
   return (
     <header className="sticky top-0 z-10 border-b border-[#3c494c66] bg-[#0e0e0fe5] backdrop-blur">
