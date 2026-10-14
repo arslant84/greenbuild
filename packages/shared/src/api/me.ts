@@ -29,6 +29,8 @@ export const meResponseSchema = z.object({
   id: z.uuid(),
   handle: z.string().nullable(),
   display_name: z.string().nullable(),
+  // The sign-in and contact address, or null for an account without one (task 47b: settings and the export notice).
+  email: z.string().nullable(),
   // ISO 3166-1 alpha-2, or null; the country leaderboard is this one (task 45b).
   country: z.string().nullable(),
   timezone: z.string(),

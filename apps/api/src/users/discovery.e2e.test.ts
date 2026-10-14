@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { signDevUserToken } from "../auth/dev-user-token.js";
 import { TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
 
-// architecture.md, task 47a: PUT /v1/me/discovery. Being found needs the 18+ confirmation; leaving and
+// architecture.md, task 47a: PUT /v1/me/discovery, and GET for the settings screen (task 47b). Being found needs the 18+ confirmation; leaving and
 // returning to hidden grants and revokes the discovery consent, keeping the history.
 const app = useAttemptsApp();
 
@@ -26,6 +26,18 @@ async function consentHistory(userId: string): Promise<boolean[]> {
     await connection.close();
   }
 }
+
+describe("GET /v1/me/discovery", () => {
+  it("answers hidden with nothing shared for a new player, then the choice once made", async () => {
+    const userId = randomUUID();
+    const token = await signDevUserToken(TEST_DEV_AUTH_SECRET, userId);
+    const read = async () => (await fetch(`${app().baseUrl}/v1/me/discovery`, { headers: { authorization: `Bearer ${token}` } })).json();
+
+    expect(await read()).toEqual({ mode: "hidden", revealed_fields: [], age_confirmed_18: false });
+    await discovery(userId, { mode: "open", confirm_18: true, revealed_fields: ["github"] });
+    expect(await read()).toEqual({ mode: "open", revealed_fields: ["github"], age_confirmed_18: true });
+  });
+});
 
 describe("PUT /v1/me/discovery", () => {
   it("refuses to make a player findable without the 18+ confirmation with 422", async () => {

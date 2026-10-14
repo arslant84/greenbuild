@@ -37,7 +37,7 @@ describe("GET and PATCH /v1/me", () => {
     const response = await (await me(userId)).get();
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ id: userId, handle: null, display_name: null, country: null, timezone: "UTC", timezone_locked_until: null, locale: "en", xp: 0, level: 0, xp_today: 0, streak: { current: 0, longest: 0, freezes: 0 } });
+    expect(await response.json()).toEqual({ id: userId, handle: null, display_name: null, email: null, country: null, timezone: "UTC", timezone_locked_until: null, locale: "en", xp: 0, level: 0, xp_today: 0, streak: { current: 0, longest: 0, freezes: 0 } });
   });
 
   it("changes the handle, name and locale, storing the handle lowercase", async () => {
@@ -97,5 +97,21 @@ describe("the 30-day timezone rule", () => {
     const response = await player.patch({ timezone: "Europe/Berlin" });
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ timezone: "Europe/Berlin" });
+  });
+});
+
+describe("GET /v1/me for the settings screen (task 47b)", () => {
+  it("includes the player's email for the settings screen", async () => {
+    const userId = randomUUID();
+    const player = await me(userId);
+    await player.get();
+    const connection = connect(app().env.DATABASE_URL);
+    try {
+      await connection.db.update(users).set({ email: "player@example.com" }).where(eq(users.id, userId));
+    } finally {
+      await connection.close();
+    }
+
+    expect(await (await player.get()).json()).toMatchObject({ email: "player@example.com" });
   });
 });
