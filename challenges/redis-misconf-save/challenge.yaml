@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: redis-misconf-save
+version: 1
+title: "Read-only overnight"
+statement: "Last night the cache's data moved to a new volume. Since this morning every page of the app fails, although the cache is up and answers. Get the pages working again without risking the cache's data."
+difficulty: 4            # 1–10
+skills: { redis: 0.6, linux: 0.4 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# Redis and the app run as their own users; root fixes the owner of the cache's directory.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [shop, forum, tickets] }
+  volume: { pick: [/srv/cache-data, /data/redis, /var/lib/cache-volume] }
+  port: { range: [8000, 8999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 30
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
