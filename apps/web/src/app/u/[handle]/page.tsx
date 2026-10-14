@@ -5,8 +5,10 @@ import { cache } from "react";
 import { apiGet, apiGetPublic } from "../../../server/api";
 import { CredentialHeader, TrustStrip } from "./_profile/credential-header";
 import { ProfileFooter } from "./_profile/profile-footer";
+import { ProfileSidebar } from "./_profile/profile-sidebar";
 import { ProfileTopNav } from "./_profile/profile-top-nav";
 import { profileDescription, profileTitle } from "./_profile/profile-view";
+import { SkillsCard } from "./_profile/skills-card";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +45,12 @@ export default async function ProfilePage({ params }: Params) {
         <ProfileTopNav ownHref={me?.handle ? `/u/${me.handle}` : null} />
         <CredentialHeader profile={profile} />
         <TrustStrip />
-        {/* The frame's two columns of cards come in the next part of task 46b. */}
-        <main className="grid flex-1 grid-cols-12 gap-8 px-6 py-8" />
+        <div className="grid flex-1 grid-cols-12 gap-8 px-6 py-8">
+          <main className="col-span-8 flex min-w-0 flex-col gap-8">
+            <SkillsCard profile={profile} />
+          </main>
+          <ProfileSidebar profile={profile} />
+        </div>
         <ProfileFooter />
       </div>
     </div>
