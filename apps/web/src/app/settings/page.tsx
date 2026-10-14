@@ -7,6 +7,7 @@ import { ProfileSection } from "./_settings/profile-section";
 import { SettingsFooter } from "./_settings/settings-footer";
 import { SettingsHeader } from "./_settings/settings-header";
 import { SettingsNav } from "./_settings/settings-nav";
+import { TimezoneSection } from "./_settings/timezone-section";
 
 export const dynamic = "force-dynamic";
 
@@ -27,12 +28,13 @@ export default async function SettingsPage() {
   );
 }
 
-// The frame's sections in its order; the timezone, visibility, discovery and danger-zone sections follow.
+// The frame's sections in its order; the visibility, discovery and danger-zone sections follow.
 function Sections({ me }: { me: MeResponse }) {
   return (
     <>
       <ProfileSection me={me} />
       <AccountSection me={me} />
+      <TimezoneSection me={me} />
       <NotificationsSection />
     </>
   );

@@ -34,3 +34,19 @@ test("the Account section shows the email and notifications stay off", async ({ 
   await expect(page.getByLabel("Weekly engineering digest")).toBeDisabled();
   await expect(page.getByLabel("Weekly engineering digest")).not.toBeChecked();
 });
+
+test("after a timezone change the next one shows when it unlocks", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/settings");
+  const zone = page.getByLabel("Assigned Ledger Timezone");
+
+  await expect(page.getByText("OPEN", { exact: true })).toBeVisible();
+  await zone.selectOption("Asia/Ashgabat");
+
+  await expect(page.getByText("LOCKED", { exact: true })).toBeVisible();
+  await expect(page.getByText(/Next timezone change opens in 30 days \([A-Z][a-z]{2} \d{1,2}, \d{4}\)\./)).toBeVisible();
+  await expect(zone).toBeDisabled();
+  await page.reload();
+  await expect(page.getByLabel("Assigned Ledger Timezone")).toHaveValue("Asia/Ashgabat");
+  await expect(page.getByText("LOCKED", { exact: true })).toBeVisible();
+});
