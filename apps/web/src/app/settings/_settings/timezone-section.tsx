@@ -1,13 +1,23 @@
 "use client";
 
 import type { MeResponse } from "@greenbuild/shared";
-import { useMemo } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import { ExpandMoreIcon, LocalFireDepartmentIcon } from "../../../ui/icons-profile";
 import { LockClockIcon, WarningIcon } from "../../../ui/icons-settings";
 import { useNow } from "../../../ui/use-now";
 import { HEADLINE_LG, LABEL_CODE } from "../../../ui/type";
 import { offsetLabel, type TimezoneLock, timezoneLock, timezoneOptions, untilDayEnds } from "./timezone";
 import { type TimezoneSave, useTimezoneSave } from "./use-timezone-save";
+
+// The server and the browser know different zone lists and clocks, so the full list and the countdown render
+// only once the page is hydrated; until then the picker holds the player's zone and the countdown "—".
+function useHydrated(): boolean {
+  return useSyncExternalStore(
+    () => () => undefined,
+    () => true,
+    () => false,
+  );
+}
 
 // The frame's 30-day density strip has 18 bars.
 const DENSITY_BARS = Array.from({ length: 18 }, (_, bar) => `bar-${bar}`);
@@ -19,6 +29,7 @@ export function TimezoneSection({ me }: { me: MeResponse }) {
   const save = useTimezoneSave(me);
   const now = new Date(useNow());
   const lock = timezoneLock(save.lockedUntil, now);
+  const hydrated = useHydrated();
   return (
     <section id="section-timezone" className="flex scroll-mt-20 flex-col gap-5 rounded-xl bg-surface-raised p-5 shadow-sm">
       <div>
@@ -28,7 +39,7 @@ export function TimezoneSection({ me }: { me: MeResponse }) {
         <h2 className={`mt-1 ${HEADLINE_LG} text-ink`}>Timezone &amp; Streak Protection</h2>
         <p className="type-body text-ink-muted">When your day ends, and how your streak and freezes stand.</p>
       </div>
-      <ZonePicker save={save} locked={lock !== null} now={now} />
+      <ZonePicker save={save} locked={lock !== null} now={now} hydrated={hydrated} />
       <div className="flex flex-col gap-1 rounded-lg bg-[#e3aa0026] p-3 text-warn">
         <span className="flex items-center gap-1 type-label font-bold">
           <WarningIcon className="text-[18px]" /> ANTI-EXPLOIT POLICY: 30-DAY COOLDOWN
@@ -41,13 +52,13 @@ export function TimezoneSection({ me }: { me: MeResponse }) {
           Your timezone was not saved. Try again.
         </p>
       )}
-      <StreakPanel me={me} zone={save.zone} now={now} />
+      <StreakPanel me={me} zone={save.zone} now={now} hydrated={hydrated} />
     </section>
   );
 }
 
-function ZonePicker({ save, locked, now }: { save: TimezoneSave; locked: boolean; now: Date }) {
-  const zones = useMemo(() => timezoneOptions(save.zone), [save.zone]);
+function ZonePicker({ save, locked, now, hydrated }: { save: TimezoneSave; locked: boolean; now: Date; hydrated: boolean }) {
+  const zones = useMemo(() => (hydrated ? timezoneOptions(save.zone) : [save.zone]), [hydrated, save.zone]);
   return (
     <label className="flex flex-col gap-1">
       <span className="type-label text-ink-muted uppercase">Assigned Ledger Timezone</span>
@@ -88,12 +99,12 @@ function LockBanner({ lock }: { lock: TimezoneLock | null }) {
   );
 }
 
-function StreakPanel({ me, zone, now }: { me: MeResponse; zone: string; now: Date }) {
+function StreakPanel({ me, zone, now, hydrated }: { me: MeResponse; zone: string; now: Date; hydrated: boolean }) {
   const metrics = [
     { label: "CURRENT STREAK", value: `🔥 Day ${me.streak.current}`, color: "text-warn" },
     { label: "ALL-TIME RECORD", value: me.streak.longest === 1 ? "1 day" : `${me.streak.longest} days`, color: "text-ink" },
     { label: "STREAK FREEZES", value: `${me.streak.freezes} avail`, color: "text-accent-soft" },
-    { label: "DAILY RESET", value: untilDayEnds(zone, now), color: "text-ok" },
+    { label: "DAILY RESET", value: hydrated ? untilDayEnds(zone, now) : "—", color: "text-ok" },
   ];
   return (
     <div className="flex flex-col gap-3 rounded-lg bg-canvas p-3">
