@@ -12,8 +12,18 @@ export async function apiGet<Schema extends z.ZodType>(path: string, schema: Sch
   if (!token) {
     return null;
   }
+  return fetchParsed(path, schema, { authorization: `Bearer ${token}` });
+}
+
+// apiGetPublic reads a public (@Public()) API route without any session, so the page renders the same
+// for every visitor. It returns null when the API answers an error or the answer does not match.
+export async function apiGetPublic<Schema extends z.ZodType>(path: string, schema: Schema): Promise<z.infer<Schema> | null> {
+  return fetchParsed(path, schema, {});
+}
+
+async function fetchParsed<Schema extends z.ZodType>(path: string, schema: Schema, headers: Record<string, string>): Promise<z.infer<Schema> | null> {
   try {
-    const response = await fetch(`${loadApiConfig().apiUrl}${path}`, { headers: { authorization: `Bearer ${token}` }, cache: "no-store" });
+    const response = await fetch(`${loadApiConfig().apiUrl}${path}`, { headers, cache: "no-store" });
     if (!response.ok) {
       return null;
     }

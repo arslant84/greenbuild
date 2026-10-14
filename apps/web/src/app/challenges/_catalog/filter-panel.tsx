@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FilterListIcon } from "../../../ui/icons-catalog";
 import type { CatalogParams } from "./catalog-params";
 import { SeveritySection, SkillSection, SlaSection, SourceSection, StatusSection } from "./filter-sections";
-import { skillStyle } from "./skills";
+import { skillStyle } from "../../../ui/skills";
 
 interface FilterPanelProps {
   params: CatalogParams;

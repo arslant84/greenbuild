@@ -2,7 +2,7 @@ import { CATALOG_SLA_WINDOWS, type CatalogSlaWindow, type ChallengeList } from "
 import Link from "next/link";
 import { type CatalogParams, catalogHref, SEVERITY_TIERS, type SeverityTier, type StatusFilter, toggled } from "./catalog-params";
 import { FilterRow, RowText, SectionTitle } from "./filter-rows";
-import { skillStyle } from "./skills";
+import { skillStyle } from "../../../ui/skills";
 
 type Summary = ChallengeList["catalog"];
 

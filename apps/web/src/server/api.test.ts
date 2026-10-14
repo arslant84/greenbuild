@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { apiGet } from "./api";
+import { apiGet, apiGetPublic } from "./api";
 
 const session = { value: "dev-token" as string | undefined };
 vi.mock("next/headers", () => ({
@@ -44,5 +44,20 @@ describe("apiGet", () => {
 
     expect(await apiGet("/v1/challenges/x", schema)).toBeNull();
     expect(api).not.toHaveBeenCalled();
+  });
+});
+
+describe("apiGetPublic", () => {
+  it("reads without a session or a token, also when the visitor is signed in", async () => {
+    api.mockResolvedValue(Response.json({ title: "arslan" }));
+
+    expect(await apiGetPublic("/v1/users/arslan", schema)).toEqual({ title: "arslan" });
+    expect(new Headers(api.mock.calls[0]?.[1]?.headers).has("authorization")).toBe(false);
+  });
+
+  it("returns null when the API answers 404", async () => {
+    api.mockResolvedValue(Response.json({}, { status: 404 }));
+
+    expect(await apiGetPublic("/v1/users/nobody", schema)).toBeNull();
   });
 });

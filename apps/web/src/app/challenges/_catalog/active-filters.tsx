@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CloseSmallIcon } from "../../../ui/icons-catalog";
 import { activeFilterCount, type CatalogParams, catalogHref, toggled } from "./catalog-params";
-import { skillStyle } from "./skills";
+import { skillStyle } from "../../../ui/skills";
 
 interface Chip {
   key: string;
