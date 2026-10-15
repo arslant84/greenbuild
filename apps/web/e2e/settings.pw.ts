@@ -64,4 +64,6 @@ test("being found by companies needs the 18+ confirmation", async ({ page }) => 
   await toggle.click({ force: true });
   await expect(page.getByText("ACTIVE: VISIBLE TO VERIFIED COMPANIES")).toBeVisible();
   await expect(toggle).toBeChecked();
+  // Leaving hidden grants the discovery consent, which the consent history lists.
+  await expect(page.getByRole("list", { name: "Consent history" })).toContainText(/Company discovery.*Active/);
 });
