@@ -647,7 +647,7 @@ REST под `/v1`, JSON, схемы в zod из `packages/shared`; OpenAPI из 
 4. **Ручное подтверждение**: деплой в prod через ревизии Container Apps (откат одним действием).
 5. **Terraform**: `plan` в PR, `apply` только после merge и ручного подтверждения.
 
-**Сейчас:** на PR выполняются lint, typecheck, unit-тесты, build, проверка размера PR, «Sandbox integration (gVisor)», «Challenges (gVisor)» и «Slice e2e (Playwright)»; `challenges:validate` и проверка сгенерированного gRPC-кода (37a) — в основной задаче. CI-задач для Terraform (28a) и деплоя в staging (28g) ещё нет. С 8 октября 2026 GitHub Actions не запускаются (оплата); до восстановления те же проверки выполняются локально перед слиянием, а PR пишет, что CI и gVisor не проверялись (решение владельца).
+**Сейчас:** на PR выполняются lint, typecheck, unit-тесты, build, проверка размера PR, «Sandbox integration (gVisor)», «Challenges (gVisor)» и «Slice e2e (Playwright)»; `challenges:validate` и проверка сгенерированного gRPC-кода (37a) — в основной задаче. CI-задач для Terraform (28a) и деплоя в staging (28g) ещё нет. С 8 по 13 октября 2026 GitHub Actions не запускались (оплата), и проверки выполнялись локально; с 13 октября, когда репозиторий стал публичным (отклонение 29), CI работает снова, и слияние — только при зелёном CI (решение владельца).
 
 ## Холодный старт
 
