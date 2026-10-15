@@ -5,6 +5,7 @@ import Google from "next-auth/providers/google";
 import { ageConfirmedInBrowser } from "./age-confirmation";
 import { e2eSignIn } from "./e2e-sign-in";
 import { emailSignIn } from "./email-sign-in";
+import { ageCheck } from "./sign-in-age";
 import { type AuthConfig, loadAuthConfig } from "../config/auth";
 
 // Sign-in with GitHub and an email link (architecture.md, task 30a): the thin adapter of ADR-013 and JWT
@@ -38,6 +39,8 @@ function authOptions(config: AuthConfig): NextAuthConfig {
     session: { strategy: "jwt" },
     providers,
     callbacks: {
+      // No sign-in past the 16+ rule (task 30b); the adapter checks it again when it creates a player.
+      signIn: ageCheck(db),
       // The JWT's subject is our user id (the adapter's); the API token names it (task 30c).
       session({ session, token }) {
         if (token.sub) {
