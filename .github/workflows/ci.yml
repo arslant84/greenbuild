@@ -198,6 +198,25 @@ jobs:
           terraform init -backend=false -input=false
           terraform validate
 
+      # Each module's terraform test runs against a mock provider: no Azure sign-in needed.
+      - name: Test modules
+        if: steps.changed.outputs.terraform == 'true'
+        run: |
+          for dir in infra/terraform/modules/*/; do
+            [ -d "${dir}tests" ] || continue
+            terraform -chdir="$dir" init -backend=false -input=false
+            terraform -chdir="$dir" test
+          done
+
+      # architecture.md, «Сети»: nothing on the private networks gets a public IP.
+      - name: Refuse public IPs
+        if: steps.changed.outputs.terraform == 'true'
+        run: |
+          if grep -rn --include='*.tf' 'azurerm_public_ip' infra/terraform; then
+            echo "::error::infra/terraform declares a public IP"
+            exit 1
+          fi
+
       # The plan needs the owner's Azure sign-in (docs/runbooks/terraform-state.md). PRs from forks get no
       # OIDC token, so they stop at validate too.
       - name: Decide on the plan
