@@ -153,6 +153,88 @@ jobs:
           # Empty on pushes to main, which verifies every challenge.
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
+  terraform:
+    name: Terraform
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write       # OIDC sign-in to Azure for the plan; no Azure secret is stored
+      pull-requests: write  # the plan as a PR comment
+    env:
+      # Pinned like the provider; infra/terraform/envs/staging/versions.tf allows 1.16.x.
+      TERRAFORM_VERSION: "1.16.2"
+      STAGING_DIR: infra/terraform/envs/staging
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Find Terraform changes
+        id: changed
+        run: |
+          if git diff --quiet "$BASE_SHA" HEAD -- infra/terraform; then
+            echo "terraform=false" >> "$GITHUB_OUTPUT"
+            echo "No change under infra/terraform: nothing to check." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "terraform=true" >> "$GITHUB_OUTPUT"
+          fi
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+
+      - if: steps.changed.outputs.terraform == 'true'
+        uses: hashicorp/setup-terraform@v4
+        with:
+          terraform_version: ${{ env.TERRAFORM_VERSION }}
+          terraform_wrapper: false
+
+      - if: steps.changed.outputs.terraform == 'true'
+        run: terraform fmt -check -recursive -diff infra/terraform
+
+      - if: steps.changed.outputs.terraform == 'true'
+        working-directory: ${{ env.STAGING_DIR }}
+        run: |
+          terraform init -backend=false -input=false
+          terraform validate
+
+      # The plan needs the owner's Azure sign-in (docs/runbooks/terraform-state.md). PRs from forks get no
+      # OIDC token, so they stop at validate too.
+      - name: Decide on the plan
+        id: plan
+        if: steps.changed.outputs.terraform == 'true'
+        run: |
+          if [ -n "$AZURE_CLIENT_ID" ] && [ -n "$AZURE_TENANT_ID" ] && [ -n "$AZURE_SUBSCRIPTION_ID" ] && [ "$HEAD_REPO" = "$GITHUB_REPOSITORY" ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=false" >> "$GITHUB_OUTPUT"
+            echo "Plan skipped: AZURE_CLIENT_ID, AZURE_TENANT_ID and AZURE_SUBSCRIPTION_ID are not set, or the PR comes from a fork." >> "$GITHUB_STEP_SUMMARY"
+          fi
+        env:
+          AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Plan staging
+        if: steps.plan.outputs.run == 'true'
+        working-directory: ${{ env.STAGING_DIR }}
+        run: |
+          terraform init -input=false
+          terraform plan -input=false -no-color -lock-timeout=5m | tee "$RUNNER_TEMP/plan.txt"
+        env:
+          ARM_USE_OIDC: "true"
+          ARM_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - if: steps.plan.outputs.run == 'true'
+        run: bash .github/scripts/terraform-plan-comment.sh "$RUNNER_TEMP/plan.txt"
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          COMMIT_SHA: ${{ github.event.pull_request.head.sha }}
+
   slice-e2e:
     name: Slice e2e (Playwright)
     runs-on: ubuntu-latest
