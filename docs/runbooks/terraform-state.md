@@ -18,7 +18,7 @@ Until the variables exist, the job runs `fmt` and `validate` only and says in it
 
 ```sh
 SUBSCRIPTION_ID=<staging subscription id>
-LOCATION=eastus
+LOCATION=eastus2   # the region of staging (owner, 2026-10-15)
 RG=rg-greenbuild-tfstate
 ACCOUNT=greenbuildtfstate
 CONTAINER=tfstate
