@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { loadAuthConfig } from "../../config/auth";
+import { ProofColumn } from "./_signin/proof-column";
 import { SignInCard } from "./_signin/sign-in-card";
 
 export const dynamic = "force-dynamic";
@@ -45,6 +46,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
           </span>
         </div>
       </section>
+      <ProofColumn />
     </main>
   );
 }
