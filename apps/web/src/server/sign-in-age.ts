@@ -2,12 +2,10 @@ import { type AgeStatus, ageStatus, confirmUser, type connect, hasAgeConfirmatio
 import type { NextAuthConfig } from "next-auth";
 import { ageConfirmedInBrowser } from "./age-confirmation";
 import { LINK_MAX_AGE_SEC } from "./email-sign-in";
+import { AGE_REQUIRED_PATH } from "./sign-in-paths";
 
 type Database = ReturnType<typeof connect>["db"];
 type SignInCallback = NonNullable<NonNullable<NextAuthConfig["callbacks"]>["signIn"]>;
-
-// Where a sign-in the 16+ rule stops goes: the sign-in screen (task 30b), which asks for the checkbox.
-export const AGE_REQUIRED_PATH = "/signin?error=AgeRequired";
 
 // The steps of a sign-in: asking for an email link, and completing it by the link or through GitHub.
 export type SignInStep = "request-link" | "complete";

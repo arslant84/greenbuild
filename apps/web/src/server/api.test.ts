@@ -1,11 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
+import { AGE_NOT_CONFIRMED } from "@greenbuild/shared";
 import { apiGet, apiGetPublic } from "./api";
+import { AGE_REQUIRED_PATH } from "./sign-in-paths";
 
 const session = { value: "dev-token" as string | undefined };
 vi.mock("next/headers", () => ({
   cookies: () => Promise.resolve({ get: () => (session.value ? { value: session.value } : undefined) }),
 }));
+
+const redirect = vi.hoisted(() => vi.fn());
+vi.mock("next/navigation", () => ({ redirect }));
 
 const api = vi.fn<typeof fetch>();
 const schema = z.object({ title: z.string() });
@@ -28,6 +33,22 @@ describe("apiGet", () => {
 
     expect(await apiGet("/v1/challenges/x", schema)).toEqual({ title: "The site returns 502" });
     expect(new Headers(api.mock.calls[0]?.[1]?.headers).get("authorization")).toBe("Bearer dev-token");
+  });
+
+  it("sends a player who has not confirmed being 16 or older to the sign-in screen", async () => {
+    api.mockResolvedValue(Response.json({ code: "forbidden", message: "x", details: { reason: AGE_NOT_CONFIRMED } }, { status: 403 }));
+
+    await apiGet("/v1/me", schema);
+
+    expect(redirect).toHaveBeenCalledWith(AGE_REQUIRED_PATH);
+  });
+
+  it("does not redirect for another 403", async () => {
+    redirect.mockClear();
+    api.mockResolvedValue(Response.json({ code: "forbidden", message: "This account is closed" }, { status: 403 }));
+
+    expect(await apiGet("/v1/me", schema)).toBeNull();
+    expect(redirect).not.toHaveBeenCalled();
   });
 
   it.each([
