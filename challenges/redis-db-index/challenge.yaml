@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: redis-db-index
+version: 1
+title: "Queued into the void"
+statement: "Since last night's Redis maintenance, customers who ask for an export see it queued, but it never arrives. The worker runs and reports no errors. Get exports produced again, including this morning's."
+difficulty: 3            # 1–10
+skills: { redis: 0.7, linux: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 256Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# Redis and the worker run as their own users; root edits the app's settings and restarts the worker.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [reports, invoices, statements] }
+  queue_db: { range: [2, 4] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 30
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
