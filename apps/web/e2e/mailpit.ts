@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomInt, randomUUID } from "node:crypto";
 import { type APIRequestContext, expect, type Page } from "@playwright/test";
 
 // The local stack sends its emails to Mailpit (infra/docker/play-stack.compose.yaml), whose API these
@@ -35,8 +35,10 @@ export async function linkInEmail(request: APIRequestContext, { to, subject, lin
 }
 
 // askForSignInLink fills the sign-in screen's email form (task 30b), ticking "I am 16 or older" unless
-// told not to; the screen answers with "Check your email" or an error banner.
-export async function askForSignInLink(page: Page, email: string, ageConfirmed = true): Promise<void> {
+// told not to; the screen answers with "Check your email" or an error banner. Link requests are limited
+// per IP (task 30b-4), so each request comes from its own address unless one is given.
+export async function askForSignInLink(page: Page, email: string, { ageConfirmed = true, ip = aTestIp() }: { ageConfirmed?: boolean; ip?: string } = {}): Promise<void> {
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": ip });
   await page.goto("/signin");
   if (ageConfirmed) {
     await page.getByLabel("I am 16 or older").check();
@@ -55,6 +57,11 @@ export async function requestSignInLink(page: Page): Promise<{ email: string; li
 
 export function signInLinkTo(request: APIRequestContext, email: string): Promise<string> {
   return linkInEmail(request, { to: email, subject: "Sign in to greenbuild", link: SIGN_IN_LINK });
+}
+
+// aTestIp is an address from TEST-NET-3 (RFC 5737), which no real client has.
+export function aTestIp(): string {
+  return `203.0.113.${randomInt(1, 255)}`;
 }
 
 // emailsTo counts the emails Mailpit holds for an address.

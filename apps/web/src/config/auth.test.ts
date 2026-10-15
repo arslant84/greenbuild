@@ -6,6 +6,7 @@ const ENV = {
   DATABASE_URL: "postgres://greenbuild:pw@127.0.0.1:5432/greenbuild",
   EMAIL_SERVER: "smtp://127.0.0.1:1025",
   EMAIL_FROM: "sign-in@greenbuild.dev",
+  REDIS_URL: "redis://127.0.0.1:6379",
   API_TOKEN_PRIVATE_KEY: JSON.stringify({ kty: "EC", crv: "P-256", x: "x", y: "y", d: "d" }),
 };
 
@@ -37,6 +38,7 @@ describe("loadAuthConfig", () => {
     { DATABASE_URL: "mysql://db" },
     { EMAIL_SERVER: "http://mail" },
     { EMAIL_FROM: "not an email" },
+    { REDIS_URL: "http://redis" },
     { AUTH_GITHUB_ID: "id" },
     { API_TOKEN_PRIVATE_KEY: JSON.stringify({ kty: "EC", crv: "P-256", x: "x", y: "y" }) },
     { API_TOKEN_PRIVATE_KEY: "not json" },

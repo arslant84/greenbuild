@@ -2,6 +2,7 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
+import { RATE_LIMITED_ERROR } from "../../../server/sign-in-paths";
 import { useHydrated } from "../../../ui/use-hydrated";
 
 export type OAuthProvider = "github" | "google";
@@ -13,6 +14,8 @@ export interface SignIn {
   sentTo: string | null;
   // Auth.js's or the 16+ rule's error code, shown in the banner.
   error: string | undefined;
+  // When another email link may be asked for, after too many (task 30b-4): epoch milliseconds.
+  retryUntil: number | null;
   // True until the page hydrates, and while a sign-in is starting: the controls wait for JavaScript.
   pending: boolean;
   withProvider: (provider: OAuthProvider) => Promise<void>;
@@ -24,11 +27,12 @@ export interface SignIn {
 // useSignIn drives the sign-in screen (task 30b): it remembers a ticked "I am 16 or older" in this
 // browser before signing in, then signs in through GitHub or Google, or asks for an email link without
 // leaving the screen. A returning player needs no box; the server sends anyone who does back here.
-export function useSignIn(callbackUrl: string, initialError: string | undefined): SignIn {
+export function useSignIn(callbackUrl: string, initialError: string | undefined, initialRetrySec: number | null): SignIn {
   const [ageConfirmed, setAgeConfirmed] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [error, setError] = useState(initialError);
   const [pending, setPending] = useState(false);
+  const [retryUntil, setRetryUntil] = useState(() => (initialRetrySec ? Date.now() + initialRetrySec * 1000 : null));
 
   async function begin(): Promise<boolean> {
     setPending(true);
@@ -53,6 +57,9 @@ export function useSignIn(callbackUrl: string, initialError: string | undefined)
     }
     const result = await signIn("email", { email, redirect: false, redirectTo: callbackUrl }).catch(() => null);
     setPending(false);
+    if (result?.error === RATE_LIMITED_ERROR) {
+      setRetryUntil(Date.now() + Number(result.code ?? 0) * 1000);
+    }
     if (!result || result.error) {
       setError(result?.error ?? "Default");
       return;
@@ -61,7 +68,7 @@ export function useSignIn(callbackUrl: string, initialError: string | undefined)
   }
 
   const hydrated = useHydrated();
-  return { ageConfirmed, setAgeConfirmed, sentTo, error, pending: pending || !hydrated, withProvider, requestLink, useAnotherEmail: () => setSentTo(null), dismissError: () => setError(undefined) };
+  return { ageConfirmed, setAgeConfirmed, sentTo, error, retryUntil, pending: pending || !hydrated, withProvider, requestLink, useAnotherEmail: () => setSentTo(null), dismissError: () => setError(undefined) };
 }
 
 async function rememberAge(): Promise<boolean> {

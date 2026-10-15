@@ -5,7 +5,8 @@ import Google from "next-auth/providers/google";
 import { ageConfirmedInBrowser } from "./age-confirmation";
 import { e2eSignIn } from "./e2e-sign-in";
 import { emailSignIn } from "./email-sign-in";
-import { ageCheck } from "./sign-in-age";
+import { ageCheck, type SignInCallback } from "./sign-in-age";
+import { linkLimit, redisCounter } from "./sign-in-limit";
 import { SIGN_IN_PATH } from "./sign-in-paths";
 import { type AuthConfig, loadAuthConfig } from "../config/auth";
 
@@ -42,8 +43,7 @@ function authOptions(config: AuthConfig): NextAuthConfig {
     pages: { signIn: SIGN_IN_PATH, error: SIGN_IN_PATH },
     providers,
     callbacks: {
-      // No sign-in past the 16+ rule (task 30b); the adapter checks it again when it creates a player.
-      signIn: ageCheck(db),
+      signIn: signInRules(db, config.redisUrl),
       // The JWT's subject is our user id (the adapter's); the API token names it (task 30c).
       session({ session, token }) {
         if (token.sub) {
@@ -53,4 +53,12 @@ function authOptions(config: AuthConfig): NextAuthConfig {
       },
     },
   };
+}
+
+// The sign-in rules, in order: at most so many email link requests (task 30b-4), then the 16+ rule (task
+// 30b), which the adapter checks again when it creates a player.
+function signInRules(db: ReturnType<typeof connect>["db"], redisUrl: string): SignInCallback {
+  const limit = linkLimit(redisCounter(redisUrl));
+  const age = ageCheck(db);
+  return async (params) => (await limit({ email: params.user.email ?? "", verificationRequest: params.email?.verificationRequest === true })) ?? age(params);
 }

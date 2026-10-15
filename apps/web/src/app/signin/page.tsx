@@ -12,7 +12,8 @@ export const metadata: Metadata = { title: "Sign in · greenbuild", robots: { in
 const AFTER_SIGN_IN = "/play";
 
 interface SignInPageProps {
-  searchParams: Promise<{ error?: string | string[]; callbackUrl?: string | string[] }>;
+  // `code` carries the seconds left after too many link requests (task 30b-4).
+  searchParams: Promise<{ error?: string | string[]; code?: string | string[]; callbackUrl?: string | string[] }>;
 }
 
 // Figma "Hotfix — Authentication Suite" (7:9957), laid out from the owner's Stitch copy (task 30b): sign in
@@ -35,7 +36,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
             <span className="size-1.5 rounded-full bg-ok" />— // —
           </span>
         </div>
-        <SignInCard callbackUrl={safeCallbackUrl(first(params.callbackUrl))} error={first(params.error)} providers={providers} />
+        <SignInCard callbackUrl={safeCallbackUrl(first(params.callbackUrl))} error={first(params.error)} retryAfterSec={Number(first(params.code)) || null} providers={providers} />
         <div className="flex w-full items-center justify-between border-t border-surface-raised pt-4 font-mono text-[11px] text-ink-muted">
           <span className="flex items-center gap-2">
             <span className="size-2 rounded-full bg-accent" />

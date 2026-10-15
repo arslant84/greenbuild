@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Page, test } from "@playwright/test";
-import { askForSignInLink, emailsTo, requestSignInLink, signInLinkTo } from "./mailpit";
+import { LINK_REQUESTS_PER_WINDOW } from "../src/server/link-limit";
+import { aTestIp, askForSignInLink, emailsTo, requestSignInLink, signInLinkTo } from "./mailpit";
 import { aPlayerCreatedBefore16Plus, signUpRecord } from "./play-db";
 
 // architecture.md, tasks 30b and 31a: no account exists without the 16+ confirmation, and sign-up records
@@ -19,7 +20,7 @@ async function signedInEmail(page: Page): Promise<string | undefined> {
 test("a new player without the 16+ box is asked to tick it and gets no link", async ({ page }) => {
   const email = anEmail();
 
-  await askForSignInLink(page, email, false);
+  await askForSignInLink(page, email, { ageConfirmed: false });
 
   await expect(page.getByText("to create your account or continue to it")).toBeVisible();
   expect(await emailsTo(page.request, email)).toBe(0);
@@ -41,7 +42,7 @@ test("a player created before the 16+ rule confirms it at sign-in", async ({ pag
   const email = anEmail();
   await aPlayerCreatedBefore16Plus(email);
 
-  await askForSignInLink(page, email, false);
+  await askForSignInLink(page, email, { ageConfirmed: false });
   await expect(page.getByText("to create your account or continue to it")).toBeVisible();
 
   await askForSignInLink(page, email);
@@ -56,4 +57,18 @@ test("a failed GitHub sign-in shows the frame's error", async ({ page }) => {
   await page.goto("/signin?error=OAuthCallbackError");
 
   await expect(page.getByText("Couldn't connect to GitHub")).toBeVisible();
+});
+
+test("a sixth link request for an address in 15 minutes waits, and sends nothing", async ({ page }) => {
+  const email = anEmail();
+  const ip = aTestIp();
+  for (let request = 0; request < LINK_REQUESTS_PER_WINDOW; request += 1) {
+    await askForSignInLink(page, email, { ip });
+    await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  }
+
+  await askForSignInLink(page, email, { ip });
+
+  await expect(page.getByText("Too many sign-in links")).toBeVisible();
+  await expect.poll(() => emailsTo(page.request, email)).toBe(LINK_REQUESTS_PER_WINDOW);
 });

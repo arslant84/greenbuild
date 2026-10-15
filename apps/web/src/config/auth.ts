@@ -9,6 +9,8 @@ const authEnvSchema = z
     // Where sign-in links are sent from: Mailpit locally, the D6 provider's SMTP elsewhere.
     EMAIL_SERVER: z.url({ protocol: /^smtps?$/ }),
     EMAIL_FROM: z.email(),
+    // Counts sign-in link requests (task 30b): the same Redis as the API.
+    REDIS_URL: z.url({ protocol: /^rediss?$/ }),
     // Signs the 5-minute API tokens (task 30c): an EC P-256 JWK with its private part, on one line.
     API_TOKEN_PRIVATE_KEY: z.string().refine(isPrivateP256Jwk, "must be an EC P-256 private JWK"),
     AUTH_GITHUB_ID: z.string().min(1).optional(),
@@ -35,6 +37,7 @@ export interface AuthConfig {
   databaseUrl: string;
   emailServer: string;
   emailFrom: string;
+  redisUrl: string;
   // Never log it.
   apiTokenPrivateKey: string;
   // Sign-in with GitHub and Google needs an OAuth app each (Google: task 54).
@@ -62,6 +65,7 @@ export function loadAuthConfig(env: Record<string, string | undefined> = process
     DATABASE_URL: env.DATABASE_URL,
     EMAIL_SERVER: env.EMAIL_SERVER,
     EMAIL_FROM: env.EMAIL_FROM,
+    REDIS_URL: env.REDIS_URL,
     API_TOKEN_PRIVATE_KEY: env.API_TOKEN_PRIVATE_KEY,
     AUTH_GITHUB_ID: env.AUTH_GITHUB_ID || undefined,
     AUTH_GITHUB_SECRET: env.AUTH_GITHUB_SECRET || undefined,
@@ -73,6 +77,7 @@ export function loadAuthConfig(env: Record<string, string | undefined> = process
     databaseUrl: parsed.DATABASE_URL,
     emailServer: parsed.EMAIL_SERVER,
     emailFrom: parsed.EMAIL_FROM,
+    redisUrl: parsed.REDIS_URL,
     apiTokenPrivateKey: parsed.API_TOKEN_PRIVATE_KEY,
     github: oauthApp(parsed.AUTH_GITHUB_ID, parsed.AUTH_GITHUB_SECRET),
     google: oauthApp(parsed.AUTH_GOOGLE_ID, parsed.AUTH_GOOGLE_SECRET),

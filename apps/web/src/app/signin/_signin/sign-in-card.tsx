@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { AlertIcon, CloseIcon, InfoIcon, MailIcon } from "../../../ui/icons-signin";
+import { RATE_LIMITED_ERROR } from "../../../server/sign-in-paths";
+import { formatClock } from "../../../ui/format";
+import { AlertIcon, ClockIcon, CloseIcon, InfoIcon, LockIcon, MailIcon } from "../../../ui/icons-signin";
+import { useHydrated } from "../../../ui/use-hydrated";
+import { useNow } from "../../../ui/use-now";
 import { signInBanner } from "./sign-in-banner";
 import { SignInForm } from "./sign-in-form";
 import { type OAuthProvider, type SignIn, useSignIn } from "./use-sign-in";
@@ -10,12 +14,21 @@ import { type OAuthProvider, type SignIn, useSignIn } from "./use-sign-in";
 const LINK_LIFETIME = "24 hours";
 
 // Figma 7:9957: the centered card with its states, V1 sign in, V3 link sent and V4's error banner.
-export function SignInCard({ callbackUrl, error, providers }: { callbackUrl: string; error: string | undefined; providers: Record<OAuthProvider, boolean> }) {
-  const signIn = useSignIn(callbackUrl, error);
-  const banner = signInBanner(signIn.error);
+interface SignInCardProps {
+  callbackUrl: string;
+  error: string | undefined;
+  retryAfterSec: number | null;
+  providers: Record<OAuthProvider, boolean>;
+}
+
+export function SignInCard({ callbackUrl, error, retryAfterSec, providers }: SignInCardProps) {
+  const signIn = useSignIn(callbackUrl, error, retryAfterSec);
+  const limited = signIn.error === RATE_LIMITED_ERROR;
+  const banner = limited ? null : signInBanner(signIn.error);
 
   return (
     <div className="relative mx-auto my-8 w-full max-w-[420px]">
+      {limited && <RateLimitBanner until={signIn.retryUntil} fallbackSec={retryAfterSec} />}
       {banner && (
         <div role="alert" className="mb-5 flex items-start justify-between gap-3 rounded-lg border border-[#93000a] bg-[#93000a]/40 p-3.5 text-xs text-[#ffdad6] shadow-sm">
           <span className="flex items-start gap-2.5">
@@ -30,23 +43,7 @@ export function SignInCard({ callbackUrl, error, providers }: { callbackUrl: str
         </div>
       )}
       <div className="relative rounded-xl border border-line bg-surface p-7">{signIn.sentTo ? <LinkSent signIn={signIn} email={signIn.sentTo} /> : <SignInForm signIn={signIn} providers={providers} />}</div>
-      <div className="mt-6 flex flex-col items-center gap-3 text-center">
-        <span className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-subtle">
-          <span className="size-1.5 rounded-full bg-[#a78bfa]" />
-          Are you hiring? Company sign-in opens later
-        </span>
-        <p className="max-w-xs text-[11px] leading-normal text-ink-muted">
-          By authenticating, you agree to our{" "}
-          <Link href="/terms" className="underline hover:text-ink">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
-          <Link href="/privacy" className="underline hover:text-ink">
-            Privacy Policy
-          </Link>
-          .
-        </p>
-      </div>
+      <SignInFooter />
     </div>
   );
 }
@@ -75,6 +72,50 @@ function LinkSent({ signIn, email }: { signIn: SignIn; email: string }) {
           ← Use a different email
         </button>
       </div>
+    </div>
+  );
+}
+
+// Figma 7:9957 › V5 Rate Limited: the same answer for any address, so it tells nothing about accounts.
+function RateLimitBanner({ until, fallbackSec }: { until: number | null; fallbackSec: number | null }) {
+  const now = useNow();
+  const hydrated = useHydrated();
+  const left = hydrated && until !== null ? (until - now) / 1000 : (fallbackSec ?? 0);
+  return (
+    <div role="status" className="mb-5 flex items-center justify-between gap-3 rounded-lg border border-warn/40 bg-warn/10 p-3.5 text-xs text-warn shadow-sm">
+      <span className="flex items-center gap-2.5">
+        <LockIcon className="shrink-0 text-base" />
+        <span className="leading-tight">
+          <span className="font-semibold">Rate limit triggered:</span> Too many sign-in links. Try again when the timer ends.
+        </span>
+      </span>
+      <span className="flex shrink-0 items-center gap-1 rounded border border-warn/40 bg-warn/20 px-2 py-0.5 font-mono text-[11px]">
+        <ClockIcon className="text-xs" />
+        {formatClock(left)}
+      </span>
+    </div>
+  );
+}
+
+// The frame's company line, as text until company sign-in exists (Stage 1.5), and the terms line.
+function SignInFooter() {
+  return (
+    <div className="mt-6 flex flex-col items-center gap-3 text-center">
+      <span className="inline-flex items-center gap-1.5 font-mono text-xs text-ink-subtle">
+        <span className="size-1.5 rounded-full bg-[#a78bfa]" />
+        Are you hiring? Company sign-in opens later
+      </span>
+      <p className="max-w-xs text-[11px] leading-normal text-ink-muted">
+        By authenticating, you agree to our{" "}
+        <Link href="/terms" className="underline hover:text-ink">
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link href="/privacy" className="underline hover:text-ink">
+          Privacy Policy
+        </Link>
+        .
+      </p>
     </div>
   );
 }
