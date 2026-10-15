@@ -15,7 +15,8 @@ test("signs in with an email link, once", async ({ page }) => {
   // The link is used up: following it again does not sign in.
   await page.context().clearCookies();
   await page.goto(link);
-  await expect(page).toHaveURL(/\/api\/auth\/error\?error=Verification/);
+  await expect(page).toHaveURL(/\/signin\?error=Verification/);
+  await expect(page.getByText("expired or was already used")).toBeVisible();
 });
 
 test("calls the API as the signed-in player, not as a dev session", async ({ page, browser }) => {
