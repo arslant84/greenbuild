@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: nginx-large-headers
+version: 1
+title: "Too much to sign in"
+statement: "Since the company moved to a new single sign-on provider, signing in to the intranet fails with 502 Bad Gateway, yet the app logs every sign-in as successful. Get signing in working again."
+difficulty: 4            # 1–10
+skills: { nginx: 0.8, linux: 0.2 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx workers and the app switch users; setup gives the app its files.
+capabilities: [CHOWN, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [intranet, portal, wiki] }
+  port: { range: [3000, 3999] }
+  session_bytes: { range: [5068, 6400] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
