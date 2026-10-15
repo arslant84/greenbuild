@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WRITE_HEADER } from "../../../server/api-proxy";
 import { DEV_SESSION_COOKIE } from "../../../server/dev-session";
-import { PATCH } from "./route";
+import { DELETE, PATCH } from "./route";
 
 const api = vi.fn<typeof fetch>();
 
@@ -40,5 +40,19 @@ describe("PATCH /api/me", () => {
     expect(response.status).toBe(400);
     expect(await response.json()).toMatchObject({ code: "validation_failed" });
     expect(api).not.toHaveBeenCalled();
+  });
+});
+
+describe("DELETE /api/me", () => {
+  it("forwards the deletion to the API", async () => {
+    api.mockResolvedValue(Response.json({ deletion_scheduled_for: "2026-11-13T12:00:00.000Z" }, { status: 202 }));
+    const headers = new Headers({ cookie: `${DEV_SESSION_COOKIE}=dev-token`, [WRITE_HEADER]: "1" });
+
+    const response = await DELETE(new NextRequest("http://localhost:3001/api/me", { method: "DELETE", headers }));
+
+    expect(response.status).toBe(202);
+    const [url, init] = api.mock.calls[0] ?? [];
+    expect(url).toBe("http://api.test:3000/v1/me");
+    expect(init?.method).toBe("DELETE");
   });
 });

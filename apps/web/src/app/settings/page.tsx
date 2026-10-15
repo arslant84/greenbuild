@@ -2,6 +2,7 @@ import { type ConsentHistory, consentHistorySchema, type DiscoveryResponse, disc
 import { apiGet } from "../../server/api";
 import { ServiceError } from "../play/service-error";
 import { AccountSection } from "./_settings/account-section";
+import { DangerSection } from "./_settings/danger-section";
 import { HiringSection } from "./_settings/hiring-section";
 import { NotificationsSection } from "./_settings/notifications-section";
 import { PrivacySection } from "./_settings/privacy-section";
@@ -34,7 +35,7 @@ export default async function SettingsPage() {
   );
 }
 
-// The frame's sections in its order; the danger zone follows.
+// The frame's sections in its order.
 function Sections({ me, discovery, consents }: { me: MeResponse; discovery: DiscoveryResponse; consents: ConsentHistory | null }) {
   return (
     <>
@@ -44,6 +45,7 @@ function Sections({ me, discovery, consents }: { me: MeResponse; discovery: Disc
       <NotificationsSection />
       <PrivacySection consents={consents} />
       <HiringSection initial={discovery} />
+      <DangerSection me={me} />
     </>
   );
 }

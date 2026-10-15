@@ -1,6 +1,11 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { linkInEmail } from "./mailpit";
 import { signInForTest } from "./test-player";
+
+const EXPORT_LINK = /https?:\/\/\S+\/api\/me\/export\/[0-9a-f-]{36}/;
+// The worker's export job runs once a minute.
+const EXPORT_EMAIL_TIMEOUT_MS = 90_000;
 
 // architecture.md, task 47b: the settings screen (Figma 7:10273) edits the player's profile through the API.
 test("a changed display name is still there after a reload", async ({ page }) => {
@@ -66,4 +71,31 @@ test("being found by companies needs the 18+ confirmation", async ({ page }) => 
   await expect(toggle).toBeChecked();
   // Leaving hidden grants the discovery consent, which the consent history lists.
   await expect(page.getByRole("list", { name: "Consent history" })).toContainText(/Company discovery.*Active/);
+});
+
+test("an export request shows the frame's notice and the link arrives by email", async ({ page }) => {
+  const email = await signInForTest(page);
+  await page.goto("/settings");
+
+  await page.getByRole("button", { name: "Request export (JSON)" }).click();
+  const notice = page.getByRole("dialog", { name: "Data Export Initiated" });
+  await expect(notice).toContainText(email);
+  await expect(notice).toContainText("works for 7 days");
+  await linkInEmail(page.request, { to: email, subject: "Your greenbuild data export", link: EXPORT_LINK, timeout: EXPORT_EMAIL_TIMEOUT_MS });
+});
+
+test("deleting the account needs the box and DELETE, then the settings are gone", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/settings");
+
+  await page.getByRole("button", { name: "Delete account..." }).click();
+  const confirm = page.getByRole("button", { name: "Delete permanently" });
+  await expect(confirm).toBeDisabled();
+  await page.getByLabel(/I understand/).check();
+  await page.getByPlaceholder("DELETE").fill("DELETE");
+  await confirm.click();
+
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto("/settings");
+  await expect(page.getByText("Your settings could not be loaded.")).toBeVisible();
 });
