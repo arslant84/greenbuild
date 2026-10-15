@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { type APIRequestContext, expect, type Page } from "@playwright/test";
+import { AGE_COOKIE } from "../src/server/age-cookie";
 
 // The local stack sends its emails to Mailpit (infra/docker/play-stack.compose.yaml), whose API these
 // tests read.
@@ -34,10 +35,12 @@ export async function linkInEmail(request: APIRequestContext, { to, subject, lin
   return found ?? "";
 }
 
-// requestSignInLink asks Auth.js's sign-in page for a link for a new player and answers it.
+// requestSignInLink asks Auth.js's sign-in page for a link for a new player, who has confirmed being 16
+// or older as the sign-in screen's checkbox records it (task 30b), and answers the link.
 export async function requestSignInLink(page: Page): Promise<{ email: string; link: string }> {
   const email = `player-${randomUUID()}@example.com`;
   await page.goto("/api/auth/signin");
+  await page.context().addCookies([{ name: AGE_COOKIE, value: "1", url: page.url() }]);
   // The email-link form; with the test sign-in on, the page has a second email field.
   const form = page.locator("form", { has: page.getByRole("button", { name: "Sign in with Email" }) });
   await form.getByLabel("Email").fill(email);

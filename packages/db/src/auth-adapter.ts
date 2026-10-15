@@ -3,16 +3,24 @@ import { ValidationError } from "@greenbuild/shared";
 import { and, eq } from "drizzle-orm";
 import type { Database } from "./client.js";
 import { authAccounts, authProvider, users, verificationTokens } from "./schema/users.js";
+import { createConfirmedUser } from "./sign-up.js";
 
 type UserRow = typeof users.$inferSelect;
 type Provider = (typeof authProvider.enumValues)[number];
 
+export interface AuthAdapterOptions {
+  // Whether the browser signing in carries the player's 16+ confirmation (task 30b). Without it a new
+  // player is created only with a confirmation recorded for their address.
+  confirmedInBrowser: () => Promise<boolean>;
+}
+
 // authAdapter is the thin Auth.js adapter of ADR-013: JWT sessions, so only the user, account and
 // email-link methods. It maps Auth.js's name, image and emailVerified to our columns, stores emails
-// lowercase and keeps only the provider's user id, never OAuth tokens.
-export function authAdapter(db: Database): Adapter {
+// lowercase and keeps only the provider's user id, never OAuth tokens. It creates no player without
+// the 16+ confirmation (task 30b).
+export function authAdapter(db: Database, options: AuthAdapterOptions): Adapter {
   return {
-    createUser: (user) => createUser(db, user),
+    createUser: async (user) => createUser(db, user, await options.confirmedInBrowser()),
     async getUser(id) {
       const [row] = await db.select().from(users).where(eq(users.id, id));
       return row ? toAdapterUser(row) : null;
@@ -41,14 +49,12 @@ export function authAdapter(db: Database): Adapter {
   };
 }
 
-async function createUser(db: Database, user: AdapterUser): Promise<AdapterUser> {
-  const [row] = await db
-    .insert(users)
-    .values({ email: lowercaseEmail(user.email), emailVerifiedAt: user.emailVerified, displayName: user.name ?? null, avatarUrl: user.image ?? null })
-    .returning();
-  if (!row) {
-    throw new Error("auth adapter: the new user row was not returned");
-  }
+async function createUser(db: Database, user: AdapterUser, confirmedInBrowser: boolean): Promise<AdapterUser> {
+  const row = await createConfirmedUser(
+    db,
+    { email: lowercaseEmail(user.email), emailVerifiedAt: user.emailVerified, displayName: user.name ?? null, avatarUrl: user.image ?? null },
+    confirmedInBrowser,
+  );
   return toAdapterUser(row);
 }
 

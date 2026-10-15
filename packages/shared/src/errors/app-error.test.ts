@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AppError, ConflictError, NotFoundError, RateLimitedError, UnavailableError, ValidationError } from "./app-error.js";
+import { AGE_NOT_CONFIRMED, AgeNotConfirmedError, AppError, ConflictError, NotFoundError, RateLimitedError, UnavailableError, ValidationError } from "./app-error.js";
 import { errorResponseSchema } from "./error-response.js";
 
 describe("AppError", () => {
@@ -21,6 +21,10 @@ describe("AppError", () => {
 
     expect(response).toEqual({ code: "not_found", message: "Challenge not found" });
     expect("details" in response).toBe(false);
+  });
+
+  it("marks a missing 16+ confirmation as forbidden with its reason", () => {
+    expect(new AgeNotConfirmedError().toResponse()).toMatchObject({ code: "forbidden", details: { reason: AGE_NOT_CONFIRMED } });
   });
 
   it("keeps the subclass name and stays an AppError", () => {
