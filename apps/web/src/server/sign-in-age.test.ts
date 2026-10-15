@@ -11,7 +11,8 @@ const browser = vi.hoisted(() => ({ confirmed: false }));
 vi.mock("@greenbuild/db/auth", () => db);
 vi.mock("./age-confirmation", () => ({ ageConfirmedInBrowser: async () => browser.confirmed }));
 
-const { AGE_REQUIRED_PATH, ageCheck, ageDecision } = await import("./sign-in-age");
+const { ageCheck, ageDecision } = await import("./sign-in-age");
+const { AGE_REQUIRED_PATH } = await import("./sign-in-paths");
 
 const NEW: AgeStatus = { kind: "new" };
 const OLDER: AgeStatus = { kind: "unconfirmed", userId: "older-player" };
