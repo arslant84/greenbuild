@@ -27,6 +27,8 @@ __queuestorage__/
 
 # Terraform
 .terraform/
+# Modules are locked by the environment that uses them (envs/*/.terraform.lock.hcl).
+infra/terraform/modules/**/.terraform.lock.hcl
 *.tfstate
 *.tfstate.*
 *.tfvars
