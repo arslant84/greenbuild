@@ -29,10 +29,14 @@ async function challengesWith(id: string): Promise<{ root: string; dir: string }
   return { root, dir };
 }
 
+// Seeding twice reads and writes every challenge twice: under 2 s alone, but CI runs it beside other
+// packages' PostgreSQL containers, where it passed 5 s (PR #274), and the catalog grows to 60 (task 53).
+const SEED_TWICE_TIMEOUT_MS = 30_000;
+
 describe("seedChallenges on a migrated database", () => {
   const database = useMigratedDatabase();
 
-  it("adds every challenge in challenges/ once, however often it runs", async () => {
+  it("adds every challenge in challenges/ once, however often it runs", { timeout: SEED_TWICE_TIMEOUT_MS }, async () => {
     const { db } = database();
     await seedChallenges(db);
     await seedChallenges(db);
