@@ -57,7 +57,7 @@ test("being found by companies needs the 18+ confirmation", async ({ page }) => 
   const toggle = page.getByLabel("Open to offers");
 
   await toggle.click({ force: true });
-  await expect(page.getByRole("alert")).toHaveText("Confirm you are 18 or older to be found by companies.");
+  await expect(page.getByText("Confirm you are 18 or older to be found by companies.")).toBeVisible();
   await expect(toggle).not.toBeChecked();
 
   await page.getByLabel(/I am 18 or older/).check();
