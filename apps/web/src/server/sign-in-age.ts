@@ -5,7 +5,7 @@ import { LINK_MAX_AGE_SEC } from "./email-sign-in";
 import { AGE_REQUIRED_PATH } from "./sign-in-paths";
 
 type Database = ReturnType<typeof connect>["db"];
-type SignInCallback = NonNullable<NonNullable<NextAuthConfig["callbacks"]>["signIn"]>;
+export type SignInCallback = NonNullable<NonNullable<NextAuthConfig["callbacks"]>["signIn"]>;
 
 // The steps of a sign-in: asking for an email link, and completing it by the link or through GitHub.
 export type SignInStep = "request-link" | "complete";
