@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
 import { type APIRequestContext, expect, type Page } from "@playwright/test";
-import { AGE_COOKIE } from "../src/server/age-cookie";
 
 // The local stack sends its emails to Mailpit (infra/docker/play-stack.compose.yaml), whose API these
 // tests read.
@@ -35,16 +34,32 @@ export async function linkInEmail(request: APIRequestContext, { to, subject, lin
   return found ?? "";
 }
 
-// requestSignInLink asks Auth.js's sign-in page for a link for a new player, who has confirmed being 16
-// or older as the sign-in screen's checkbox records it (task 30b), and answers the link.
+// askForSignInLink fills the sign-in screen's email form (task 30b), ticking "I am 16 or older" unless
+// told not to; the screen answers with "Check your email" or an error banner.
+export async function askForSignInLink(page: Page, email: string, ageConfirmed = true): Promise<void> {
+  await page.goto("/signin");
+  if (ageConfirmed) {
+    await page.getByLabel("I am 16 or older").check();
+  }
+  await page.getByLabel("Work or personal email").fill(email);
+  await page.getByRole("button", { name: "Send magic link" }).click();
+}
+
+// requestSignInLink asks the sign-in screen for a link for a new player who is 16 or older, and answers it.
 export async function requestSignInLink(page: Page): Promise<{ email: string; link: string }> {
   const email = `player-${randomUUID()}@example.com`;
-  await page.goto("/api/auth/signin");
-  await page.context().addCookies([{ name: AGE_COOKIE, value: "1", url: page.url() }]);
-  // The email-link form; with the test sign-in on, the page has a second email field.
-  const form = page.locator("form", { has: page.getByRole("button", { name: "Sign in with Email" }) });
-  await form.getByLabel("Email").fill(email);
-  await form.getByRole("button", { name: "Sign in with Email" }).click();
-  await expect(page).toHaveURL(/\/api\/auth\/verify-request/);
-  return { email, link: await linkInEmail(page.request, { to: email, subject: "Sign in to greenbuild", link: SIGN_IN_LINK }) };
+  await askForSignInLink(page, email);
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  return { email, link: await signInLinkTo(page.request, email) };
+}
+
+export function signInLinkTo(request: APIRequestContext, email: string): Promise<string> {
+  return linkInEmail(request, { to: email, subject: "Sign in to greenbuild", link: SIGN_IN_LINK });
+}
+
+// emailsTo counts the emails Mailpit holds for an address.
+export async function emailsTo(request: APIRequestContext, email: string): Promise<number> {
+  const query = encodeURIComponent(`to:"${email}"`);
+  const search = (await (await request.get(`${MAILPIT_URL}/api/v1/search?query=${query}`)).json()) as MailpitSearch;
+  return search.messages.length;
 }

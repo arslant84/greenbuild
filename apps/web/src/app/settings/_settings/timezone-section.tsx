@@ -1,23 +1,14 @@
 "use client";
 
 import type { MeResponse } from "@greenbuild/shared";
-import { useMemo, useSyncExternalStore } from "react";
+import { useMemo } from "react";
 import { ExpandMoreIcon, LocalFireDepartmentIcon } from "../../../ui/icons-profile";
 import { LockClockIcon, WarningIcon } from "../../../ui/icons-settings";
+import { useHydrated } from "../../../ui/use-hydrated";
 import { useNow } from "../../../ui/use-now";
 import { HEADLINE_LG, LABEL_CODE } from "../../../ui/type";
 import { offsetLabel, type TimezoneLock, timezoneLock, timezoneOptions, untilDayEnds } from "./timezone";
 import { type TimezoneSave, useTimezoneSave } from "./use-timezone-save";
-
-// The server and the browser know different zone lists and clocks, so the full list and the countdown render
-// only once the page is hydrated; until then the picker holds the player's zone and the countdown "—".
-function useHydrated(): boolean {
-  return useSyncExternalStore(
-    () => () => undefined,
-    () => true,
-    () => false,
-  );
-}
 
 // The frame's 30-day density strip has 18 bars.
 const DENSITY_BARS = Array.from({ length: 18 }, (_, bar) => `bar-${bar}`);

@@ -6,6 +6,7 @@ import { ageConfirmedInBrowser } from "./age-confirmation";
 import { e2eSignIn } from "./e2e-sign-in";
 import { emailSignIn } from "./email-sign-in";
 import { ageCheck } from "./sign-in-age";
+import { SIGN_IN_PATH } from "./sign-in-paths";
 import { type AuthConfig, loadAuthConfig } from "../config/auth";
 
 // Sign-in with GitHub and an email link (architecture.md, task 30a): the thin adapter of ADR-013 and JWT
@@ -37,6 +38,8 @@ function authOptions(config: AuthConfig): NextAuthConfig {
     secret: config.secret,
     adapter,
     session: { strategy: "jwt" },
+    // Our sign-in screen (task 30b) shows sign-in and its errors; it asks for links without leaving it.
+    pages: { signIn: SIGN_IN_PATH, error: SIGN_IN_PATH },
     providers,
     callbacks: {
       // No sign-in past the 16+ rule (task 30b); the adapter checks it again when it creates a player.
