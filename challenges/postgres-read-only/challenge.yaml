@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: postgres-read-only
+version: 1
+title: "Frozen after the move"
+statement: "Since last night's maintenance, the shop's checkout fails for every order, though customers can still browse. The database is up and has plenty of disk. Get orders recorded again without losing any."
+difficulty: 4            # 1–10
+skills: { postgresql: 0.8, linux: 0.2 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# PostgreSQL runs as its own user; root runs psql as postgres to change the cluster's settings.
+capabilities: [CHOWN, DAC_OVERRIDE, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  database: { pick: [shop, tickets, billing] }
+  orders: { range: [40, 89] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
