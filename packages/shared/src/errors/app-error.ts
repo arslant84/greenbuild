@@ -37,6 +37,16 @@ export class ForbiddenError extends AppError {
   }
 }
 
+// AgeNotConfirmedError refuses an account whose player has not confirmed being 16 or older (task 30b);
+// details.reason lets the web app send them to sign-in, where they confirm it.
+export const AGE_NOT_CONFIRMED = "age_not_confirmed";
+
+export class AgeNotConfirmedError extends AppError {
+  constructor() {
+    super("forbidden", "Confirm you are 16 or older to use greenbuild", { reason: AGE_NOT_CONFIRMED });
+  }
+}
+
 export class NotFoundError extends AppError {
   constructor(message: string) {
     super("not_found", message);

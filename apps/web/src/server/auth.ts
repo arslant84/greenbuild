@@ -2,6 +2,7 @@ import { authAdapter, connect } from "@greenbuild/db/auth";
 import NextAuth, { type NextAuthConfig, type NextAuthResult } from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
+import { ageConfirmedInBrowser } from "./age-confirmation";
 import { e2eSignIn } from "./e2e-sign-in";
 import { emailSignIn } from "./email-sign-in";
 import { type AuthConfig, loadAuthConfig } from "../config/auth";
@@ -19,7 +20,8 @@ export function authInstance(): NextAuthResult | null {
 }
 
 function authOptions(config: AuthConfig): NextAuthConfig {
-  const adapter = authAdapter(connect(config.databaseUrl).db);
+  const { db } = connect(config.databaseUrl);
+  const adapter = authAdapter(db, { confirmedInBrowser: ageConfirmedInBrowser });
   const providers: NextAuthConfig["providers"] = [emailSignIn({ server: config.emailServer, from: config.emailFrom })];
   if (config.github) {
     providers.push(GitHub({ clientId: config.github.clientId, clientSecret: config.github.clientSecret }));
@@ -28,7 +30,7 @@ function authOptions(config: AuthConfig): NextAuthConfig {
     providers.push(Google({ clientId: config.google.clientId, clientSecret: config.google.clientSecret }));
   }
   if (config.e2eSignIn) {
-    providers.push(e2eSignIn(adapter));
+    providers.push(e2eSignIn(adapter, db));
   }
   return {
     secret: config.secret,

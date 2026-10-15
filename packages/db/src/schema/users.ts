@@ -68,3 +68,10 @@ export const verificationTokens = pgTable(
   },
   (table) => [primaryKey({ columns: [table.identifier, table.token] })],
 );
+
+// A new player's 16+ confirmation, given when they asked for an email link (task 30b). It belongs to the
+// address, not the browser, so the link may be opened anywhere; it lives as long as the link.
+export const ageConfirmations = pgTable("age_confirmations", {
+  email: text("email").primaryKey(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+});

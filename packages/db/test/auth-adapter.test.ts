@@ -18,7 +18,7 @@ const NEEDED = ["createUser", "getUser", "getUserByEmail", "getUserByAccount", "
 type Needed = Required<Pick<Adapter, (typeof NEEDED)[number]>>;
 
 function adapter(): Needed {
-  const methods = authAdapter(database().db);
+  const methods = authAdapter(database().db, { confirmedInBrowser: async () => true });
   const missing = NEEDED.filter((name) => !methods[name]);
   if (missing.length > 0) {
     throw new Error(`the adapter lacks ${missing.join(", ")}, which JWT sessions and the email link need`);

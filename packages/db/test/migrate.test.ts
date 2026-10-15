@@ -5,6 +5,7 @@ import { useMigratedDatabase } from "./migrated.js";
 import { aUser } from "./users-fixture.js";
 
 const TABLES = [
+  "age_confirmations",
   "assessment_invites",
   "attempt_checks",
   "attempt_signals",

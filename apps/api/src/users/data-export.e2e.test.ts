@@ -12,7 +12,7 @@ const DAY_MS = 86_400_000;
 async function aSignedInUser(): Promise<string> {
   const connection = connect(app().env.DATABASE_URL);
   try {
-    const [user] = await connection.db.insert(users).values({ email: `${randomUUID()}@example.com` }).returning({ id: users.id });
+    const [user] = await connection.db.insert(users).values({ email: `${randomUUID()}@example.com`, ageConfirmed16At: new Date() }).returning({ id: users.id });
     return user?.id ?? "";
   } finally {
     await connection.close();
