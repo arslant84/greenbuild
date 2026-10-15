@@ -2,7 +2,7 @@ import type { EmailConfig } from "next-auth/providers/email";
 import { createTransport } from "nodemailer";
 
 // A sign-in link works for a day, as Auth.js's own default.
-const LINK_MAX_AGE_SEC = 24 * 60 * 60;
+export const LINK_MAX_AGE_SEC = 24 * 60 * 60;
 
 // emailSignIn sends the sign-in link over SMTP: Mailpit locally, the D6 provider elsewhere. It builds
 // Auth.js's EmailConfig itself because next-auth's Nodemailer provider does not type-check with

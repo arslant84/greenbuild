@@ -2,8 +2,8 @@ import { randomUUID } from "node:crypto";
 import { AgeNotConfirmedError, PRIVACY_VERSION, TERMS_VERSION } from "@greenbuild/shared";
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
-import { consents, users } from "../src/schema/index.js";
-import { confirmUser, createConfirmedUser, hasAgeConfirmation, recordAgeConfirmation } from "../src/sign-up.js";
+import { authAccounts, consents, users } from "../src/schema/index.js";
+import { ageStatus, confirmUser, createConfirmedUser, hasAgeConfirmation, recordAgeConfirmation } from "../src/sign-up.js";
 import { useMigratedDatabase } from "./migrated.js";
 
 // Task 30b: no account exists without the 16+ confirmation; task 31a: sign-up records the consents.
@@ -70,5 +70,24 @@ describe("confirmUser", () => {
     expect(first?.ageConfirmed16At).toBeInstanceOf(Date);
     expect(second?.ageConfirmed16At).toEqual(first?.ageConfirmed16At);
     expect(await signUpConsents(userId)).toEqual(EXPECTED_CONSENTS);
+  });
+});
+
+describe("ageStatus", () => {
+  it("tells a new address from a confirmed player and one created before 16+ was asked", async () => {
+    const confirmed = await createConfirmedUser(database().db, { email: anEmail() }, true);
+    const [older] = await database().db.insert(users).values({ email: anEmail() }).returning();
+
+    expect(await ageStatus(database().db, { email: anEmail() })).toEqual({ kind: "new" });
+    expect(await ageStatus(database().db, { email: (confirmed.email ?? "").toUpperCase() })).toEqual({ kind: "confirmed", userId: confirmed.id });
+    expect(await ageStatus(database().db, { email: older?.email ?? "" })).toEqual({ kind: "unconfirmed", userId: older?.id });
+  });
+
+  it("finds a player by their GitHub account", async () => {
+    const player = await createConfirmedUser(database().db, { email: anEmail() }, true);
+    await database().db.insert(authAccounts).values({ userId: player.id, provider: "github", providerUserId: "gh-4242" });
+
+    expect(await ageStatus(database().db, { provider: "github", providerUserId: "gh-4242" })).toEqual({ kind: "confirmed", userId: player.id });
+    expect(await ageStatus(database().db, { provider: "github", providerUserId: "gh-0000" })).toEqual({ kind: "new" });
   });
 });

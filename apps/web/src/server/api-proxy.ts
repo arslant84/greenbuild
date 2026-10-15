@@ -20,8 +20,11 @@ export interface ProxyOptions {
 
 // proxyToApi forwards a page's request to the API as the signed-in user; the token stays on the server.
 export async function proxyToApi(request: NextRequest, options: ProxyOptions): Promise<Response> {
-  if (options.method !== "GET" && request.headers.get(WRITE_HEADER) !== "1") {
-    return failure(new ForbiddenError("Missing request header"));
+  if (options.method !== "GET") {
+    const refused = refusedWrite(request);
+    if (refused) {
+      return refused;
+    }
   }
   const token = await apiBearer(request.cookies.get(DEV_SESSION_COOKIE)?.value);
   if (!token) {
@@ -42,6 +45,11 @@ export async function proxyToApi(request: NextRequest, options: ProxyOptions): P
     logger.error("api unreachable", { path: options.path, error });
     return failure(new UnavailableError("The service is unavailable"));
   }
+}
+
+// refusedWrite answers a write without the request header, which a cross-site form cannot send.
+export function refusedWrite(request: NextRequest): Response | null {
+  return request.headers.get(WRITE_HEADER) === "1" ? null : failure(new ForbiddenError("Missing request header"));
 }
 
 // invalidPath answers a malformed id or slug before anything reaches the API.

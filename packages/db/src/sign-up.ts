@@ -2,9 +2,15 @@ import { AgeNotConfirmedError, PRIVACY_VERSION, TERMS_VERSION } from "@greenbuil
 import { and, eq, gt, inArray, isNull } from "drizzle-orm";
 import type { Database } from "./client.js";
 import { consents } from "./schema/consent.js";
-import { ageConfirmations, users } from "./schema/users.js";
+import { ageConfirmations, authAccounts, authProvider, users } from "./schema/users.js";
 
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
+
+// Who is signing in, as far as the 16+ rule goes (task 30b): nobody yet, a confirmed player, or one
+// created before the rule.
+export type AgeStatus = { kind: "new" } | { kind: "confirmed"; userId: string } | { kind: "unconfirmed"; userId: string };
+export type SignInIdentity = { email: string } | { provider: (typeof authProvider.enumValues)[number]; providerUserId: string };
+
 type NewUser = Pick<typeof users.$inferInsert, "email" | "emailVerifiedAt" | "displayName" | "avatarUrl">;
 
 // What a player accepts at sign-up (task 31a): the current terms and privacy policy.
@@ -12,6 +18,23 @@ const SIGN_UP_CONSENTS = [
   { kind: "terms", version: TERMS_VERSION },
   { kind: "privacy", version: PRIVACY_VERSION },
 ] as const;
+
+// ageStatus finds the player behind an email address or a sign-in account.
+export async function ageStatus(db: Database, identity: SignInIdentity): Promise<AgeStatus> {
+  const columns = { id: users.id, ageConfirmed16At: users.ageConfirmed16At };
+  const [row] =
+    "email" in identity
+      ? await db.select(columns).from(users).where(eq(users.email, identity.email.toLowerCase()))
+      : await db
+          .select(columns)
+          .from(authAccounts)
+          .innerJoin(users, eq(users.id, authAccounts.userId))
+          .where(and(eq(authAccounts.provider, identity.provider), eq(authAccounts.providerUserId, identity.providerUserId)));
+  if (!row) {
+    return { kind: "new" };
+  }
+  return row.ageConfirmed16At ? { kind: "confirmed", userId: row.id } : { kind: "unconfirmed", userId: row.id };
+}
 
 // recordAgeConfirmation keeps a player's 16+ confirmation for their address until expiresAt (task 30b),
 // so the email link they asked for creates their account in any browser.
