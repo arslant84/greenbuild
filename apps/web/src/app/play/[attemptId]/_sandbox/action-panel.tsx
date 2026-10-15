@@ -9,7 +9,7 @@ interface ActionPanelProps {
 }
 
 // Figma › Action Panel & Verification CTA, with V2's checking and V5's reconnecting buttons.
-// Hints arrive with their API endpoint; until then the hint row is shown but inert.
+// The hint row stays inert until a Figma frame shows a revealed hint (task 35c); the hints API is done.
 export function ActionPanel({ mode, onCheck, onGiveUp }: ActionPanelProps) {
   return (
     <div className="flex flex-col gap-3 pt-5">
