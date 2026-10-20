@@ -99,3 +99,17 @@ test("deleting the account needs the box and DELETE, then the settings are gone"
   await page.goto("/settings");
   await expect(page.getByText("Your settings could not be loaded.")).toBeVisible();
 });
+
+test("the streak reminder and its hour are still set after a reload", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/settings");
+  const reminder = page.getByLabel("Daily streak reminder");
+  const saved = () => page.waitForResponse((response) => response.url().endsWith("/api/me/notifications") && response.ok());
+
+  await Promise.all([saved(), reminder.click({ force: true })]);
+  await Promise.all([saved(), page.getByLabel("Reminder time").selectOption("7")]);
+  await page.reload();
+
+  await expect(page.getByLabel("Daily streak reminder")).toBeChecked();
+  await expect(page.getByLabel("Reminder time")).toHaveValue("7");
+});
