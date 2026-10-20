@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: ssh-host-key-changed
+version: 1
+title: "Someone could be eavesdropping"
+statement: "Since the archive host was reinstalled last night, the job that pushes reports to it refuses to connect with a scary warning about the host's identity. Get the reports through again, safely."
+difficulty: 3            # 1–10
+skills: { ssh: 0.6, linux: 0.4 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 256Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# The archive host and the job run as their own users; setup gives each their files.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [reports, billing, analytics] }
+  port: { range: [2200, 2899] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
