@@ -6,7 +6,7 @@ import { type ReminderCandidate, reminderDue, secondsLeftInDay } from "./due.js"
 const NOW = new Date("2026-12-01T18:30:00Z");
 
 function candidate(overrides: Partial<ReminderCandidate> = {}): ReminderCandidate {
-  return { userId: "u", email: "ada@example.com", timezone: "Europe/Berlin", reminderHour: 19, lastRemindedDay: null, streak: NO_STREAK, ...overrides };
+  return { userId: "u", email: "ada@example.com", timezone: "Europe/Berlin", reminderHour: 19, lastRemindedDay: null, unsubscribeToken: "t", streak: NO_STREAK, ...overrides };
 }
 
 describe("reminderDue", () => {

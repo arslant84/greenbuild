@@ -13,3 +13,8 @@ export const notificationsSchema = z.strictObject({
 });
 
 export type Notifications = z.infer<typeof notificationsSchema>;
+
+// POST /v1/notifications/unsubscribe (public): the token from a reminder's one-click unsubscribe link.
+export const unsubscribeRequestSchema = z.strictObject({ token: z.uuid() });
+
+export type UnsubscribeRequest = z.infer<typeof unsubscribeRequestSchema>;

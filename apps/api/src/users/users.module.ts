@@ -12,11 +12,12 @@ import { NotificationsController } from "./notifications.controller.js";
 import { NotificationSettings } from "./notifications.js";
 import { PublicProfileController } from "./public-profile.controller.js";
 import { PublicProfiles } from "./public-profile.js";
+import { UnsubscribeController } from "./unsubscribe.controller.js";
 
 // The player's own profile, their public game profile, discovery mode, consent history and reminder
 // settings (task 52); export and deletion join them (tasks 50a–50b).
 @Module({
-  controllers: [MeController, PublicProfileController, DiscoveryController, ConsentsController, NotificationsController],
+  controllers: [MeController, PublicProfileController, DiscoveryController, ConsentsController, NotificationsController, UnsubscribeController],
   providers: [MeService, PublicProfiles, Discovery, Consents, AccountDeletion, DataExport, ExportArchives, NotificationSettings],
 })
 export class UsersModule {}

@@ -37,13 +37,21 @@ export async function sendDueReminders({ db, mail, webUrl }: ReminderDeps, now: 
       settingsUrl: `${webUrl}/settings#section-notifications`,
     });
     try {
-      await mail.send({ to: candidate.email, ...email });
+      await mail.send({ to: candidate.email, ...email, headers: unsubscribeHeaders(webUrl, candidate.unsubscribeToken) });
       sent += 1;
     } catch (error) {
       logger.error("streak reminder not sent", { userId: candidate.userId, error });
     }
   }
   return sent;
+}
+
+// unsubscribeHeaders let mail providers offer one-click unsubscribe (RFC 8058): they POST to the URL.
+export function unsubscribeHeaders(webUrl: string, token: string): Record<string, string> {
+  return {
+    "List-Unsubscribe": `<${webUrl}/api/notifications/unsubscribe?token=${encodeURIComponent(token)}>`,
+    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+  };
 }
 
 // reminderCandidates are the active players with an address, confirmed 16+, who turned the reminder on.
@@ -60,6 +68,7 @@ async function reminderCandidates(db: Database): Promise<ReminderCandidate[]> {
     timezone: user.timezone,
     reminderHour: settings.reminderHour,
     lastRemindedDay: settings.lastRemindedDay,
+    unsubscribeToken: settings.unsubscribeToken,
     streak: streak ? { current: streak.current, longest: streak.longest, lastDay: streak.lastDay, freezes: streak.freezesAvailable } : NO_STREAK,
   }));
 }

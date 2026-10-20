@@ -37,4 +37,10 @@ export class NotificationSettings {
       .onConflictDoUpdate({ target: userSettings.userId, set: values });
     return request;
   }
+
+  // unsubscribe turns the reminders off for the player whose link carries token. It answers nothing either
+  // way, so a token reveals no account.
+  async unsubscribe(token: string): Promise<void> {
+    await this.database.db.update(userSettings).set({ notifyEmail: false }).where(eq(userSettings.unsubscribeToken, token));
+  }
 }
