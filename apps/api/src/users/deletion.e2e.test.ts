@@ -1,15 +1,14 @@
 import { randomUUID } from "node:crypto";
 import { connect, consents, eq, privacyRequests } from "@greenbuild/db";
 import { describe, expect, it } from "vitest";
-import { signDevUserToken } from "../auth/dev-user-token.js";
-import { TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
+import { playerToken, useAttemptsApp } from "../testing/attempts-app.js";
 
 // architecture.md, task 50b: DELETE /v1/me hides the account at once and schedules the deletion.
 const app = useAttemptsApp();
 const DELETION_DAYS_MS = 30 * 86_400_000;
 
 async function me(userId: string, method: string, body?: unknown): Promise<Response> {
-  const token = await signDevUserToken(TEST_DEV_AUTH_SECRET, userId);
+  const token = await playerToken(app, userId);
   const path = method === "PUT" ? "/v1/me/discovery" : "/v1/me";
   return fetch(`${app().baseUrl}${path}`, { method, headers: { authorization: `Bearer ${token}`, "content-type": "application/json" }, body: body === undefined ? null : JSON.stringify(body) });
 }

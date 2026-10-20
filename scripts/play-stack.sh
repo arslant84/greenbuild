@@ -28,7 +28,7 @@ log() { printf '[play] %s\n' "$*"; }
 # later (AUTH_SECRET, task 30a) is appended to an older secrets.env.
 secrets() {
   touch "$PLAY/secrets.env"
-  for name in ATTACH_SECRET INTERNAL_TOKEN DEV_AUTH_SECRET AUTH_SECRET; do
+  for name in ATTACH_SECRET INTERNAL_TOKEN AUTH_SECRET; do
     if ! grep -q "^$name=" "$PLAY/secrets.env"; then
       echo "$name=$(head -c 32 /dev/urandom | od -An -tx1 | tr -d ' \n')" >> "$PLAY/secrets.env"
     fi
@@ -132,7 +132,7 @@ services() {
     SANDBOX_ENGINE_HTTP_ADDR="127.0.0.1:$ENGINE_PORT" SANDBOX_ENGINE_AGENT_ADDR="127.0.0.1:$AGENT_GRPC_PORT" "$PLAY/bin/sandbox-engine"
   wait_for engine "$ENGINE_PORT"
   start api NODE_ENV=development PORT="$API_PORT" DATABASE_URL="$DATABASE_URL" REDIS_URL="$REDIS_URL" ATTACH_SECRET="$ATTACH_SECRET" \
-    ENGINE_INTERNAL_URL="http://127.0.0.1:$ENGINE_PORT" ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" \
+    ENGINE_INTERNAL_URL="http://127.0.0.1:$ENGINE_PORT" ENGINE_INTERNAL_TOKEN="$INTERNAL_TOKEN" \
     API_TOKEN_PUBLIC_KEY="$API_TOKEN_PUBLIC_KEY" EXPORT_BLOB_CONNECTION_STRING="$EXPORT_BLOB" node apps/api/dist/main.js
   wait_for api "$API_PORT"
   # The worker relays attempt.finished and publishes the daily challenge (task 41a).

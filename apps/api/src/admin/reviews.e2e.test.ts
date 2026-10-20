@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { attempts, attemptSignals, auditLog, challenges, challengeVersions, cheatReviews, connect, desc, eq, outbox, users } from "@greenbuild/db";
 import { describe, expect, it } from "vitest";
-import { signDevUserToken } from "../auth/dev-user-token.js";
-import { TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
+import { playerToken, useAttemptsApp } from "../testing/attempts-app.js";
 
 // architecture.md, task 49c: admins review flagged attempts; every decision goes to audit_log.
 const app = useAttemptsApp();
@@ -17,7 +16,7 @@ async function withDatabase<T>(work: (db: ReturnType<typeof connect>["db"]) => P
 }
 
 async function headers(userId: string): Promise<Record<string, string>> {
-  return { authorization: `Bearer ${await signDevUserToken(TEST_DEV_AUTH_SECRET, userId)}`, "content-type": "application/json" };
+  return { authorization: `Bearer ${await playerToken(app, userId)}`, "content-type": "application/json" };
 }
 
 async function list(userId: string): Promise<Response> {

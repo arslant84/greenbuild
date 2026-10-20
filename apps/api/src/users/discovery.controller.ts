@@ -1,6 +1,6 @@
 import { type DiscoveryResponse, discoveryRequestSchema } from "@greenbuild/shared";
 import { Body, Controller, Get, Put } from "@nestjs/common";
-import type { AuthenticatedUser } from "../auth/dev-user-token.js";
+import type { AuthenticatedUser } from "../auth/api-token.js";
 import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
 import { Discovery } from "./discovery.js";

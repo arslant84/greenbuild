@@ -8,7 +8,6 @@ const valid = {
   ATTACH_SECRET: "a".repeat(32),
   ENGINE_INTERNAL_URL: "http://engine:8080",
   ENGINE_INTERNAL_TOKEN: "i".repeat(32),
-  DEV_AUTH_SECRET: "d".repeat(32),
 };
 
 describe("loadServicesEnv", () => {
@@ -16,8 +15,8 @@ describe("loadServicesEnv", () => {
     expect(loadServicesEnv(valid)).toEqual({ NODE_ENV: "development", ...valid });
   });
 
-  it("treats an empty dev auth secret as unset", () => {
-    expect(loadServicesEnv({ ...valid, DEV_AUTH_SECRET: "" }).DEV_AUTH_SECRET).toBeUndefined();
+  it("treats an empty API token key as unset", () => {
+    expect(loadServicesEnv({ ...valid, API_TOKEN_PUBLIC_KEY: "" }).API_TOKEN_PUBLIC_KEY).toBeUndefined();
   });
 
   it("names the wrong variables without their values", () => {
