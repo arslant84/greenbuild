@@ -1,6 +1,6 @@
 # ADR-009: A temporary dev user token until Auth.js
 
-Status: Accepted (owner, 2026-10-12)
+Status: Superseded (task 30e, 2026-10-20): Auth.js sign-in and the web app's API tokens (task 30c) replaced the dev path, which is removed. Accepted (owner, 2026-10-12).
 
 ## Context
 
