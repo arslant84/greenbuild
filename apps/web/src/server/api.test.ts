@@ -4,10 +4,8 @@ import { AGE_NOT_CONFIRMED } from "@greenbuild/shared";
 import { apiGet, apiGetPublic } from "./api";
 import { AGE_REQUIRED_PATH } from "./sign-in-paths";
 
-const session = { value: "dev-token" as string | undefined };
-vi.mock("next/headers", () => ({
-  cookies: () => Promise.resolve({ get: () => (session.value ? { value: session.value } : undefined) }),
-}));
+const session = vi.hoisted(() => ({ value: "api-token" as string | undefined }));
+vi.mock("./api-bearer", () => ({ apiBearer: async () => session.value }));
 
 const redirect = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({ redirect }));
@@ -16,7 +14,7 @@ const api = vi.fn<typeof fetch>();
 const schema = z.object({ title: z.string() });
 
 beforeEach(() => {
-  session.value = "dev-token";
+  session.value = "api-token";
   vi.stubEnv("API_URL", "http://api.test:3000");
   vi.stubGlobal("fetch", api);
 });
@@ -32,7 +30,7 @@ describe("apiGet", () => {
     api.mockResolvedValue(Response.json({ title: "The site returns 502" }));
 
     expect(await apiGet("/v1/challenges/x", schema)).toEqual({ title: "The site returns 502" });
-    expect(new Headers(api.mock.calls[0]?.[1]?.headers).get("authorization")).toBe("Bearer dev-token");
+    expect(new Headers(api.mock.calls[0]?.[1]?.headers).get("authorization")).toBe("Bearer api-token");
   });
 
   it("sends a player who has not confirmed being 16 or older to the sign-in screen", async () => {

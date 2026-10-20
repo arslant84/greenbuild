@@ -1,46 +1,42 @@
-import { jwtVerify } from "jose";
 import { NextRequest } from "next/server";
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { proxy } from "./proxy";
-import { DEV_SESSION_COOKIE } from "./server/dev-session";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const SECRET = "dev-auth-secret-dev-auth-secret-32";
+// Auth.js as the proxy sees it: configured or not, and the visitor's session.
+const signIn = vi.hoisted(() => ({ configured: true, userId: null as string | null }));
+vi.mock("./server/auth", () => ({
+  authInstance: () => (signIn.configured ? { auth: async () => (signIn.userId ? { user: { id: signIn.userId } } : null) } : null),
+}));
 
-function visit(cookie?: string): Promise<Response> {
-  const headers = cookie ? { cookie: `${DEV_SESSION_COOKIE}=${cookie}` } : undefined;
-  return proxy(new NextRequest("http://localhost:3001/play", headers ? { headers } : {}));
+const { proxy } = await import("./proxy");
+
+function visit(path: string): Promise<Response> {
+  return proxy(new NextRequest(`http://localhost:3001${path}`));
 }
 
-afterEach(() => {
-  vi.unstubAllEnvs();
+beforeEach(() => {
+  signIn.configured = true;
+  signIn.userId = null;
 });
 
 describe("proxy", () => {
-  it("starts an httpOnly dev session on the first visit", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("DEV_AUTH_SECRET", SECRET);
-    const cookie = (await visit()).headers.get("set-cookie") ?? "";
+  it("sends a visitor without a session to sign in, and back to the page after", async () => {
+    const response = await visit("/challenges?skill=nginx");
 
-    expect(cookie).toMatch(/HttpOnly/i);
-    expect(cookie).toMatch(/SameSite=lax/i);
-    const token = new RegExp(`${DEV_SESSION_COOKIE}=([^;]+)`).exec(cookie)?.[1] ?? "";
-    const { payload } = await jwtVerify(token, new TextEncoder().encode(SECRET), { audience: "greenbuild-dev-user" });
-    expect(payload.sub).toMatch(/^[0-9a-f-]{36}$/);
+    expect(response.status).toBe(307);
+    const location = new URL(response.headers.get("location") ?? "");
+    expect(location.pathname).toBe("/signin");
+    expect(location.searchParams.get("callbackUrl")).toBe("/challenges?skill=nginx");
   });
 
-  it("keeps an existing session", async () => {
-    vi.stubEnv("NODE_ENV", "development");
-    vi.stubEnv("DEV_AUTH_SECRET", SECRET);
+  it("lets a signed-in player through", async () => {
+    signIn.userId = "player";
 
-    expect((await visit("existing")).headers.get("set-cookie")).toBeNull();
+    expect((await visit("/play")).headers.get("location")).toBeNull();
   });
 
-  it.each([
-    ["in production", { NODE_ENV: "production", DEV_AUTH_SECRET: SECRET }],
-    ["without DEV_AUTH_SECRET", { NODE_ENV: "development" }],
-  ])("starts no session %s", async (_name, env) => {
-    for (const [name, value] of Object.entries(env)) vi.stubEnv(name, value);
+  it("redirects nobody when sign-in is not configured", async () => {
+    signIn.configured = false;
 
-    expect((await visit()).headers.get("set-cookie")).toBeNull();
+    expect((await visit("/play")).headers.get("location")).toBeNull();
   });
 });

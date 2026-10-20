@@ -19,18 +19,24 @@ test("signs in with an email link, once", async ({ page }) => {
   await expect(page.getByText("expired or was already used")).toBeVisible();
 });
 
-test("calls the API as the signed-in player, not as a dev session", async ({ page, browser }) => {
+test("calls the API as the signed-in player, and refuses a visitor without a session", async ({ page, browser }) => {
   await page.goto((await requestSignInLink(page)).link);
   const started = await page.request.post("/api/attempts", { headers: WRITE_HEADERS, data: { challenge_slug: NGINX_502 } });
   expect(started.status()).toBe(201);
   const { id } = (await started.json()) as { id: string };
   expect((await page.request.get(`/api/attempts/${id}`)).status()).toBe(200);
 
-  // A visitor with only a dev session is another user, so the attempt is not theirs.
-  const visitor = await (await browser.newContext()).newPage();
-  await visitor.goto("/play");
-  expect((await visitor.request.get(`/api/attempts/${id}`)).status()).toBe(404);
-  await visitor.context().close();
+  // A visitor without a session has no player to call the API as (task 30e).
+  const visitor = await browser.newContext();
+  expect((await visitor.request.get(`/api/attempts/${id}`)).status()).toBe(401);
+  await visitor.close();
 
   expect((await page.request.post(`/api/attempts/${id}/abandon`, { headers: WRITE_HEADERS })).status()).toBe(200);
+});
+
+test("a visitor without a session is sent to sign in, and back to the page after", async ({ page }) => {
+  await page.goto("/challenges");
+
+  await expect(page).toHaveURL(/\/signin\?callbackUrl=%2Fchallenges$/);
+  await expect(page.getByRole("heading", { name: "Sign in to greenbuild" })).toBeVisible();
 });

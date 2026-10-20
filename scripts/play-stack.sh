@@ -144,7 +144,7 @@ services() {
   # next dev, not next start: the dev session exists only outside production builds.
   # Sign-in (tasks 30a, 54): email links go to Mailpit; GitHub and Google only when AUTH_GITHUB_ID/SECRET
   # and AUTH_GOOGLE_ID/SECRET are set in the shell (the services inherit its environment).
-  start web API_URL="http://127.0.0.1:$API_PORT" DEV_AUTH_SECRET="$DEV_AUTH_SECRET" ENGINE_ATTACH_URL="ws://127.0.0.1:$ENGINE_PORT/attach" \
+  start web API_URL="http://127.0.0.1:$API_PORT" ENGINE_ATTACH_URL="ws://127.0.0.1:$ENGINE_PORT/attach" \
     AUTH_SECRET="$AUTH_SECRET" AUTH_URL="http://localhost:$WEB_PORT" DATABASE_URL="$DATABASE_URL" \
     EMAIL_SERVER="smtp://127.0.0.1:11025" EMAIL_FROM="sign-in@greenbuild.dev" API_TOKEN_PRIVATE_KEY="$API_TOKEN_PRIVATE_KEY" REDIS_URL="$REDIS_URL" \
     GREENBUILD_E2E_AUTH="${GREENBUILD_E2E_AUTH:-}" \

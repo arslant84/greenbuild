@@ -1,4 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { signInForTest } from "./test-player";
+
+// These screens need a signed-in player (task 30e).
+test.beforeEach(async ({ page }) => {
+  await signInForTest(page);
+});
 
 // architecture.md, task 22 (until decision D5): screens are at least 1280 px wide, span wider windows
 // (owner, 2026-10-14), keep their footers at the window's bottom, and nothing on the sandbox screen is cut off.

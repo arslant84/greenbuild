@@ -1,26 +1,18 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { loadApiConfig } from "./config/api";
-import { DEV_SESSION_COOKIE, DEV_SESSION_MAX_AGE_SEC, signDevSession } from "./server/dev-session";
+import { authInstance } from "./server/auth";
+import { SIGN_IN_PATH } from "./server/sign-in-paths";
 
-// Until Auth.js login exists, a visit to the play screens, the catalog, the leaderboard or the settings without a session starts one as a new
-// dev user. Nothing happens in production or without DEV_AUTH_SECRET.
+// The play screens, the catalog, the leaderboard and the settings need a signed-in player (task 30e): a
+// visitor without a session goes to the sign-in screen, which brings them back after. Without sign-in
+// configured (a local run without the stack) nothing is redirected.
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const { devAuthSecret } = loadApiConfig();
-  if (!devAuthSecret || request.cookies.has(DEV_SESSION_COOKIE)) {
+  const auth = authInstance();
+  if (!auth || (await auth.auth())?.user) {
     return NextResponse.next();
   }
-  const token = await signDevSession(devAuthSecret, crypto.randomUUID());
-  // Server components rendering this same request read the session from its headers.
-  request.cookies.set(DEV_SESSION_COOKIE, token);
-  const response = NextResponse.next({ request: { headers: request.headers } });
-  response.cookies.set(DEV_SESSION_COOKIE, token, {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: request.nextUrl.protocol === "https:",
-    path: "/",
-    maxAge: DEV_SESSION_MAX_AGE_SEC,
-  });
-  return response;
+  const signIn = new URL(SIGN_IN_PATH, request.url);
+  signIn.searchParams.set("callbackUrl", `${request.nextUrl.pathname}${request.nextUrl.search}`);
+  return NextResponse.redirect(signIn);
 }
 
 export const config = { matcher: ["/play", "/play/:path*", "/challenges", "/leaderboard", "/settings"] };

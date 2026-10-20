@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { signInForTest } from "./test-player";
+
+// These screens need a signed-in player (task 30e).
+test.beforeEach(async ({ page }) => {
+  await signInForTest(page);
+});
 
 const PLAY_PATH = /\/play$/;
 const KEY_TIMEOUT_MS = 2_000;

@@ -1,13 +1,14 @@
 import { NextRequest } from "next/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WRITE_HEADER } from "../../../../server/api-proxy";
-import { DEV_SESSION_COOKIE } from "../../../../server/dev-session";
 import { PUT } from "./route";
+
+vi.mock("../../../../server/api-bearer", () => ({ apiBearer: async () => "api-token" }));
 
 const api = vi.fn<typeof fetch>();
 
 function putRequest(body: unknown): NextRequest {
-  const headers = new Headers({ cookie: `${DEV_SESSION_COOKIE}=dev-token`, [WRITE_HEADER]: "1", "content-type": "application/json" });
+  const headers = new Headers({ [WRITE_HEADER]: "1", "content-type": "application/json" });
   return new NextRequest("http://localhost:3001/api/me/discovery", { method: "PUT", headers, body: JSON.stringify(body) });
 }
 
