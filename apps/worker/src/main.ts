@@ -13,6 +13,7 @@ import { BlobArchiveStore, smtpMailer } from "./privacy/export-delivery.js";
 import { runDataExports } from "./privacy/export-job.js";
 import { runPrivacyPurge } from "./privacy/purge.js";
 import { ratingHandler } from "./rating/rate.js";
+import { runStreakReminders } from "./reminders/schedule.js";
 import { BlobSessionLogs } from "./signals/logs.js";
 import { streakHandler } from "./streaks/count.js";
 import { xpHandler } from "./xp/credit.js";
@@ -33,7 +34,7 @@ async function main(): Promise<void> {
   const env = loadEnv(process.env);
   const server = createHealthServer();
   const stops = [await startRelay(env)];
-  for (const [name, job] of [...DATABASE_JOBS, ...exportJob(env)]) {
+  for (const [name, job] of [...DATABASE_JOBS, ...exportJob(env), ...reminderJob(env)]) {
     stops.push(startDatabaseJob(env, name, job));
   }
   for (const handler of FINISHED_HANDLERS) {
@@ -105,6 +106,17 @@ function exportJob(env: Env): [string, DatabaseJob][] {
   const archives = new BlobArchiveStore(blob);
   const mail = smtpMailer(server, from);
   return [["data export", (db, signal) => runDataExports({ db, archives, mail, webUrl: webUrl.replace(/\/$/, "") }, signal)]];
+}
+
+// reminderJob is the streak reminder job (task 52), which needs the same email settings as the export.
+function reminderJob(env: Env): [string, DatabaseJob][] {
+  const { EMAIL_SERVER: server, EMAIL_FROM: from, WEB_URL: webUrl } = env;
+  if (!server || !from || !webUrl) {
+    logger.warn("streak reminders disabled; set EMAIL_SERVER, EMAIL_FROM and WEB_URL");
+    return [];
+  }
+  const mail = smtpMailer(server, from);
+  return [["streak reminders", (db, signal) => runStreakReminders({ db, mail, webUrl: webUrl.replace(/\/$/, "") }, signal)]];
 }
 
 // startDatabaseJob runs a job that needs only the database, when the worker has one.
