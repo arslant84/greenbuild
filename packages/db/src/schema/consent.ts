@@ -1,6 +1,6 @@
-import { CONSENT_KINDS, DISCOVERY_MODES, REVEALED_FIELDS } from "@greenbuild/shared";
+import { CONSENT_KINDS, DEFAULT_REMINDER_HOUR, DISCOVERY_MODES, REVEALED_FIELDS } from "@greenbuild/shared";
 import { sql } from "drizzle-orm";
-import { boolean, index, pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, date, index, pgEnum, pgTable, smallint, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { idColumn, timestampColumns } from "./columns.js";
 import { users } from "./users.js";
 
@@ -28,6 +28,9 @@ export const userSettings = pgTable("user_settings", {
   // Reminders are opt-in.
   notifyEmail: boolean("notify_email").notNull().default(false),
   notifyPush: boolean("notify_push").notNull().default(false),
+  // The local hour the streak reminder goes at (task 52), and the local day it last went, so it goes once.
+  reminderHour: smallint("reminder_hour").notNull().default(DEFAULT_REMINDER_HOUR),
+  lastRemindedDay: date("last_reminded_day"),
   ...timestampColumns(),
 });
 
