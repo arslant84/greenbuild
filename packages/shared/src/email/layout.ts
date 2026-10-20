@@ -18,6 +18,7 @@ export const EMAIL_COLORS = {
   accent: "#22D3EE",
   onAccent: "#0A0A0B",
   streak: "#FFC640",
+  ok: "#64F88A",
 } as const;
 
 export const SANS = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
