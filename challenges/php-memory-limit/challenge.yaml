@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: php-memory-limit
+version: 1
+title: "Raised the limit, still out of memory"
+statement: "The monthly export page answers with an error. Ops raised PHP's memory limit and restarted php-fpm yesterday, yet the export fails exactly as before. Get the export working, with a sane memory limit."
+difficulty: 4            # 1–10
+skills: { php: 0.7, linux: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# The pool runs as the app's user with its own log directory; nginx keeps its logs and temp files in
+# directories its own user owns, and its workers switch users; php-fpm's master signals its workers.
+capabilities: [CHOWN, DAC_OVERRIDE, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [reports, invoices, payroll] }
+  rows: { range: [150000, 199999] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 30
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
