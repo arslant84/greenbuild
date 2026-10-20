@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { challenges, challengeVersions, companies, connect } from "@greenbuild/db";
-import type { ChallengeList } from "@greenbuild/shared";
+import { CATALOG_PAGE_MAX, type CatalogEntry, type ChallengeList } from "@greenbuild/shared";
 import { beforeAll, describe, expect, it } from "vitest";
 import { type AttemptsApp, player, useAttemptsApp } from "../testing/attempts-app.js";
 
@@ -24,27 +24,27 @@ async function catalog(app: () => AttemptsApp, query: string): Promise<Challenge
   return (await response.json()) as ChallengeList;
 }
 
-const slugsOf = (list: ChallengeList) => list.challenges.map((card) => card.slug);
+const slugsOf = (cards: CatalogEntry[]) => cards.map((card) => card.slug);
 
-// everyPage follows next_cursor two cards at a time and returns every slug in the order shown.
-async function everyPage(app: () => AttemptsApp, query: string): Promise<string[]> {
-  let page = await catalog(app, `?limit=2${query}`);
-  const slugs = slugsOf(page);
+// everyCard follows next_cursor `limit` cards at a time and returns every card in the order shown.
+async function everyCard(app: () => AttemptsApp, query: string, limit: number): Promise<CatalogEntry[]> {
+  let page = await catalog(app, `?limit=${limit}${query}`);
+  const cards = [...page.challenges];
   while (page.next_cursor) {
-    page = await catalog(app, `?limit=2${query}&cursor=${page.next_cursor}`);
-    slugs.push(...slugsOf(page));
+    page = await catalog(app, `?limit=${limit}${query}&cursor=${page.next_cursor}`);
+    cards.push(...page.challenges);
   }
-  return slugs;
+  return cards;
 }
 
 async function listsPublicOnly(app: () => AttemptsApp): Promise<void> {
-  const list = await catalog(app, "?limit=50");
-  expect(slugsOf(list)).toContain("nginx-502-upstream");
-  expect(slugsOf(list)).not.toContain(PRIVATE_SLUG);
-  expect(list.next_cursor).toBeNull();
-  expect(list.total).toBe(list.challenges.length);
+  const list = await catalog(app, `?limit=${CATALOG_PAGE_MAX}`);
+  const cards = await everyCard(app, "", CATALOG_PAGE_MAX);
+  expect(slugsOf(cards)).toContain("nginx-502-upstream");
+  expect(slugsOf(cards)).not.toContain(PRIVATE_SLUG);
+  expect(list.total).toBe(cards.length);
   expect(list.catalog.challenges).toBe(list.total);
-  expect(list.catalog.skills.linux).toBe(list.challenges.filter((card) => card.skills.includes("linux")).length);
+  expect(list.catalog.skills.linux).toBe(cards.filter((card) => card.skills.includes("linux")).length);
   expect(Object.values(list.catalog.sla).reduce((sum, count) => sum + count, 0)).toBe(list.total);
 }
 
@@ -56,7 +56,7 @@ async function filters(app: () => AttemptsApp): Promise<void> {
   const window = await catalog(app, "?sla=10to15&limit=50");
   expect(window.challenges.every((card) => card.time_limit_sec > 600 && card.time_limit_sec <= 900)).toBe(true);
   const search = await catalog(app, "?q=POSTGRESQL&limit=50");
-  expect(slugsOf(search)).toContain("postgres-data-permissions");
+  expect(slugsOf(search.challenges)).toContain("postgres-data-permissions");
   expect(search.total).toBe(search.challenges.length);
   expect((await catalog(app, "?q=%25")).total).toBe(0);
 }
@@ -69,8 +69,8 @@ describe("GET /v1/challenges", () => {
   it("filters by any of several skills, difficulty, time limit and text", () => filters(app));
 
   it("pages through everything once, newest first", async () => {
-    expect(await everyPage(app, "")).toEqual(slugsOf(await catalog(app, "?limit=50")));
-    expect(await everyPage(app, "&skill=linux")).toEqual(slugsOf(await catalog(app, "?skill=linux&limit=50")));
+    expect(slugsOf(await everyCard(app, "", 2))).toEqual(slugsOf(await everyCard(app, "", CATALOG_PAGE_MAX)));
+    expect(slugsOf(await everyCard(app, "&skill=linux", 2))).toEqual(slugsOf(await everyCard(app, "&skill=linux", CATALOG_PAGE_MAX)));
   });
 
   it.each([
