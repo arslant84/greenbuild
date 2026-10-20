@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: ca-store-not-updated
+version: 1
+title: "Copied, not trusted"
+statement: "Since the internal certificate authority was replaced last night, the invoice sync fails with \"unable to get local issuer certificate\", although ops distributed the new root to every server. Get the sync working again without weakening TLS."
+difficulty: 2            # 1–10
+skills: { tls: 0.6, linux: 0.4 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 256Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# nginx chowns its cache at start and its workers switch users; the job runs as its own user.
+capabilities: [CHOWN, DAC_OVERRIDE, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [invoices, payouts, ledger] }
+  port: { range: [8400, 8899] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
