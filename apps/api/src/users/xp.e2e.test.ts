@@ -2,8 +2,7 @@ import { randomUUID } from "node:crypto";
 import { connect, streaks, xpLedger } from "@greenbuild/db";
 import { utcDay } from "@greenbuild/shared";
 import { describe, expect, it } from "vitest";
-import { signDevUserToken } from "../auth/dev-user-token.js";
-import { player, TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
+import { player, playerToken, useAttemptsApp } from "../testing/attempts-app.js";
 import { readyAttempt } from "../testing/engine-status.js";
 
 // architecture.md, task 42b: XP and level in GET /v1/me and the XP an attempt earned in its result.
@@ -12,7 +11,7 @@ const app = useAttemptsApp();
 const DAY_MS = 86_400_000;
 
 async function me(userId: string): Promise<Record<string, unknown>> {
-  const token = await signDevUserToken(TEST_DEV_AUTH_SECRET, userId);
+  const token = await playerToken(app, userId);
   return (await (await fetch(`${app().baseUrl}/v1/me`, { headers: { authorization: `Bearer ${token}` } })).json()) as Record<string, unknown>;
 }
 

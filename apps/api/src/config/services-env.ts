@@ -13,8 +13,6 @@ const servicesEnvSchema = z.object({
   // The engine's internal API, for checks; the token is its SANDBOX_ENGINE_INTERNAL_TOKEN.
   ENGINE_INTERNAL_URL: z.url({ protocol: /^https?$/ }),
   ENGINE_INTERNAL_TOKEN: z.string().min(MIN_SECRET_LENGTH),
-  // Verifies dev user tokens until Auth.js login exists; ignored in production.
-  DEV_AUTH_SECRET: z.string().min(MIN_SECRET_LENGTH).optional(),
   // The web app's public key for API tokens (task 30c): an EC P-256 JWK on one line, never the private key.
   API_TOKEN_PUBLIC_KEY: z.string().refine(isPublicP256Jwk).optional(),
   // Where the worker stores data export archives (task 50a); holds a key.
@@ -41,7 +39,6 @@ export type ServicesEnv = z.infer<typeof servicesEnvSchema>;
 export function loadServicesEnv(source: Record<string, string | undefined>): ServicesEnv {
   const result = servicesEnvSchema.safeParse({
     ...source,
-    DEV_AUTH_SECRET: source.DEV_AUTH_SECRET || undefined,
     API_TOKEN_PUBLIC_KEY: source.API_TOKEN_PUBLIC_KEY || undefined,
     EXPORT_BLOB_CONNECTION_STRING: source.EXPORT_BLOB_CONNECTION_STRING || undefined,
   });

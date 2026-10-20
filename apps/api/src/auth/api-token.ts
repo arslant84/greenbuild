@@ -1,11 +1,15 @@
 import { API_TOKEN_ALGORITHM, API_TOKEN_AUDIENCE, API_TOKEN_ISSUER, API_TOKEN_LIFETIME_SEC } from "@greenbuild/shared";
 import { importJWK, type JWK, jwtVerify } from "jose";
 import { z } from "zod";
-import type { AuthenticatedUser } from "./dev-user-token.js";
 
 type VerifyKey = Exclude<Awaited<ReturnType<typeof importJWK>>, Uint8Array>;
 
 const userIdSchema = z.uuid();
+
+// The player a request is made for, from the API token the web app signs for their session (task 30c).
+export interface AuthenticatedUser {
+  id: string;
+}
 
 // apiTokenKey imports the web app's public key (API_TOKEN_PUBLIC_KEY, validated by loadServicesEnv).
 export async function apiTokenKey(publicJwk: string): Promise<VerifyKey> {

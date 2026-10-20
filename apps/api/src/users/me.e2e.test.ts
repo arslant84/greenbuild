@@ -1,8 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { connect, eq, users } from "@greenbuild/db";
 import { describe, expect, it } from "vitest";
-import { signDevUserToken } from "../auth/dev-user-token.js";
-import { TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
+import { playerToken, useAttemptsApp } from "../testing/attempts-app.js";
 
 // architecture.md, task 32: GET and PATCH /v1/me, with the timezone changing at most once in 30 days.
 const app = useAttemptsApp();
@@ -14,7 +13,7 @@ interface Me {
 }
 
 async function me(userId = randomUUID()): Promise<Me> {
-  const token = await signDevUserToken(TEST_DEV_AUTH_SECRET, userId);
+  const token = await playerToken(app, userId);
   const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
   return {
     get: () => fetch(`${app().baseUrl}/v1/me`, { headers }),

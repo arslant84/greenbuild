@@ -8,7 +8,7 @@ import {
 } from "@greenbuild/shared";
 import { Body, Controller, Get, HttpCode, HttpStatus, Param, Post, Query } from "@nestjs/common";
 import { z } from "zod";
-import type { AuthenticatedUser } from "../auth/dev-user-token.js";
+import type { AuthenticatedUser } from "../auth/api-token.js";
 import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
 import { AttemptReader } from "./attempt-reader.js";

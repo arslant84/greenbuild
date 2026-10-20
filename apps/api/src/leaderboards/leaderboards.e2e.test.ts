@@ -3,15 +3,14 @@ import { connect, users, userSettings } from "@greenbuild/db";
 import { isoWeek, leaderboardKeys, utcDay } from "@greenbuild/shared";
 import { createClient } from "redis";
 import { describe, expect, it } from "vitest";
-import { signDevUserToken } from "../auth/dev-user-token.js";
-import { TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
+import { playerToken, useAttemptsApp } from "../testing/attempts-app.js";
 
 // architecture.md, task 45b: GET /v1/leaderboards/{kind} reads the boards the worker keeps (45a). The
 // worker is not running here, so the tests fill Redis and the users table themselves.
 const app = useAttemptsApp();
 
 async function board(userId: string, path: string): Promise<Response> {
-  const token = await signDevUserToken(TEST_DEV_AUTH_SECRET, userId);
+  const token = await playerToken(app, userId);
   return fetch(`${app().baseUrl}/v1/leaderboards/${path}`, { headers: { authorization: `Bearer ${token}` } });
 }
 

@@ -1,7 +1,7 @@
 import { eq, users } from "@greenbuild/db";
 import { ForbiddenError } from "@greenbuild/shared";
 import { type CanActivate, type ExecutionContext, Injectable } from "@nestjs/common";
-import type { AuthenticatedUser } from "../auth/dev-user-token.js";
+import type { AuthenticatedUser } from "../auth/api-token.js";
 import { DatabaseClient } from "../infra/services.js";
 
 // AdminGuard admits only users whose role is admin (architecture.md, API rules: /v1/admin needs

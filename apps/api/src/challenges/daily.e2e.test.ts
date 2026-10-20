@@ -2,8 +2,7 @@ import { randomUUID } from "node:crypto";
 import { attempts, challenges, challengeVersions, connect, dailyChallenges, desc, eq } from "@greenbuild/db";
 import { utcDay } from "@greenbuild/shared";
 import { describe, expect, it } from "vitest";
-import { signDevUserToken } from "../auth/dev-user-token.js";
-import { player, TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
+import { player, playerToken, useAttemptsApp } from "../testing/attempts-app.js";
 import { NGINX_502 } from "../testing/engine-status.js";
 
 // architecture.md, task 41b: today's challenge for a track and the player's status on it. The worker
@@ -11,7 +10,7 @@ import { NGINX_502 } from "../testing/engine-status.js";
 const app = useAttemptsApp();
 
 async function daily(userId: string, query = ""): Promise<Response> {
-  const token = await signDevUserToken(TEST_DEV_AUTH_SECRET, userId);
+  const token = await playerToken(app, userId);
   return fetch(`${app().baseUrl}/v1/daily${query}`, { headers: { authorization: `Bearer ${token}` } });
 }
 

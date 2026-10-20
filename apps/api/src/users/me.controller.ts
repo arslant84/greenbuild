@@ -1,7 +1,7 @@
 import { type DeletionResponse, type ExportRequestResponse, type MeResponse, updateMeRequestSchema } from "@greenbuild/shared";
 import { Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, StreamableFile } from "@nestjs/common";
 import { z } from "zod";
-import type { AuthenticatedUser } from "../auth/dev-user-token.js";
+import type { AuthenticatedUser } from "../auth/api-token.js";
 import { CurrentUser } from "../auth/session.guard.js";
 import { parseInput } from "../validation.js";
 import { DataExport } from "./data-export.js";

@@ -1,14 +1,13 @@
 import { randomUUID } from "node:crypto";
 import { DISCOVERY_CONSENT_VERSION } from "@greenbuild/shared";
 import { describe, expect, it } from "vitest";
-import { signDevUserToken } from "../auth/dev-user-token.js";
-import { TEST_DEV_AUTH_SECRET, useAttemptsApp } from "../testing/attempts-app.js";
+import { playerToken, useAttemptsApp } from "../testing/attempts-app.js";
 
 // architecture.md, task 50c: GET /v1/me/consents shows every consent, newest first, revoked ones too.
 const app = useAttemptsApp();
 
 async function headers(userId: string): Promise<Record<string, string>> {
-  return { authorization: `Bearer ${await signDevUserToken(TEST_DEV_AUTH_SECRET, userId)}`, "content-type": "application/json" };
+  return { authorization: `Bearer ${await playerToken(app, userId)}`, "content-type": "application/json" };
 }
 
 async function consentsOf(userId: string): Promise<Response> {

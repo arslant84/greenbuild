@@ -10,8 +10,7 @@
     "dev:compile": "tsc -p tsconfig.build.json --watch --preserveWatchOutput",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
-    "dev:user-token": "node dist/dev/dev-user-token.js"
+    "test": "vitest run"
   },
   "dependencies": {
     "@azure/storage-blob": "^12.34.0",

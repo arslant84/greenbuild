@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { applyMigrations, connect, seedChallenges } from "@greenbuild/db";
+import { applyMigrations, connect, seedChallenges, users } from "@greenbuild/db";
 import { API_TOKEN_ALGORITHM, API_TOKEN_AUDIENCE, API_TOKEN_ISSUER, API_TOKEN_LIFETIME_SEC } from "@greenbuild/shared";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
@@ -9,13 +9,11 @@ import postgres from "postgres";
 import { createClient } from "redis";
 import { afterAll, beforeAll } from "vitest";
 import { AppModule } from "../app.module.js";
-import { signDevUserToken } from "../auth/dev-user-token.js";
 import type { ServicesEnv } from "../config/services-env.js";
 import { type Container, startContainer } from "@greenbuild/testkit";
 import { type FakeEngine, startFakeEngine } from "./fake-engine.js";
 
 const STARTUP_TIMEOUT_MS = 180_000;
-export const TEST_DEV_AUTH_SECRET = "dev-auth-secret-dev-auth-secret-32";
 export const TEST_ATTACH_SECRET = "attach-secret-attach-secret-32byte";
 export const TEST_ENGINE_TOKEN = "engine-internal-token-engine-32byte";
 
@@ -110,7 +108,6 @@ export function useAttemptsApp(options: { exportArchives?: boolean } = {}): () =
       ATTACH_SECRET: TEST_ATTACH_SECRET,
       ENGINE_INTERNAL_URL: engine.url,
       ENGINE_INTERNAL_TOKEN: TEST_ENGINE_TOKEN,
-      DEV_AUTH_SECRET: TEST_DEV_AUTH_SECRET,
       API_TOKEN_PUBLIC_KEY: apiToken.publicJwk,
       ...(azurite ? { EXPORT_BLOB_CONNECTION_STRING: azuriteConnection(azurite.address) } : {}),
     };
@@ -149,9 +146,21 @@ export interface Player {
   catalog: (query: string) => Promise<Response>;
 }
 
-// player calls the API as one dev user.
+// playerToken signs an API token for a player, first creating their user as sign-in does (task 30a),
+// confirmed 16+ (task 30b); the API admits no token for a user that does not exist.
+export async function playerToken(app: () => AttemptsApp, userId: string): Promise<string> {
+  const connection = connect(app().env.DATABASE_URL);
+  try {
+    await connection.db.insert(users).values({ id: userId, ageConfirmed16At: new Date() }).onConflictDoNothing();
+  } finally {
+    await connection.close();
+  }
+  return app().signApiToken(userId);
+}
+
+// player calls the API as one signed-in player.
 export async function player(app: () => AttemptsApp, userId: string): Promise<Player> {
-  const token = await signDevUserToken(TEST_DEV_AUTH_SECRET, userId);
+  const token = await playerToken(app, userId);
   const headers = { authorization: `Bearer ${token}`, "content-type": "application/json" };
   return {
     userId,
