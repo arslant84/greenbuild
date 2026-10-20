@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: ssh-key-permissions
+version: 1
+title: "Restored, but refused"
+statement: "Since the build server was restored from last night's backup, the job that pushes reports to the archive host fails with \"Permission denied (publickey)\". The archive team says the key it trusts has not changed. Get the reports through again."
+difficulty: 3            # 1–10
+skills: { linux: 0.7, ssh: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 256Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# The archive host and the job run as their own users; setup gives each their files.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [reports, billing, analytics] }
+  port: { range: [2200, 2899] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
