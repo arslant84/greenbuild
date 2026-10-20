@@ -2,7 +2,6 @@ import { AppError, ForbiddenError, UnauthorizedError, UnavailableError, Validati
 import type { NextRequest } from "next/server";
 import { loadApiConfig } from "../config/api";
 import { apiBearer } from "./api-bearer";
-import { DEV_SESSION_COOKIE } from "./dev-session";
 import { logger } from "./logger";
 
 // Browsers cannot send a custom header cross-site without CORS, so requiring it on writes blocks
@@ -26,7 +25,7 @@ export async function proxyToApi(request: NextRequest, options: ProxyOptions): P
       return refused;
     }
   }
-  const token = await apiBearer(request.cookies.get(DEV_SESSION_COOKIE)?.value);
+  const token = await apiBearer();
   if (!token) {
     return failure(new UnauthorizedError());
   }

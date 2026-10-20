@@ -1,10 +1,8 @@
 import { AGE_NOT_CONFIRMED } from "@greenbuild/shared";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { loadApiConfig } from "../config/api";
 import { apiBearer } from "./api-bearer";
-import { DEV_SESSION_COOKIE } from "./dev-session";
 import { logger } from "./logger";
 import { AGE_REQUIRED_PATH } from "./sign-in-paths";
 
@@ -14,7 +12,7 @@ const ageNotConfirmedSchema = z.object({ details: z.object({ reason: z.literal(A
 // there is no session, the API answers an error or the answer does not match the schema. A player
 // who has not confirmed being 16 or older goes to the sign-in screen to confirm it (task 30b).
 export async function apiGet<Schema extends z.ZodType>(path: string, schema: Schema): Promise<z.infer<Schema> | null> {
-  const token = await apiBearer((await cookies()).get(DEV_SESSION_COOKIE)?.value);
+  const token = await apiBearer();
   if (!token) {
     return null;
   }

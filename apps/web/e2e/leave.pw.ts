@@ -1,4 +1,10 @@
 import { expect, type Page, test } from "@playwright/test";
+import { signInForTest } from "./test-player";
+
+// These screens need a signed-in player (task 30e).
+test.beforeEach(async ({ page }) => {
+  await signInForTest(page);
+});
 
 // architecture.md, task 19c: "Exit Attempt" and "Give up" end the attempt, so the player can start again.
 const SANDBOX_START_TIMEOUT_MS = 90_000;

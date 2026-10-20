@@ -1,4 +1,10 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { signInForTest } from "./test-player";
+
+// These screens need a signed-in player (task 30e).
+test.beforeEach(async ({ page }) => {
+  await signInForTest(page);
+});
 
 // architecture.md, task 36b: find a challenge in the catalog by skill and start it.
 const SANDBOX_START_TIMEOUT_MS = 90_000;

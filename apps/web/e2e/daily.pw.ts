@@ -1,4 +1,10 @@
 import { expect, test } from "@playwright/test";
+import { signInForTest } from "./test-player";
+
+// These screens need a signed-in player (task 30e).
+test.beforeEach(async ({ page }) => {
+  await signInForTest(page);
+});
 
 // architecture.md, task 41c: the Daily screen shows the challenge the worker published for today, not
 // a hardcoded one. The play stack publishes nginx-502 on its first day (scripts/play-stack.sh).
