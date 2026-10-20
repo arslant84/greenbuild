@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { connect, eq, users } from "@greenbuild/db";
+import { connect, eq, users, userSettings } from "@greenbuild/db";
 import { DEFAULT_REMINDER_HOUR } from "@greenbuild/shared";
 import { describe, expect, it } from "vitest";
 import { playerToken, useAttemptsApp } from "../testing/attempts-app.js";
@@ -49,4 +49,36 @@ describe("/v1/me/notifications", () => {
       expect((await call(await aPlayerWithEmail(), "PUT", body)).status).toBe(400);
     },
   );
+});
+
+async function unsubscribe(body: unknown): Promise<Response> {
+  return fetch(`${app().baseUrl}/v1/notifications/unsubscribe`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+}
+
+async function unsubscribeToken(userId: string): Promise<string> {
+  const connection = connect(app().env.DATABASE_URL);
+  try {
+    const [settings] = await connection.db.select({ token: userSettings.unsubscribeToken }).from(userSettings).where(eq(userSettings.userId, userId));
+    return settings?.token ?? "";
+  } finally {
+    await connection.close();
+  }
+}
+
+describe("POST /v1/notifications/unsubscribe", () => {
+  it("turns the reminders off with the token from the email, without signing in", async () => {
+    const userId = await aPlayerWithEmail();
+    await call(userId, "PUT", { streak_reminder_email: true, reminder_hour: 19 });
+
+    expect((await unsubscribe({ token: await unsubscribeToken(userId) })).status).toBe(204);
+    expect(await (await call(userId, "GET")).json()).toEqual({ streak_reminder_email: false, reminder_hour: 19 });
+  });
+
+  it("answers the same for a token nobody has, so it reveals no account", async () => {
+    expect((await unsubscribe({ token: randomUUID() })).status).toBe(204);
+  });
+
+  it("rejects a token that is not one with 400", async () => {
+    expect((await unsubscribe({ token: "everyone" })).status).toBe(400);
+  });
 });

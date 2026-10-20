@@ -41,15 +41,15 @@ afterAll(async () => {
   await container?.stop();
 });
 
-function fakeMail(fail = false): Mailer & { sent: { to: string; subject: string; html?: string | undefined }[] } {
-  const sent: { to: string; subject: string; html?: string | undefined }[] = [];
+function fakeMail(fail = false): Mailer & { sent: { to: string; subject: string; html?: string | undefined; headers?: Record<string, string> | undefined }[] } {
+  const sent: { to: string; subject: string; html?: string | undefined; headers?: Record<string, string> | undefined }[] = [];
   return {
     sent,
-    send: async ({ to, subject, html }) => {
+    send: async ({ to, subject, html, headers }) => {
       if (fail) {
         throw new Error("smtp down");
       }
-      sent.push({ to, subject, html });
+      sent.push({ to, subject, html, headers });
     },
   };
 }
@@ -90,6 +90,8 @@ describe("sendDueReminders", () => {
     expect(mine?.subject).toBe("Day 5: don't break the chain");
     expect(mine?.html).toContain("The site returns 502");
     expect(mine?.html).toContain(`${WEB_URL}/play`);
+    expect(mine?.headers?.["List-Unsubscribe"]).toMatch(/^<https:\/\/greenbuild\.test\/api\/notifications\/unsubscribe\?token=[0-9a-f-]{36}>$/);
+    expect(mine?.headers?.["List-Unsubscribe-Post"]).toBe("List-Unsubscribe=One-Click");
     expect(second.sent.find((message) => message.to === email)).toBeUndefined();
   });
 

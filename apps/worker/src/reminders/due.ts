@@ -11,6 +11,8 @@ export interface ReminderCandidate {
   timezone: string;
   reminderHour: number;
   lastRemindedDay: string | null;
+  // The token of the player's one-click unsubscribe link.
+  unsubscribeToken: string;
   streak: StreakState;
 }
 

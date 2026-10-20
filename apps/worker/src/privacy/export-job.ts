@@ -15,8 +15,8 @@ export interface ArchiveStore {
 
 // Mailer sends one plain-text email (SMTP; a fake in tests).
 export interface Mailer {
-  // html is optional: the plain-text part always goes.
-  send(message: { to: string; subject: string; text: string; html?: string }): Promise<void>;
+  // html and headers are optional: the plain-text part always goes.
+  send(message: { to: string; subject: string; text: string; html?: string; headers?: Record<string, string> }): Promise<void>;
 }
 
 export interface ExportDeps {

@@ -31,6 +31,8 @@ export const userSettings = pgTable("user_settings", {
   // The local hour the streak reminder goes at (task 52), and the local day it last went, so it goes once.
   reminderHour: smallint("reminder_hour").notNull().default(DEFAULT_REMINDER_HOUR),
   lastRemindedDay: date("last_reminded_day"),
+  // Turns the reminders off from an email without signing in (task 52): random, so it cannot be guessed.
+  unsubscribeToken: uuid("unsubscribe_token").notNull().defaultRandom().unique(),
   ...timestampColumns(),
 });
 
