@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { LINK_LIFETIME_HOURS } from "../../../server/link-limit";
 import { RATE_LIMITED_ERROR } from "../../../server/sign-in-paths";
 import { formatClock } from "../../../ui/format";
 import { AlertIcon, ClockIcon, CloseIcon, InfoIcon, LockIcon, MailIcon } from "../../../ui/icons-signin";
@@ -10,8 +11,6 @@ import { signInBanner } from "./sign-in-banner";
 import { SignInForm } from "./sign-in-form";
 import { type OAuthProvider, type SignIn, useSignIn } from "./use-sign-in";
 
-// The link's lifetime as the email itself states it (server/email-sign-in.ts).
-const LINK_LIFETIME = "24 hours";
 
 // Figma 7:9957: the centered card with its states, V1 sign in, V3 link sent and V4's error banner.
 interface SignInCardProps {
@@ -62,7 +61,7 @@ function LinkSent({ signIn, email }: { signIn: SignIn; email: string }) {
       </p>
       <p className="mb-6 flex w-full items-start gap-2.5 rounded-lg border border-line bg-surface-raised p-3.5 text-left font-mono text-xs text-ink-muted">
         <InfoIcon className="mt-0.5 shrink-0 text-base text-accent" />
-        <span>The link works once, for {LINK_LIFETIME}. Check spam or junk folders if it does not arrive.</span>
+        <span>The link works once, for {LINK_LIFETIME_HOURS} hours. Check spam or junk folders if it does not arrive.</span>
       </p>
       <div className="flex w-full flex-col gap-2.5 text-xs">
         <button type="button" disabled={signIn.pending} onClick={() => void signIn.requestLink(email)} className="w-full rounded-lg border border-line bg-surface-raised py-2.5 font-mono text-ink transition-colors hover:bg-control">

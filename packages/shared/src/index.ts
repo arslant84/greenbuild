@@ -18,4 +18,5 @@ export * from "./game/leaderboards.js";
 export * from "./game/levels.js";
 export * from "./game/streaks.js";
 export * from "./game/xp.js";
+export * from "./email/index.js";
 export * from "./logging/index.js";
