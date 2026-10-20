@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { applyMigrations, connect, seedChallenges, users } from "@greenbuild/db";
+import { applyMigrations, connect, isNull, seedChallenges, users } from "@greenbuild/db";
 import { API_TOKEN_ALGORITHM, API_TOKEN_AUDIENCE, API_TOKEN_ISSUER, API_TOKEN_LIFETIME_SEC } from "@greenbuild/shared";
 import type { INestApplication } from "@nestjs/common";
 import { Test } from "@nestjs/testing";
@@ -147,11 +147,15 @@ export interface Player {
 }
 
 // playerToken signs an API token for a player, first creating their user as sign-in does (task 30a),
-// confirmed 16+ (task 30b); the API admits no token for a user that does not exist.
+// confirmed 16+ (task 30b), or confirming one a test created; the API admits no token for a user that
+// does not exist, nor one without the 16+ date.
 export async function playerToken(app: () => AttemptsApp, userId: string): Promise<string> {
   const connection = connect(app().env.DATABASE_URL);
   try {
-    await connection.db.insert(users).values({ id: userId, ageConfirmed16At: new Date() }).onConflictDoNothing();
+    await connection.db
+      .insert(users)
+      .values({ id: userId, ageConfirmed16At: new Date() })
+      .onConflictDoUpdate({ target: users.id, set: { ageConfirmed16At: new Date() }, setWhere: isNull(users.ageConfirmed16At) });
   } finally {
     await connection.close();
   }
