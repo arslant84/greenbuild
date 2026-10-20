@@ -24,6 +24,9 @@ async function catalog(app: () => AttemptsApp, query: string): Promise<Challenge
   return (await response.json()) as ChallengeList;
 }
 
+// Small enough to cross many pages, large enough that walking the growing catalog stays fast.
+const SMALL_PAGE = 7;
+
 const slugsOf = (cards: CatalogEntry[]) => cards.map((card) => card.slug);
 
 // everyCard follows next_cursor `limit` cards at a time and returns every card in the order shown.
@@ -69,8 +72,8 @@ describe("GET /v1/challenges", () => {
   it("filters by any of several skills, difficulty, time limit and text", () => filters(app));
 
   it("pages through everything once, newest first", async () => {
-    expect(slugsOf(await everyCard(app, "", 2))).toEqual(slugsOf(await everyCard(app, "", CATALOG_PAGE_MAX)));
-    expect(slugsOf(await everyCard(app, "&skill=linux", 2))).toEqual(slugsOf(await everyCard(app, "&skill=linux", CATALOG_PAGE_MAX)));
+    expect(slugsOf(await everyCard(app, "", SMALL_PAGE))).toEqual(slugsOf(await everyCard(app, "", CATALOG_PAGE_MAX)));
+    expect(slugsOf(await everyCard(app, "&skill=linux", SMALL_PAGE))).toEqual(slugsOf(await everyCard(app, "&skill=linux", CATALOG_PAGE_MAX)));
   });
 
   it.each([
