@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: haproxy-health-path
+version: 1
+title: "503 after the release"
+statement: "Release 2.0 of the app went out on both servers behind haproxy, and both copies start and serve pages, yet every visitor now gets 503 Service Unavailable. Bring the site back while haproxy keeps checking each copy's health."
+difficulty: 3            # 1–10
+skills: { haproxy: 0.7, linux: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# haproxy and the app drop root for their own users; reloading haproxy signals its old process.
+capabilities: [CHOWN, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [shop, portal, catalog] }
+  port: { range: [9000, 9399] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
