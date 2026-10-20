@@ -66,6 +66,14 @@ jobs:
 
       - run: pnpm build
 
+      # Task 30e removed the dev path; docs may still tell its history, the code may not bring it back.
+      - name: Refuse the removed dev path
+        run: |
+          if git grep -n -E 'DEV_AUTH_SECRET|gb_dev_session|dev:user-token|DevUserGuard|signDevUserToken|verifyDevUserToken' -- . ':!docs' ':!.github/workflows/ci.yml'; then
+            echo "::error::the dev path removed in task 30e is referenced again"
+            exit 1
+          fi
+
       # The committed gRPC code must match agent.proto (architecture.md, task 37a). The only place
       # the generator versions are pinned; packages/agent-api/generate.sh points here.
       - name: Check generated gRPC code

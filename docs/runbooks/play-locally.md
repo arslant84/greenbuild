@@ -13,7 +13,7 @@ pnpm play:up      # builds, starts everything, prints the URL
 pnpm play:down    # stops everything and removes the sandboxes this stack started
 ```
 
-Then open <http://localhost:3001>. A dev session starts on the first visit. Press **Start Challenge**, wait for the sandbox, fix the site in the terminal and press **Check Solution** (or Cmd/Ctrl+Enter). The result opens from the scorecard's link.
+Then open <http://localhost:3001> and sign in (below). Press **Start Challenge**, wait for the sandbox, fix the site in the terminal and press **Check Solution** (or Cmd/Ctrl+Enter). The result opens from the scorecard's link.
 
 On Windows, `play:up` runs the script with Git Bash (found next to `git.exe`), never with WSL's `bash`: WSL would run it inside Linux, where the Windows Docker, Go and Node are not found. Without Git for Windows it stops and says so.
 
@@ -23,8 +23,8 @@ The first `play:up` builds the Go binaries, the dev certificates, the API and on
 
 | Service | Address | Notes |
 |---|---|---|
-| Web | `localhost:3001` | `next dev`, so the dev session exists |
-| API | `127.0.0.1:3000` | dev user tokens on |
+| Web | `localhost:3001` | `next dev`, with Auth.js sign-in |
+| API | `127.0.0.1:3000` | admits the web app's API tokens |
 | Worker | `127.0.0.1:3002` | relays `attempt.finished`, publishes the daily challenge |
 | Engine | `127.0.0.1:8080` | consumer on, `/attach` and `/internal` on |
 | Agent | `127.0.0.1:8081`, gRPC `9443` | runc; labels its sandboxes `greenbuild.stack=play-<web port>` |
@@ -38,22 +38,18 @@ Everything else lives in `.play/` (git-ignored): binaries, dev certificates, thr
 ## What protects what
 
 - The terminal opens only with a 60-second attach token, which the API issues to the attempt's owner and the engine verifies.
-- Every API call carries the dev user token from the session cookie; the browser never sees it, and writes also need the `x-greenbuild-request` header.
-- Dev sessions exist only outside production and only with `DEV_AUTH_SECRET`. Auth.js login replaces them.
+- Every API call carries a 5-minute API token the web app signs for the signed-in player; the browser never sees it, and writes also need the `x-greenbuild-request` header.
+- The play screens, the catalog, the leaderboard and the settings send a visitor without a session to the sign-in screen.
 
 ## Signing in
 
-The stack also runs Auth.js sign-in (tasks 30a, 54), alongside the dev session until task 30e. Open <http://localhost:3001/api/auth/signin> (Auth.js's own page until the sign-in screens, task 30b):
+Sign in at <http://localhost:3001/signin> (tasks 30a, 30b). A new player ticks **I am 16 or older** first.
 
-- **Email link:** the email goes to Mailpit, not to a real mailbox. Read it at <http://localhost:18025>.
+- **Email link:** the email goes to Mailpit, not to a real mailbox. Read it at <http://localhost:18025>. Five links per address and per IP in 15 minutes; locally every request counts as one IP.
 - **GitHub or Google:** offered only when an OAuth app's id and secret are set in the shell before `pnpm play:up` (`AUTH_GITHUB_ID` and `AUTH_GITHUB_SECRET`, `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET`). The app's callback URL is `http://localhost:3001/api/auth/callback/github` or `.../google`. Never commit these values.
 
-A signed-in player calls the API as themselves; without signing in, the dev session is used.
-
-## A rejected dev session
-
-The dev session cookie (`gb_dev_session`) is signed with `DEV_AUTH_SECRET`. If the secret changes (for example after deleting `.play/`), the old cookie is refused: the screens show the service error and API calls answer 401, and the web app does not replace a cookie that is present. Delete the cookie and reload: in the browser's developer tools, Application (Chrome) or Storage (Firefox) › Cookies › `http://localhost:3001` › `gb_dev_session`; or use a private window. Auth.js sign-in replaces dev sessions (task 30e).
+If `.play/` is deleted, its `AUTH_SECRET` changes and an earlier session no longer reads: sign in again.
 
 ## End-to-end test
 
-With the stack up, `pnpm --filter @greenbuild/web test:e2e` plays nginx-502 in Chromium from Start to the debrief (`apps/web/e2e/slice.pw.ts`). Install the browser once with `pnpm --filter @greenbuild/web exec playwright install chromium`. Set `PLAY_WEB_URL` when the web app is not on `http://localhost:3001`. CI's "Slice e2e (Playwright)" job runs the same test on a fresh stack.
+With the stack up with the test sign-in (`GREENBUILD_E2E_AUTH=1 pnpm play:up`, never in production), `pnpm --filter @greenbuild/web test:e2e` plays nginx-502 in Chromium from Start to the debrief (`apps/web/e2e/slice.pw.ts`). Install the browser once with `pnpm --filter @greenbuild/web exec playwright install chromium`. Set `PLAY_WEB_URL` when the web app is not on `http://localhost:3001`. CI's "Slice e2e (Playwright)" job runs the same test on a fresh stack.
