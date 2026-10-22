@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: group-membership-restart
+version: 1
+title: "In the group, still denied"
+statement: "Every upload fails with Permission denied. Ops added the service's user to the right group an hour ago, and the directory's permissions look correct, yet uploads keep failing. Get uploads working without loosening the directory's permissions."
+difficulty: 3            # 1–10
+skills: { linux: 1 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# The service runs as its own user; restarting it signals that user's process.
+capabilities: [CHOWN, KILL, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [gallery, avatars, attachments] }
+  port: { range: [8100, 8899] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
