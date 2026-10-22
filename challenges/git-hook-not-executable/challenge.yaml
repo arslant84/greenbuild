@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: git-hook-not-executable
+version: 1
+title: "Pushed, but not deployed"
+statement: "Since the git server moved to a new host, pushes to main succeed but the site never changes: it still shows the release from before the move. Make pushes to main deploy again."
+difficulty: 3            # 1–10
+skills: { git: 0.6, linux: 0.4 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# Pushes and the deploy run as the git user, which owns the repository and the site; root works in
+# directories the git user owns.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [blog, wiki, landing] }
+  release: { range: [2, 8] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
