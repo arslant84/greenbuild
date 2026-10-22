@@ -1,0 +1,25 @@
+# yaml-language-server: $schema=../../packages/challenge-spec/challenge.schema.json
+id: git-pull-local-changes
+version: 1
+title: "The deploy job won't pull"
+statement: "Tonight's release was pushed an hour ago, but the deploy job fails every run and the server still has yesterday's version. Get the release deployed through the deploy job, without losing last night's hotfix."
+difficulty: 3            # 1–10
+skills: { git: 0.7, linux: 0.3 }
+time_limit_sec: 900
+resources:
+  cpu: 500m
+  memory: 512Mi
+  disk: 1Gi
+network: none            # none | allowlist
+# The deploy user owns the repository and the checkout; root works in directories it owns.
+capabilities: [CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+randomize:               # applied by setup.sh from the attempt seed
+  app: { pick: [billing, catalog, search] }
+  release: { range: [40, 89] }
+  timeout: { range: [20, 40] }
+check:
+  command: /opt/greenbuild/check.sh
+  timeout_sec: 20
+  run_as: root           # the checker is not visible to the user
+hints: 3
+source: ai               # human | ai | community
