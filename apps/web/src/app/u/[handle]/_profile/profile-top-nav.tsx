@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PersonIcon } from "../../../../ui/icons-profile";
 import { LABEL_BADGE, LABEL_CODE } from "./type";
+import { LogoMark } from "../../../../ui/logo-mark";
 
 const CURRENT = "rounded bg-control px-2 py-1 type-body font-medium text-accent-soft";
 const OTHER = `rounded px-2 py-1 ${LABEL_CODE} text-ink-muted`;
@@ -13,6 +14,7 @@ export function ProfileTopNav({ ownHref }: { ownHref: string | null }) {
     <header className="flex h-14 items-center justify-between bg-[#131314e6] px-6 shadow-[0_1px_8px_rgba(0,0,0,0.4)] backdrop-blur-md">
       <div className="flex items-center gap-5">
         <Link href="/" className="flex items-center gap-2">
+          <LogoMark />
           <span className={`${LABEL_CODE} font-medium tracking-tight text-accent-soft`}>&gt;_ greenbuild</span>
           <span className="flex items-center gap-1 rounded bg-control px-1 py-0.5">
             <span className="size-1.5 animate-pulse rounded-full bg-ok" />

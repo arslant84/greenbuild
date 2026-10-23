@@ -3,6 +3,7 @@ import Link from "next/link";
 import { PersonIcon } from "../../../ui/icons-profile";
 import { SettingsIcon } from "../../../ui/icons-settings";
 import { LABEL_BADGE, LABEL_CODE } from "../../../ui/type";
+import { LogoMark } from "../../../ui/logo-mark";
 
 const NAV = "py-1 type-body text-ink-muted hover:text-ink";
 
@@ -15,6 +16,7 @@ export function SettingsHeader({ me }: { me: MeResponse | null }) {
       <div className="frame flex h-14 items-center justify-between gap-5 px-6">
         <div className="flex shrink-0 items-center gap-8">
           <Link href="/play" className={`flex items-center gap-2 ${LABEL_CODE} font-bold tracking-tight text-accent-soft`}>
+            <LogoMark />
             <span className="text-ok">&gt;_</span>
             <span>greenbuild</span>
             <span className="ml-1 size-2 rounded-full bg-ok" />

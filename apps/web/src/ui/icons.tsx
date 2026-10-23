@@ -219,14 +219,6 @@ export function FlagIcon(props: IconProps) {
   );
 }
 
-export function BrandIcon(props: IconProps) {
-  return (
-    <svg width={17} height={14} viewBox="0 0 17 14" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M1.7 13.6C1.2325 13.6 0.832294 13.4336 0.499376 13.1007C0.166459 12.7677 0 12.3675 0 11.9V1.7C0 1.2325 0.166459 0.832294 0.499376 0.499376C0.832294 0.166459 1.2325 0 1.7 0H15.3C15.7675 0 16.1677 0.166459 16.5007 0.499376C16.8336 0.832294 17 1.2325 17 1.7V11.9C17 12.3675 16.8336 12.7677 16.5007 13.1007C16.1677 13.4336 15.7675 13.6 15.3 13.6H1.7ZM1.7 11.9H15.3V3.40001H1.7V11.9ZM4.67501 11.05L3.48501 9.86002L5.67376 7.65002L3.46376 5.44001L4.67501 4.25001L8.07502 7.65002L4.67501 11.05ZM8.50002 11.05V9.35002H13.6V11.05H8.50002Z" />
-    </svg>
-  );
-}
-
 export function LogoutIcon(props: IconProps) {
   return (
     <svg width={12} height={12} viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" {...props}>

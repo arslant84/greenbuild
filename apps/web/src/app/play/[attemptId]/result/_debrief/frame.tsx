@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { PersonIcon } from "../../../../../ui/icons";
 import { type Outcome, TONE_BG, TONE_TEXT } from "./outcome";
+import { LogoMark } from "../../../../../ui/logo-mark";
 
 interface DebriefFrameProps {
   incident: string;
@@ -16,7 +17,8 @@ export function DebriefFrame({ incident, outcome, children }: DebriefFrameProps)
       <header className="sticky top-0 z-10 bg-[#131314cc] px-[max(280px,calc(50%-360px))] shadow-[0_1px_2px_rgba(0,0,0,0.05)] backdrop-blur-md">
         <div className="flex h-14 items-center justify-between px-4">
           <span className="flex items-center gap-3">
-            <Link href="/play" className="font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] text-accent-soft">
+            <Link href="/play" className="flex items-center gap-2 font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] text-accent-soft">
+              <LogoMark />
               &gt;_ greenbuild
             </Link>
             <span className="type-label text-[#3c494c]">/</span>

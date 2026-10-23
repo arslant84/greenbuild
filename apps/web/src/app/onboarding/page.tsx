@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AFTER_ONBOARDING, ContinueButton } from "./continue-button";
 import { TerminalPreview, ValueProps } from "./welcome-parts";
+import { LogoMark } from "../../ui/logo-mark";
 
 const STEPS = 3;
 
@@ -13,6 +14,7 @@ export default function OnboardingPage() {
       <section className="relative w-[880px] overflow-hidden rounded-xl bg-surface shadow-[0_8px_10px_-6px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1)]">
         <header className="flex h-11 items-center justify-between bg-surface-raised px-5">
           <span className="flex items-center gap-1.5 font-mono text-[13px] leading-[18px] font-medium tracking-[-0.32px]">
+            <LogoMark />
             <span className="text-warn">&gt;_</span>
             <span className="text-ink">greenbuild</span>
             <span className="text-xs leading-4 text-ink-subtle">:: onboarding</span>
