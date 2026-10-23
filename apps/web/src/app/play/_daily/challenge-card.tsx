@@ -5,8 +5,8 @@ import { StartButton } from "./start-button";
 
 const DIFFICULTY_STEPS = 10;
 
-// Figma › Section - PRIMARY CHALLENGE CARD (HERO ELEMENT).
-export function ChallengeCard({ card }: { card: Card }) {
+// Figma › Section - PRIMARY CHALLENGE CARD (HERO ELEMENT); blocked while another attempt runs (task 21b).
+export function ChallengeCard({ card, blocked }: { card: Card; blocked: boolean }) {
   return (
     <section className="relative flex flex-col gap-3 rounded-xl bg-surface-raised p-5 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.1),0_4px_6px_-1px_rgba(0,0,0,0.1)]">
       <span className="absolute -top-px left-1 h-0.5 w-[calc(100%-8px)] bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.8)_50%,rgba(34,211,238,0)_100%)]" />
@@ -23,7 +23,7 @@ export function ChallengeCard({ card }: { card: Card }) {
       </div>
       <MetadataRow card={card} />
       <TerminalPreview slug={card.slug} />
-      <StartButton challengeSlug={card.slug} />
+      <StartButton challengeSlug={card.slug} blocked={blocked} />
     </section>
   );
 }
