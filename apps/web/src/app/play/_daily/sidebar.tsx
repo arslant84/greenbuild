@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 import { BadgeIcon, CatalogIcon, FlameIcon, LeaderboardIcon, PersonIcon, TerminalIcon, TuneIcon } from "../../../ui/icons";
+import { LogoMark } from "../../../ui/logo-mark";
 
 interface NavItem {
   label: string;
@@ -23,7 +24,10 @@ export function Sidebar({ streak }: { streak: number }) {
     <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col justify-between border-r border-[#3c494c4d] bg-canvas p-3">
       <div className="flex flex-col gap-5">
         <div className="flex h-[22px] items-center justify-between px-1 pt-1">
-          <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] text-accent-soft">&gt;_ greenbuild</span>
+          <span className="flex items-center gap-2">
+            <LogoMark />
+            <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] text-accent-soft">&gt;_ greenbuild</span>
+          </span>
           <span className="type-label rounded border border-[#3c494c66] bg-line px-1.5 py-0.5 tracking-[0.5px] text-[#2fd9f4] uppercase">Beta</span>
         </div>
         <nav className="flex flex-col gap-1">

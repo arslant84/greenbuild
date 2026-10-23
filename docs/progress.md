@@ -214,6 +214,7 @@ Dropped: S4 (empty `db`, `queue`, `challenge-spec`, `ui` packages). Each package
 - Auth.js runs in `apps/web`; the API verifies a short-lived signed token behind `@CurrentUser()`. Sign-in: GitHub and email in Stage 1, Google in Stage 2. 16+ is a self-attested checkbox stored as `age_confirmed_16_at`; no date of birth.
 - Until decision D5: screens have a minimum width of 1280 px, are centered on wider windows, and nothing is clipped.
 - Private challenges for design partners are split from the 15 public Stage 1 challenges and blocked on signed partners.
+- Logo and favicon (owner, 2026-10-23): the mark from the Stitch screen "Greenbuild Logo" (a passing prompt, a G and a green build dot) is the favicon, `apps/web/src/app/icon.svg`, and sits before the wordmark in every header through `LogoMark`, which shows that same file; the two Stitch favicons with "HF" (the old hotfix name) are not used.
 - UI follows the owner's Figma file "HotFix" exactly (layout, spacing, colors, type, states); blocks without data yet show neutral empty values, never the mock numbers; brand text is "greenbuild" (owner, 2026-10-02; also CLAUDE.md section 13).
 
 ## Open items

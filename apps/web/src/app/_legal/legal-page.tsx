@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { LogoMark } from "../../ui/logo-mark";
 
 // The beta terms and privacy pages (task 31a; architecture.md, deviation 30): no Figma frame, plain text on
 // the app's tokens, replaced by the lawyer's texts before the public launch (task 60).
@@ -8,6 +9,7 @@ export function LegalPage({ title, version, children }: { title: string; version
     <main className="min-h-screen min-w-[1280px] bg-canvas text-ink">
       <header className="flex h-14 items-center border-b border-line px-16">
         <Link href="/" className="inline-flex items-center gap-2 font-mono text-sm tracking-tight text-ink">
+          <LogoMark />
           <span className="font-bold text-accent">&gt;_</span>
           <span className="font-semibold tracking-wide">greenbuild</span>
         </Link>

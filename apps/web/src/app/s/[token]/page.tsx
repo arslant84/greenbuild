@@ -5,6 +5,7 @@ import { ArrowForwardIcon } from "../../../ui/icons";
 import { ShareCard } from "./share-card";
 import { loadShareCard, requestOrigin } from "./share-data";
 import { shareView } from "./share-view";
+import { LogoMark } from "../../../ui/logo-mark";
 
 export const dynamic = "force-dynamic";
 
@@ -39,7 +40,10 @@ export default async function SharePage({ params }: SharePageProps) {
     <div className="flex min-h-screen flex-col bg-[#0a0a0c]">
       <header className="border-b border-line/60">
         <div className="mx-auto flex h-14 max-w-[720px] items-center justify-between px-4">
-          <span className="font-mono text-sm font-semibold tracking-[-0.3px] text-white">&gt;_ greenbuild</span>
+          <span className="flex items-center gap-2">
+            <LogoMark />
+            <span className="font-mono text-sm font-semibold tracking-[-0.3px] text-white">&gt;_ greenbuild</span>
+          </span>
           <Link href="/signin" className="font-mono text-[13px] text-ink-muted hover:text-white">
             Sign in
           </Link>
