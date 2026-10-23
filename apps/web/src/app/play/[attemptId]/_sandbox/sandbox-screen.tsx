@@ -7,6 +7,8 @@ import { useSubmitShortcut } from "../../../../ui/use-shortcut";
 import type { ConnectionStatus, TerminalSize } from "../protocol";
 import { ActionPanel } from "./action-panel";
 import { SandboxHeader } from "./header";
+import { HintControl } from "./hint-button";
+import { HintsCard } from "./hints-card";
 import { MissionPanel } from "./mission-panel";
 import { SandboxTerminal } from "./sandbox-terminal";
 import { type SandboxView, sandboxView } from "./sandbox-view";
@@ -63,8 +65,8 @@ export function SandboxScreen({ attempt, token, card, attachUrl, refresh }: Sand
             card={card}
             remainingSeconds={card.time_limit_sec - elapsed}
             checksUsed={attempt.checks_used}
-            extra={<PanelExtra view={view} check={check} />}
-            actions={<ActionPanel mode={view.mode} onCheck={() => void runCheck()} onGiveUp={leave.giveUp} />}
+            extra={<PanelExtra view={view} check={check} attempt={attempt} />}
+            actions={<ActionPanel mode={view.mode} hint={<HintControl attempt={attempt} ready={view.mode === "ready"} refresh={refresh} />} onCheck={() => void runCheck()} onGiveUp={leave.giveUp} />}
           />
         )}
       </main>
@@ -108,7 +110,17 @@ function StateBanner({ view, check, retry, onReconnect }: StateBannerProps) {
   return null;
 }
 
-function PanelExtra({ view, check }: { view: SandboxView; check: CheckState }) {
+// The opened hints (Stitch V6, task 35c) come first, under the checks card; then the state's own blocks.
+function PanelExtra({ view, check, attempt }: { view: SandboxView; check: CheckState; attempt: AttemptResponse }) {
+  return (
+    <>
+      <HintsCard hints={attempt.hints} total={attempt.hints_total} />
+      <StateBlocks view={view} check={check} />
+    </>
+  );
+}
+
+function StateBlocks({ view, check }: { view: SandboxView; check: CheckState }) {
   if (view.frame === "V5") return <DisconnectedCard />;
   if (view.checksLeft === 0) return <AmberAlert>All checks for this attempt are used.</AmberAlert>;
   if (view.frame !== "V4" || check.kind !== "done") return null;

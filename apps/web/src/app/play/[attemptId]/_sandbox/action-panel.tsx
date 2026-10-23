@@ -1,28 +1,21 @@
-import { FlagIcon, LightbulbIcon, PlayIcon } from "../../../../ui/icons";
+import type { ReactNode } from "react";
+import { FlagIcon, PlayIcon } from "../../../../ui/icons";
 
 export type ActionMode = "ready" | "checking" | "reconnecting" | "exhausted";
 
 interface ActionPanelProps {
   mode: ActionMode;
+  hint: ReactNode;
   onCheck: () => void;
   onGiveUp: () => void;
 }
 
-// Figma › Action Panel & Verification CTA, with V2's checking and V5's reconnecting buttons.
-// The hint row stays inert until a Figma frame shows a revealed hint (task 35c); the hints API is done.
-export function ActionPanel({ mode, onCheck, onGiveUp }: ActionPanelProps) {
+// Figma › Action Panel & Verification CTA, with V2's checking and V5's reconnecting buttons; the hint
+// button comes from Stitch V6 (task 35c).
+export function ActionPanel({ mode, hint, onCheck, onGiveUp }: ActionPanelProps) {
   return (
     <div className="flex flex-col gap-3 pt-5">
-      <span className="flex h-10 items-center justify-between rounded-lg bg-surface px-3 opacity-60 shadow-[0_1px_2px_rgba(0,0,0,0.05)]" aria-disabled="true">
-        <span className="flex items-center gap-1">
-          <LightbulbIcon className="text-warn" />
-          <span className="type-body font-medium text-ink">Get Diagnostic Hint</span>
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="type-label text-ink-subtle">— left</span>
-          <kbd className="type-label rounded bg-line px-1.5 py-0.5 text-ink">⌘H</kbd>
-        </span>
-      </span>
+      {hint}
       <CheckButton mode={mode} onCheck={onCheck} />
       <button type="button" onClick={onGiveUp} className="flex cursor-pointer items-center justify-center gap-1 pt-1 text-ink-subtle">
         <FlagIcon />
