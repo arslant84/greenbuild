@@ -142,6 +142,8 @@ export interface Player {
   abandon: (id: string) => Promise<Response>;
   hint: (id: string) => Promise<Response>;
   result: (id: string) => Promise<Response>;
+  share: (id: string) => Promise<Response>;
+  unshare: (id: string) => Promise<Response>;
   card: (slug: string) => Promise<Response>;
   catalog: (query: string) => Promise<Response>;
 }
@@ -175,6 +177,8 @@ export async function player(app: () => AttemptsApp, userId: string): Promise<Pl
     abandon: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/abandon`, { method: "POST", headers }),
     hint: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/hint`, { method: "POST", headers }),
     result: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/result`, { headers }),
+    share: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/share`, { method: "POST", headers }),
+    unshare: (id) => fetch(`${app().baseUrl}/v1/attempts/${id}/share`, { method: "DELETE", headers }),
     card: (slug) => fetch(`${app().baseUrl}/v1/challenges/${slug}`, { headers }),
     catalog: (query) => fetch(`${app().baseUrl}/v1/challenges${query}`, { headers }),
   };

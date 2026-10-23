@@ -6,4 +6,5 @@ export * from "./consent.js";
 export * from "./daily.js";
 export * from "./game.js";
 export * from "./outbox.js";
+export * from "./share.js";
 export * from "./users.js";

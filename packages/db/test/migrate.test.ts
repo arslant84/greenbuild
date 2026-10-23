@@ -23,6 +23,7 @@ const TABLES = [
   "outbox",
   "privacy_requests",
   "sandbox_sessions",
+  "share_tokens",
   "streaks",
   "subscriptions",
   "user_settings",
