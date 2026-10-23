@@ -50,6 +50,13 @@ describe("proxyToApi", () => {
     expect(api).not.toHaveBeenCalled();
   });
 
+  it("passes an answer without a body, such as a revoked share link's 204, back as it is", async () => {
+    api.mockResolvedValue(new Response(null, { status: 204 }));
+
+    const response = await proxyToApi(pageRequest({ session: "api-token", write: true }), { method: "DELETE", path: "/v1/attempts/a1/share" });
+    expect(response.status).toBe(204);
+  });
+
   it("keeps the API's attachment header, so a data export downloads as a file", async () => {
     const disposition = 'attachment; filename="greenbuild-export-2026-12-01.json"';
     api.mockResolvedValue(new Response('{"format":1}', { status: 200, headers: { "content-type": "application/json", "content-disposition": disposition } }));
