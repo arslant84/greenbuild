@@ -17,15 +17,20 @@ export interface ShareView {
   summary: string;
 }
 
-// shareView: a player without a display name shows their handle; one without either stays anonymous.
-// XP is "—" until the worker credits the solve.
+// playerNames: a player without a display name shows their handle; one without either stays anonymous. The
+// handle shows beside a display name only, so it never appears twice.
+export function playerNames(player: { display_name: string | null; handle: string | null }): { name: string; handle: string | null } {
+  const handle = player.handle ? `@${player.handle}` : null;
+  return { name: player.display_name ?? handle ?? "A greenbuild player", handle: player.display_name ? handle : null };
+}
+
+// shareView: XP is "—" until the worker credits the solve.
 export function shareView(card: ShareCard): ShareView {
-  const handle = card.handle ? `@${card.handle}` : null;
-  const name = card.display_name ?? handle ?? "A greenbuild player";
+  const { name, handle } = playerNames(card);
   const time = card.duration_ms === null ? null : formatClock(card.duration_ms / MS_PER_SECOND);
   return {
     name,
-    handle: card.display_name ? handle : null,
+    handle,
     title: card.challenge_title,
     solvedIn: time ? `Solved in ${time}` : "Solved",
     xp: card.xp_earned === null ? "— XP" : `+${card.xp_earned} XP`,

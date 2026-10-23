@@ -31,7 +31,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
     <DebriefFrame incident={attemptId.slice(0, 8).toUpperCase()} outcome={outcome}>
       <Summary title={card?.title ?? result.challenge_slug} outcome={outcome} durationMs={result.duration_ms} xpEarned={result.xp_earned} streak={streak} />
       <Postmortem />
-      <Credential result={result} skills={card?.skills ?? []} streak={streak} />
+      <Credential result={result} skills={card?.skills ?? []} streak={streak} player={player} />
       <NextActions />
     </DebriefFrame>
   );
