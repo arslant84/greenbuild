@@ -1,8 +1,8 @@
 import { expect, test } from "@playwright/test";
-import { requestSignInLink } from "./mailpit";
+import { askForSignInLink, emailsTo, requestSignInLink, signInLinkTo } from "./mailpit";
 
 // architecture.md, tasks 30a and 30c: an email link signs a player in, and the web app then calls the
-// API as that player.
+// API as that player; task 50b: a deleted account signs in no more.
 const NGINX_502 = "nginx-502-upstream";
 const WRITE_HEADERS = { "x-greenbuild-request": "1" };
 
@@ -39,4 +39,20 @@ test("a visitor without a session is sent to sign in, and back to the page after
 
   await expect(page).toHaveURL(/\/signin\?callbackUrl=%2Fchallenges$/);
   await expect(page.getByRole("heading", { name: "Sign in to greenbuild" })).toBeVisible();
+});
+
+test("a deleted player gets a link like anyone, and following it shows the account is closed", async ({ page }) => {
+  const { email, link } = await requestSignInLink(page);
+  await page.goto(link);
+  expect((await page.request.delete("/api/me", { headers: WRITE_HEADERS })).status()).toBe(202);
+  await page.context().clearCookies();
+
+  await askForSignInLink(page, email);
+  await expect(page.getByRole("heading", { name: "Check your email" })).toBeVisible();
+  await expect.poll(() => emailsTo(page.request, email)).toBe(2);
+  await page.goto(await signInLinkTo(page.request, email));
+
+  await expect(page).toHaveURL(/\/signin\?error=AccountClosed/);
+  await expect(page.getByText("This account can no longer be used to sign in.")).toBeVisible();
+  expect(await (await page.request.get("/api/auth/session")).json()).toBeNull();
 });

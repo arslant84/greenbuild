@@ -12,11 +12,12 @@ vi.mock("@greenbuild/db/auth", () => db);
 vi.mock("./age-confirmation", () => ({ ageConfirmedInBrowser: async () => browser.confirmed }));
 
 const { ageCheck, ageDecision } = await import("./sign-in-age");
-const { AGE_REQUIRED_PATH } = await import("./sign-in-paths");
+const { ACCOUNT_CLOSED_PATH, AGE_REQUIRED_PATH } = await import("./sign-in-paths");
 
 const NEW: AgeStatus = { kind: "new" };
 const OLDER: AgeStatus = { kind: "unconfirmed", userId: "older-player" };
 const CONFIRMED: AgeStatus = { kind: "confirmed", userId: "player" };
+const CLOSED: AgeStatus = { kind: "closed" };
 const EMAIL_ACCOUNT = { type: "email", provider: "email", providerAccountId: "ada@example.com" } as const;
 const GITHUB_ACCOUNT = { type: "oauth", provider: "github", providerAccountId: "4242" } as const;
 
@@ -30,6 +31,8 @@ describe("ageDecision", () => {
     { name: "a new player through GitHub without it", status: NEW, step: "complete", inBrowser: false, recorded: false, expected: "deny" },
     { name: "an older player with the box", status: OLDER, step: "complete", inBrowser: true, recorded: false, expected: "confirm" },
     { name: "an older player without it", status: OLDER, step: "complete", inBrowser: false, recorded: false, expected: "deny" },
+    { name: "a closed account asking for a link, like any player", status: CLOSED, step: "request-link", inBrowser: false, recorded: false, expected: "allow" },
+    { name: "a closed account completing, even with the box", status: CLOSED, step: "complete", inBrowser: true, recorded: true, expected: "closed" },
   ] as const)("$name: $expected", ({ status, step, inBrowser, recorded, expected }) => {
     expect(ageDecision(status, step, { inBrowser, recorded })).toBe(expected);
   });
@@ -78,5 +81,23 @@ describe("ageCheck", () => {
   it("leaves the e2e sign-in to confirm its test players itself", async () => {
     expect(await signIn({ user: { id: "x" }, account: { type: "credentials", provider: "e2e", providerAccountId: "x" } })).toBe(true);
     expect(db.ageStatus).not.toHaveBeenCalled();
+  });
+});
+
+// Task 50b: a banned or deleted account may not sign in.
+describe("ageCheck for a closed account", () => {
+  const signIn = ageCheck({} as never);
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    db.ageStatus.mockResolvedValue(CLOSED);
+    browser.confirmed = true;
+  });
+
+  it("sends it back to the sign-in screen when it completes, and changes nothing", async () => {
+    expect(await signIn({ user: { id: "x" }, account: EMAIL_ACCOUNT })).toBe(ACCOUNT_CLOSED_PATH);
+    expect(await signIn({ user: { id: "x" }, account: GITHUB_ACCOUNT })).toBe(ACCOUNT_CLOSED_PATH);
+    expect(db.confirmUser).not.toHaveBeenCalled();
+    expect(db.recordAgeConfirmation).not.toHaveBeenCalled();
   });
 });

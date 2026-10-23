@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AGE_REQUIRED_ERROR } from "../../../server/sign-in-paths";
+import { ACCOUNT_CLOSED_ERROR, AGE_REQUIRED_ERROR } from "../../../server/sign-in-paths";
 import { signInBanner } from "./sign-in-banner";
 
 describe("signInBanner", () => {
@@ -13,6 +13,10 @@ describe("signInBanner", () => {
 
   it("uses the frame's OAuth error for a failed GitHub sign-in", () => {
     expect(signInBanner("OAuthCallbackError")).toEqual({ title: "Authentication Failed:", text: "Couldn't connect to GitHub. Try again or continue using email." });
+  });
+
+  it("says a banned or deleted account is closed, without saying why", () => {
+    expect(signInBanner(ACCOUNT_CLOSED_ERROR)).toEqual({ title: "Account closed:", text: "This account can no longer be used to sign in." });
   });
 
   it("says a used or expired link must be asked for again", () => {
