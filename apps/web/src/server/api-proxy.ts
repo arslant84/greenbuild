@@ -10,6 +10,8 @@ export const WRITE_HEADER = "x-greenbuild-request";
 // The API may wait up to 30 s for the engine's check.
 const PROXY_TIMEOUT_MS = 35_000;
 const STATUS_BY_CODE = { validation_failed: 400, unauthorized: 401, forbidden: 403, unavailable: 503 } as const;
+// These answers carry no body, and a Response refuses even an empty one for them.
+const NO_BODY_STATUSES = new Set([204, 205, 304]);
 
 export interface ProxyOptions {
   method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
@@ -39,7 +41,8 @@ export async function proxyToApi(request: NextRequest, options: ProxyOptions): P
     // A download (the data export) keeps the API's attachment header, so the browser saves a file.
     const disposition = upstream.headers.get("content-disposition");
     const headers = { "content-type": "application/json", ...(disposition ? { "content-disposition": disposition } : {}) };
-    return new Response(await upstream.text(), { status: upstream.status, headers });
+    const body = NO_BODY_STATUSES.has(upstream.status) ? null : await upstream.text();
+    return new Response(body, { status: upstream.status, headers });
   } catch (error) {
     logger.error("api unreachable", { path: options.path, error });
     return failure(new UnavailableError("The service is unavailable"));
