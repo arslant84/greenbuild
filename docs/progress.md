@@ -52,7 +52,7 @@ The vertical slice above covers part of Stage 1. Status of each Stage 1 item:
 | Control plane: Redis Streams, node selection, TTL; node agent: gVisor, limits, mTLS | Mostly done | Streams (task 10), TTL (4), limits (2), mTLS (6), gVisor verified in CI. Node selection not built (the engine talks to one agent): deferred to Stage 2, task 57a. `destroyed` is never published: task 17 |
 | WebSocket proxy with JWT, xterm.js | Done | Tasks 8, 12, 16 |
 | Check, session log in Blob Storage, deleted after 90 days | Mostly done | Check (tasks 9, 15), session log (11). The 90-day deletion rule: task 28c; managed identity: 28f |
-| Login with GitHub and email, sign-up from 16 | In progress | Auth.js with the email link and GitHub (30a), the API's session check (30c) and the e2e sign-in (30d) are done; the sign-in screens and 16+ (30b) and removing the dev path (30e) are blocked on the full Figma frame; consents at sign-up (31a) wait for 30b |
+| Login with GitHub and email, sign-up from 16 | Done (GitHub sign-in not verified) | Auth.js with the email link and GitHub (30a), the sign-in screens and 16+ (30b), the API's session check (30c), the e2e sign-in (30d), removing the dev path (30e) and the consent tables (31a) are done; see their rows. Signing in with a real GitHub app is not verified yet (30a) |
 | Challenge page: statement, terminal, timer, check, hint | Mostly done | All but hints (button shown disabled): tasks 35a–35c |
 | 15 public challenges | 15 of 15 | nginx-502 and 25a–25n (track: Linux/DevOps, D1) |
 | 1–2 private challenges per design partner | Blocked | Needs signed design partners |
