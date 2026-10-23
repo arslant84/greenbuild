@@ -1,10 +1,11 @@
 "use client";
 
 import type { AttemptResult } from "@greenbuild/shared";
-import { useState } from "react";
-import { AuthenticIcon, CredentialIcon, DownloadIcon, LinkIcon, ShareIcon, TerminalBadgeIcon } from "../../../../../ui/icons-debrief";
+import { AuthenticIcon, CredentialIcon, TerminalBadgeIcon } from "../../../../../ui/icons-debrief";
+import { playerNames } from "../../../../s/[token]/share-view";
 import { xpAmount } from "../../../xp-view";
 import { checkSummary } from "./outcome";
+import { ShareActions } from "./share-actions";
 import { formatDuration } from "./summary";
 
 interface CredentialProps {
@@ -12,11 +13,13 @@ interface CredentialProps {
   skills: string[];
   // The player's current streak, or null when the profile could not be read.
   streak: number | null;
+  // The player's names as their profile has them, or null when it could not be read.
+  player: { display_name: string | null; handle: string | null } | null;
 }
 
-// Figma › Verifiable Credential Section. Accounts, sharing and signed proofs arrive later; the card shows
-// what this attempt proves and empty values for the rest. The verification link is this result page.
-export function Credential({ result, skills, streak }: CredentialProps) {
+// Figma › Verifiable Credential Section. The card shows what this attempt proves, with empty values for what
+// does not exist yet (MMR, signed proofs); its share link is public (task 51).
+export function Credential({ result, skills, streak, player }: CredentialProps) {
   return (
     <section className="flex flex-col gap-2 pb-8">
       <div className="flex items-center justify-between">
@@ -38,19 +41,20 @@ export function Credential({ result, skills, streak }: CredentialProps) {
             <span className="type-label">{result.status === "solved" ? "AUTHENTIC" : "UNVERIFIED"}</span>
           </span>
         </div>
-        <Player result={result} streak={streak} />
+        <Player result={result} streak={streak} player={player} />
         <ChecksRow result={result} skills={skills} />
         <div className="flex justify-between pt-1 font-mono text-[10px] leading-[18px] text-ink-subtle">
           <span>Verified by greenbuild sandbox engine</span>
           <span>Seed hidden · SHA-256: —</span>
         </div>
       </div>
-      <Actions />
+      <ShareActions attemptId={result.id} solved={result.status === "solved"} />
     </section>
   );
 }
 
-function Player({ result, streak }: { result: AttemptResult; streak: number | null }) {
+function Player({ result, streak, player }: Pick<CredentialProps, "result" | "streak" | "player">) {
+  const names = player ? playerNames(player) : { name: "—", handle: null };
   return (
     <div className="flex items-start justify-between">
       <span className="flex gap-2">
@@ -59,8 +63,8 @@ function Player({ result, streak }: { result: AttemptResult; streak: number | nu
         </span>
         <span className="flex flex-col">
           <span className="flex items-center gap-2">
-            <span className="text-[15px] leading-[22px] font-semibold text-ink">Dev player</span>
-            <span className="type-label text-ink-subtle">@—</span>
+            <span className="text-[15px] leading-[22px] font-semibold text-ink">{names.name}</span>
+            {names.handle && <span className="type-label text-ink-subtle">{names.handle}</span>}
           </span>
           <span className="text-[10px] leading-3 tracking-[0.2px] text-ink-muted">—</span>
           <span className="flex items-center gap-1.5 pt-1">
@@ -92,7 +96,7 @@ function Metric({ value, label, tone }: { value: string; label: string; tone: st
   );
 }
 
-function ChecksRow({ result, skills }: Omit<CredentialProps, "streak">) {
+function ChecksRow({ result, skills }: Pick<CredentialProps, "result" | "skills">) {
   return (
     <div className="flex items-center justify-between pt-2">
       <span className="flex gap-1.5">
@@ -112,26 +116,3 @@ function ChecksRow({ result, skills }: Omit<CredentialProps, "streak">) {
   );
 }
 
-function Actions() {
-  const [copied, setCopied] = useState(false);
-  const copyLink = async () => {
-    await navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-  };
-  return (
-    <div className="flex gap-1 pt-1">
-      <span className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-accent text-[#00363e] opacity-60" aria-disabled="true">
-        <ShareIcon />
-        <span className="type-body font-semibold">Share result</span>
-      </span>
-      <span className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-surface-raised text-ink opacity-60" aria-disabled="true">
-        <DownloadIcon />
-        <span className="type-body font-medium">Download PNG</span>
-      </span>
-      <button type="button" onClick={() => void copyLink()} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg bg-surface-raised text-ink-muted">
-        <LinkIcon />
-        <span className="type-body font-medium">{copied ? "Link copied" : "Copy verification link"}</span>
-      </button>
-    </div>
-  );
-}
