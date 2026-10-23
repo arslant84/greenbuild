@@ -9,7 +9,7 @@ import { type AttemptsApp, useAttemptsApp } from "../testing/attempts-app.js";
 // architecture.md, task 30c: every route needs a session unless it is public, and the public ones are
 // exactly those the architecture's API rules name.
 const ARCHITECTURE = new URL("../../../../docs/architecture.md", import.meta.url);
-const PUBLIC_ROUTES = ["GET /health", "GET /v1/users/:handle", "POST /v1/notifications/unsubscribe"];
+const PUBLIC_ROUTES = ["GET /health", "GET /v1/share/:token", "GET /v1/users/:handle", "POST /v1/notifications/unsubscribe"];
 
 interface Route {
   method: string;

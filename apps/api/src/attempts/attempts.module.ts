@@ -13,11 +13,13 @@ import { AttemptEvents } from "./finished-events.js";
 import { HintsController } from "./hints.controller.js";
 import { HintsService } from "./hints.service.js";
 import { SandboxRequests } from "./sandbox-requests.js";
+import { PublicShareController, ShareController } from "./share.controller.js";
+import { ShareCards } from "./share.service.js";
 import { StatusConsumer } from "./status-consumer.js";
 
 @Module({
   imports: [ChallengesModule],
-  controllers: [AttemptsController, AbandonController, HintsController],
+  controllers: [AttemptsController, AbandonController, HintsController, ShareController, PublicShareController],
   providers: [
     AttemptsService,
     AttemptReader,
@@ -25,6 +27,7 @@ import { StatusConsumer } from "./status-consumer.js";
     ChecksService,
     AbandonService,
     HintsService,
+    ShareCards,
     EngineClient,
     AttachTokens,
     AttemptStatusUpdates,
