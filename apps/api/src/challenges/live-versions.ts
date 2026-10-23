@@ -10,15 +10,20 @@ export interface LiveVersion {
   specJson: unknown;
 }
 
+// The latest live version as an attempt starts it: with its hints, which the attempt counts (task 35c).
+export interface LatestVersion extends LiveVersion {
+  hintsJson: string[] | null;
+}
+
 // LiveVersions finds what players get for a challenge: its newest version, while the challenge is live
 // and that version is not retired (task 49d).
 @Injectable()
 export class LiveVersions {
   constructor(private readonly database: DatabaseClient) {}
 
-  async latest(slug: string): Promise<LiveVersion> {
+  async latest(slug: string): Promise<LatestVersion> {
     const [version] = await this.database.db
-      .select({ id: challengeVersions.id, version: challengeVersions.version, imageRef: challengeVersions.imageRef, specJson: challengeVersions.specJson, retiredReason: challengeVersions.retiredReason })
+      .select({ id: challengeVersions.id, version: challengeVersions.version, imageRef: challengeVersions.imageRef, specJson: challengeVersions.specJson, hintsJson: challengeVersions.hintsJson, retiredReason: challengeVersions.retiredReason })
       .from(challengeVersions)
       .innerJoin(challenges, eq(challenges.id, challengeVersions.challengeId))
       .where(and(eq(challenges.slug, slug), eq(challenges.status, "live")))

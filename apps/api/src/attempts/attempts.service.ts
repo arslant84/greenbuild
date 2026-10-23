@@ -36,7 +36,7 @@ export class AttemptsService {
       await this.database.db.transaction((tx) => finishAttempt(tx, { attemptId: attempt.id, from: ["starting"], to: "failed" }));
       throw error;
     }
-    return toResponse(attempt, challengeSlug);
+    return toResponse(attempt, { slug: challengeSlug, hints: version.hintsJson });
   }
 
   private async insert(userId: string, challengeVersionId: string, context: "daily" | "catalog"): Promise<StartedAttempt> {
@@ -51,6 +51,7 @@ export class AttemptsService {
           createdAt: attempts.createdAt,
           startedAt: attempts.startedAt,
           checksUsed: attempts.checksUsed,
+          hintsUsed: attempts.hintsUsed,
         });
       if (!attempt) {
         throw new Error("insert attempt returned no row");

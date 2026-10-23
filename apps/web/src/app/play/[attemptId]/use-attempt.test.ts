@@ -3,7 +3,7 @@ import { fetchAttempt, isFinished } from "./use-attempt";
 
 const ID = "0199a5c4-7b2e-7c3a-9f10-2b3c4d5e6f70";
 const api = vi.fn<typeof fetch>();
-const attempt = { id: ID, status: "ready", challenge_slug: "nginx-502-upstream", created_at: "2026-10-02T10:00:00.000Z", started_at: "2026-10-02T10:00:12.000Z", checks_used: 0, attach_token: "t" };
+const attempt = { id: ID, status: "ready", challenge_slug: "nginx-502-upstream", created_at: "2026-10-02T10:00:00.000Z", started_at: "2026-10-02T10:00:12.000Z", checks_used: 0, hints: [], hints_total: 3, attach_token: "t" };
 
 beforeEach(() => vi.stubGlobal("fetch", api));
 afterEach(() => {
