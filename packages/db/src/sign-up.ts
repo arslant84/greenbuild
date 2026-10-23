@@ -7,8 +7,8 @@ import { ageConfirmations, authAccounts, authProvider, users } from "./schema/us
 type Transaction = Parameters<Parameters<Database["transaction"]>[0]>[0];
 
 // Who is signing in, as far as the 16+ rule goes (task 30b): nobody yet, a confirmed player, or one
-// created before the rule.
-export type AgeStatus = { kind: "new" } | { kind: "confirmed"; userId: string } | { kind: "unconfirmed"; userId: string };
+// created before the rule; or a banned or deleted account, which may not sign in (task 50b).
+export type AgeStatus = { kind: "new" } | { kind: "closed" } | { kind: "confirmed"; userId: string } | { kind: "unconfirmed"; userId: string };
 export type SignInIdentity = { email: string } | { provider: (typeof authProvider.enumValues)[number]; providerUserId: string };
 
 type NewUser = Pick<typeof users.$inferInsert, "email" | "emailVerifiedAt" | "displayName" | "avatarUrl">;
@@ -21,7 +21,7 @@ const SIGN_UP_CONSENTS = [
 
 // ageStatus finds the player behind an email address or a sign-in account.
 export async function ageStatus(db: Database, identity: SignInIdentity): Promise<AgeStatus> {
-  const columns = { id: users.id, ageConfirmed16At: users.ageConfirmed16At };
+  const columns = { id: users.id, status: users.status, ageConfirmed16At: users.ageConfirmed16At };
   const [row] =
     "email" in identity
       ? await db.select(columns).from(users).where(eq(users.email, identity.email.toLowerCase()))
@@ -32,6 +32,9 @@ export async function ageStatus(db: Database, identity: SignInIdentity): Promise
           .where(and(eq(authAccounts.provider, identity.provider), eq(authAccounts.providerUserId, identity.providerUserId)));
   if (!row) {
     return { kind: "new" };
+  }
+  if (row.status !== "active") {
+    return { kind: "closed" };
   }
   return row.ageConfirmed16At ? { kind: "confirmed", userId: row.id } : { kind: "unconfirmed", userId: row.id };
 }

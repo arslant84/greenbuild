@@ -90,4 +90,16 @@ describe("ageStatus", () => {
     expect(await ageStatus(database().db, { provider: "github", providerUserId: "gh-4242" })).toEqual({ kind: "confirmed", userId: player.id });
     expect(await ageStatus(database().db, { provider: "github", providerUserId: "gh-0000" })).toEqual({ kind: "new" });
   });
+
+  it("reports a banned or deleted account as closed, by its address and by its GitHub account", async () => {
+    const banned = await createConfirmedUser(database().db, { email: anEmail() }, true);
+    const deleted = await createConfirmedUser(database().db, { email: anEmail() }, true);
+    await database().db.update(users).set({ status: "banned" }).where(eq(users.id, banned.id));
+    await database().db.update(users).set({ status: "deleted" }).where(eq(users.id, deleted.id));
+    await database().db.insert(authAccounts).values({ userId: deleted.id, provider: "github", providerUserId: "gh-closed" });
+
+    expect(await ageStatus(database().db, { email: banned.email ?? "" })).toEqual({ kind: "closed" });
+    expect(await ageStatus(database().db, { email: deleted.email ?? "" })).toEqual({ kind: "closed" });
+    expect(await ageStatus(database().db, { provider: "github", providerUserId: "gh-closed" })).toEqual({ kind: "closed" });
+  });
 });

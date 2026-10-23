@@ -2,20 +2,25 @@ import { type AgeStatus, ageStatus, confirmUser, type connect, hasAgeConfirmatio
 import type { NextAuthConfig } from "next-auth";
 import { ageConfirmedInBrowser } from "./age-confirmation";
 import { LINK_MAX_AGE_SEC } from "./email-sign-in";
-import { AGE_REQUIRED_PATH } from "./sign-in-paths";
+import { ACCOUNT_CLOSED_PATH, AGE_REQUIRED_PATH } from "./sign-in-paths";
 
 type Database = ReturnType<typeof connect>["db"];
 export type SignInCallback = NonNullable<NonNullable<NextAuthConfig["callbacks"]>["signIn"]>;
 
 // The steps of a sign-in: asking for an email link, and completing it by the link or through GitHub.
 export type SignInStep = "request-link" | "complete";
-export type AgeDecision = "allow" | "record" | "confirm" | "deny";
+export type AgeDecision = "allow" | "record" | "confirm" | "deny" | "closed";
 
 // ageDecision is the 16+ rule at one sign-in step (task 30b). A confirmed player always passes. Anyone
 // else needs the confirmation: from this browser when asking for a link, which records it for the
 // address so the link works anywhere; from this browser or that record when completing. A player
 // created before the rule is completed then; a new one is created by the adapter, which checks again.
+// A banned or deleted account (task 50b) gets its link like any existing player, so asking reveals
+// nothing new about the address, and is refused when it completes.
 export function ageDecision(status: AgeStatus, step: SignInStep, confirmation: { inBrowser: boolean; recorded: boolean }): AgeDecision {
+  if (status.kind === "closed") {
+    return step === "request-link" ? "allow" : "closed";
+  }
   if (status.kind === "confirmed") {
     return "allow";
   }
@@ -40,6 +45,9 @@ export function ageCheck(db: Database): SignInCallback {
     const step: SignInStep = email?.verificationRequest ? "request-link" : "complete";
     const recorded = "email" in identity && step === "complete" ? await hasAgeConfirmation(db, identity.email) : false;
     const decision = ageDecision(status, step, { inBrowser: await ageConfirmedInBrowser(), recorded });
+    if (decision === "closed") {
+      return ACCOUNT_CLOSED_PATH;
+    }
     return decision === "deny" ? AGE_REQUIRED_PATH : applyDecision(db, decision, { identity, status });
   };
 }
