@@ -1,5 +1,6 @@
-import { dailyResponseSchema, meResponseSchema } from "@greenbuild/shared";
+import { type AttemptResponse, attemptListResponseSchema, type ChallengeCard as Card, challengeCardSchema, type DailyResponse, dailyResponseSchema, meResponseSchema } from "@greenbuild/shared";
 import { apiGet } from "../../server/api";
+import { ActiveAttemptCard } from "./_daily/active-attempt-card";
 import { ChallengeCard } from "./_daily/challenge-card";
 import { RecentAttempts } from "./_daily/recent-attempts";
 import { RightAside } from "./_daily/right-aside";
@@ -12,7 +13,8 @@ export const dynamic = "force-dynamic";
 // Figma "Hotfix — Daily Challenge" (1280 × 1024).
 export default async function DailyPage() {
   // Today's challenge as the worker published it (task 41c); none yet shows the service error.
-  const [daily, player] = await Promise.all([apiGet("/v1/daily", dailyResponseSchema), apiGet("/v1/me", meResponseSchema)]);
+  const [daily, player, active] = await Promise.all([apiGet("/v1/daily", dailyResponseSchema), apiGet("/v1/me", meResponseSchema), runningAttempt()]);
+  const running = active && (await withCard(active, daily));
   return (
     <div className="min-h-screen bg-canvas">
       {/* The content spans the whole window (owner, 2026-10-14); the asides keep their width. */}
@@ -21,7 +23,8 @@ export default async function DailyPage() {
         <div className="flex min-w-0 flex-1 justify-between pb-8">
           <main className="flex min-w-0 flex-1 flex-col gap-5 px-3 pt-5">
             <StatusBar player={player} />
-            {daily ? <ChallengeCard card={daily.challenge} /> : <ServiceError />}
+            {running && <ActiveAttemptCard attempt={running.attempt} card={running.card} />}
+            {daily ? <ChallengeCard card={daily.challenge} blocked={active !== undefined} /> : <ServiceError />}
             <RecentAttempts />
           </main>
           <RightAside />
@@ -29,4 +32,15 @@ export default async function DailyPage() {
       </div>
     </div>
   );
+}
+
+// runningAttempt is the player's starting or ready attempt, at any challenge (task 21b).
+async function runningAttempt(): Promise<AttemptResponse | undefined> {
+  return (await apiGet("/v1/attempts?status=active", attemptListResponseSchema))?.attempts[0];
+}
+
+// withCard adds the running attempt's challenge card: today's card when it is today's challenge.
+async function withCard(attempt: AttemptResponse, daily: DailyResponse | null): Promise<{ attempt: AttemptResponse; card: Card } | null> {
+  const card = daily?.challenge.slug === attempt.challenge_slug ? daily.challenge : await apiGet(`/v1/challenges/${attempt.challenge_slug}`, challengeCardSchema);
+  return card ? { attempt, card } : null;
 }
