@@ -1,10 +1,11 @@
 import { randomUUID } from "node:crypto";
-import type { HintResponse } from "@greenbuild/shared";
+import type { AttemptResponse, HintResponse } from "@greenbuild/shared";
 import { describe, expect, it } from "vitest";
 import { player, useAttemptsApp } from "../testing/attempts-app.js";
 import { readyAttempt, waitForStatus } from "../testing/engine-status.js";
 
-// architecture.md, task 35b: POST /v1/attempts/{id}/hint on PostgreSQL. nginx-502 has 3 hints.
+// architecture.md, task 35b: POST /v1/attempts/{id}/hint on PostgreSQL; task 35c: the attempt carries the
+// hints opened so far. nginx-502 has 3 hints.
 const NGINX_502_HINTS = 3;
 
 describe("POST /v1/attempts/{id}/hint", () => {
@@ -44,5 +45,22 @@ describe("POST /v1/attempts/{id}/hint", () => {
     await owner.abandon(id);
     await waitForStatus(owner, id, "abandoned");
     expect((await owner.hint(id)).status).toBe(409);
+  });
+});
+
+describe("the attempt's hints", () => {
+  const app = useAttemptsApp();
+
+  it("start with none opened, then list the opened ones in order", async () => {
+    const user = await player(app, randomUUID());
+    const id = await readyAttempt(app, user);
+    const ready = (await (await user.find(id)).json()) as AttemptResponse;
+    expect([ready.hints, ready.hints_total]).toEqual([[], NGINX_502_HINTS]);
+
+    const first = (await (await user.hint(id)).json()) as HintResponse;
+    const second = (await (await user.hint(id)).json()) as HintResponse;
+
+    const attempt = (await (await user.find(id)).json()) as AttemptResponse;
+    expect([attempt.hints, attempt.hints_total]).toEqual([[first.hint, second.hint], NGINX_502_HINTS]);
   });
 });

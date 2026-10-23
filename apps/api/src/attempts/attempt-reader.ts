@@ -34,7 +34,9 @@ export class AttemptReader {
         createdAt: attempts.createdAt,
         startedAt: attempts.startedAt,
         checksUsed: attempts.checksUsed,
+        hintsUsed: attempts.hintsUsed,
         slug: challenges.slug,
+        hints: challengeVersions.hintsJson,
         sandboxId: sandboxSessions.sandboxId,
       })
       .from(attempts)
@@ -45,7 +47,7 @@ export class AttemptReader {
     if (!row || row.userId !== userId) {
       throw new NotFoundError("Attempt not found");
     }
-    const response = toResponse(row, row.slug);
+    const response = toResponse(row, { slug: row.slug, hints: row.hints });
     if (row.status !== "ready" || !row.sandboxId) {
       return response;
     }

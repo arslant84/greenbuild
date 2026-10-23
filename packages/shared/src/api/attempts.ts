@@ -16,6 +16,9 @@ export const attemptResponseSchema = z.object({
   // When the sandbox became ready; the time limit counts from here.
   started_at: z.iso.datetime().nullable(),
   checks_used: z.number().int().nonnegative(),
+  // The hints the player has opened, in order, and how many the challenge has (task 35c).
+  hints: z.array(z.string()),
+  hints_total: z.number().int().nonnegative(),
   // Present while the sandbox is ready: valid for 60 seconds, only for connecting the terminal.
   attach_token: z.string().optional(),
 });
