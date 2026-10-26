@@ -1,0 +1,22 @@
+import { expect, type Locator, type Page, test } from "@playwright/test";
+
+// architecture.md, task 56: phone layouts. Each screen fits a phone without sideways scrolling, and its main
+// controls sit inside the screen's width.
+const PHONE = { width: 390, height: 844 };
+
+test.use({ viewport: PHONE });
+
+async function expectFitsPhone(page: Page, controls: Locator[]): Promise<void> {
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(PHONE.width);
+  for (const control of controls) {
+    await expect(control).toBeVisible();
+    const box = await control.boundingBox();
+    expect(box && box.x >= 0 && box.x + box.width <= PHONE.width).toBe(true);
+  }
+}
+
+test("the sign-in screen fits a phone", async ({ page }) => {
+  await page.goto("/signin");
+
+  await expectFitsPhone(page, [page.getByLabel("Work or personal email"), page.getByLabel("I am 16 or older"), page.getByRole("button", { name: "Send magic link" })]);
+});

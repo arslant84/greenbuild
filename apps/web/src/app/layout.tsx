@@ -10,7 +10,9 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
-      <body className="min-h-screen min-w-[1280px] antialiased">{children}</body>
+      {/* Screens are 1280 px wide until each gets its phone layout (task 56); a converted screen marks its
+          root data-responsive, which lifts the minimum. */}
+      <body className="min-h-screen min-w-[1280px] antialiased has-[[data-responsive]]:min-w-0">{children}</body>
     </html>
   );
 }
