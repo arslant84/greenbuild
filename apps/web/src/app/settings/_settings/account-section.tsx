@@ -21,7 +21,7 @@ export function AccountSection({ me }: { me: MeResponse }) {
       </div>
       <div className="flex flex-col gap-1 rounded-lg bg-surface p-3">
         <span className="type-label text-ink-muted uppercase">Primary Email Address</span>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
           <span className="relative flex-1">
             <LockIcon className="absolute top-2.5 left-3 text-[18px] text-ink-subtle" />
             <input readOnly aria-label="Primary email address" value={me.email ?? "—"} className={`w-full cursor-not-allowed rounded-lg bg-canvas py-2 pr-3 pl-10 ${LABEL_CODE} text-ink-muted`} />
@@ -61,12 +61,12 @@ function Provider({ icon, name, action }: { icon: ReactNode; name: string; actio
 function Sessions() {
   return (
     <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="type-label tracking-wider text-ink-subtle uppercase">Active Device &amp; CLI Sessions</h3>
         <span className="type-label text-ink-subtle">— total tokens</span>
       </div>
       <table className="w-full overflow-hidden rounded-lg bg-surface text-left type-label">
-        <thead className="bg-control text-[10px] text-ink-subtle uppercase">
+        <thead className="hidden bg-control text-[10px] text-ink-subtle uppercase lg:table-header-group">
           <tr>
             {SESSION_COLUMNS.map((column) => (
               <th key={column} className="p-2 font-normal">

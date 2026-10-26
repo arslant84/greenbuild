@@ -82,7 +82,7 @@ function OffView() {
         request. Company accounts are not open yet.
       </p>
       <span className="type-label text-ink-subtle uppercase">Trust &amp; Privacy Matrix:</span>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
         <Matrix tone="text-ok" background="bg-ok/10" title="WHAT COMPANIES CAN SEE" icon={<VisibilityIcon className="text-[16px]" />} items={VISIBLE} />
         <Matrix tone="text-danger" background="bg-[#93000a1a]" title="SHIELDED UNTIL YOU CONSENT" icon={<ShieldIcon className="text-[16px]" />} items={SHIELDED} />
       </div>
@@ -121,7 +121,7 @@ function OnView() {
         </span>
         <textarea disabled rows={3} placeholder="Notes for companies are not available yet." className="w-full resize-none rounded-lg bg-canvas px-3 py-2 type-body text-ink opacity-60" />
       </label>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
         <DisabledSelect label="Salary Floor (Base USD)" />
         <DisabledSelect label="Target Role Level" />
       </div>

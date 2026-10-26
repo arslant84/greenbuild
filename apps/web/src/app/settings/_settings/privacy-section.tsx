@@ -29,7 +29,7 @@ export function PrivacySection({ consents }: { consents: ConsentHistory | null }
         <h2 className={`mt-1 ${HEADLINE_LG} text-ink`}>Visibility &amp; Privacy Controls</h2>
         <p className="type-body text-ink-muted">Who can see your profile, and the consents you gave.</p>
       </div>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-1 gap-2 lg:grid-cols-3">
         {VISIBILITY.map((card) => (
           <div key={card.title} aria-disabled="true" className="rounded-lg bg-surface p-3 opacity-60">
             <span className="flex items-center justify-between type-body font-semibold text-ink">
@@ -42,7 +42,7 @@ export function PrivacySection({ consents }: { consents: ConsentHistory | null }
       </div>
       <div className="flex flex-col gap-2">
         {SWITCHES.map((item) => (
-          <label key={item.title} className="flex items-center justify-between rounded-lg bg-surface p-2">
+          <label key={item.title} className="flex items-center justify-between gap-2 rounded-lg bg-surface p-2">
             <span>
               <span className="block type-body font-medium text-ink">{item.title}</span>
               <span className="block type-label text-ink-subtle">{item.note}</span>

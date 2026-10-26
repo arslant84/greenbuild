@@ -30,7 +30,7 @@ export function DangerSection({ me }: { me: MeResponse }) {
 function DangerActions({ danger }: { danger: Danger }) {
   return (
     <div className="flex flex-col gap-3 rounded-lg bg-[#93000a26] p-3">
-      <div className="flex items-center justify-between gap-2 pb-3">
+      <div className="flex flex-col items-start gap-2 pb-3 lg:flex-row lg:items-center lg:justify-between">
         <span className="flex max-w-[500px] flex-col gap-1">
           <span className="type-body font-medium text-ink">Export personal telemetry ledger</span>
           <span className="type-label text-ink-subtle">A JSON archive of everything we keep about you: account, attempts, XP, ratings, streak and consent history.</span>
@@ -39,7 +39,7 @@ function DangerActions({ danger }: { danger: Danger }) {
           Request export (JSON)
         </button>
       </div>
-      <div className="flex items-center justify-between gap-2 pt-3">
+      <div className="flex flex-col items-start gap-2 pt-3 lg:flex-row lg:items-center lg:justify-between">
         <span className="flex max-w-[500px] flex-col gap-1">
           <span className="type-body font-medium text-danger">Permanently delete account</span>
           <span className="type-label text-ink-subtle">Your account is hidden at once and your personal data deleted 30 days later. This cannot be undone.</span>

@@ -74,7 +74,7 @@ function ZonePicker({ save, locked, now, hydrated }: { save: TimezoneSave; locke
 
 function LockBanner({ lock }: { lock: TimezoneLock | null }) {
   return (
-    <div className="flex items-center justify-between rounded-lg bg-surface p-2 type-label text-ink-subtle">
+    <div className="flex items-center justify-between gap-2 rounded-lg bg-surface p-2 type-label text-ink-subtle">
       <span className="flex items-center gap-2">
         <LockClockIcon className="text-[16px] text-warn" />
         {lock ? (
@@ -105,7 +105,7 @@ function StreakPanel({ me, zone, now, hydrated }: { me: MeResponse; zone: string
           <span className="size-1.5 rounded-full bg-ok" /> SYNCED
         </span>
       </span>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
         {metrics.map((metric) => (
           <div key={metric.label} className="rounded bg-surface p-2">
             <span className="block type-label text-ink-subtle">{metric.label}</span>

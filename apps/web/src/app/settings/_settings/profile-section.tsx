@@ -46,7 +46,7 @@ function AvatarBlock() {
         <PersonIcon className="text-[40px]" />
       </span>
       <div className="flex flex-1 flex-col gap-1">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <button type="button" disabled className="rounded-lg bg-control px-3 py-1.5 type-label text-ink opacity-60">
             Change avatar
           </button>
@@ -62,7 +62,7 @@ function AvatarBlock() {
 
 function IdentityFields({ form }: { form: ProfileSave }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
       <label>
         <span className={LABEL}>Display Name</span>
         <input className={`${INPUT} type-body`} value={form.edited.display_name} onChange={(event) => form.edit({ display_name: event.target.value })} />
@@ -103,7 +103,7 @@ function UnavailableFields({ country }: { country: string | null }) {
 function ActionBar({ form }: { form: ProfileSave }) {
   const ready = form.dirty && form.status.kind !== "saving";
   return (
-    <div className="flex items-center justify-between gap-2 pt-2">
+    <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
       <div className="flex items-center gap-3">
         <button
           type="button"
