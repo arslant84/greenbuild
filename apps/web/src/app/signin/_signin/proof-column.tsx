@@ -4,7 +4,7 @@ import { ChevronIcon, TerminalIcon } from "../../../ui/icons-signin";
 // feedback and live numbers have no data yet, so they stay empty rather than show the frame's samples.
 export function ProofColumn() {
   return (
-    <aside className="relative col-span-5 flex min-h-screen flex-col justify-between overflow-hidden border-l border-line bg-surface p-10">
+    <aside className="relative flex flex-col justify-between gap-6 overflow-hidden border-t border-line bg-surface p-4 lg:col-span-5 lg:min-h-screen lg:border-t-0 lg:border-l lg:p-10">
       <span className="pointer-events-none absolute -top-32 -right-32 size-80 rounded-full bg-accent/10 blur-3xl" />
       <div className="relative z-10 flex flex-col gap-6">
         <ExampleTerminal />
