@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CodeHostIcon, CommunityIcon, GuestAvatarIcon } from "../../ui/icons-landing";
+import { CodeHostIcon, CommunityIcon, GuestAvatarIcon, MenuIcon } from "../../ui/icons-landing";
 import { LogoMark } from "../../ui/logo-mark";
 
 // Figma (Landing) › Header. Leaderboard and sign-in have no screens yet, so they are not links. The bar
@@ -7,7 +7,7 @@ import { LogoMark } from "../../ui/logo-mark";
 export function LandingHeader() {
   return (
     <header className="sticky top-0 z-10 border-b border-[#3c494c66] bg-[#0e0e0fe5] backdrop-blur">
-      <div className="frame flex h-14 items-center justify-between px-8">
+      <div className="frame flex h-14 items-center justify-between px-4 lg:px-8">
         <span className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
             <LogoMark />
@@ -16,18 +16,42 @@ export function LandingHeader() {
           </Link>
           <span className="type-label rounded border border-[#3c494c99] bg-surface px-1 py-0.5 text-ink-subtle">beta</span>
         </span>
-        <span className="flex items-center gap-5">
-          <nav className="flex items-center gap-5 text-[13px] leading-[18px] text-ink-muted">
-            <span aria-disabled="true">Leaderboard</span>
-            <Link href="/challenges">Challenges</Link>
-            <span aria-disabled="true">Sign in</span>
-          </nav>
+        <span className="hidden items-center gap-5 lg:flex">
+          <NavLinks className="flex items-center gap-5" />
           <span className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
             <GuestAvatarIcon />
           </span>
         </span>
+        <PhoneMenu />
       </div>
     </header>
+  );
+}
+
+function NavLinks({ className }: { className: string }) {
+  return (
+    <nav className={`${className} text-[13px] leading-[18px] text-ink-muted`}>
+      <span aria-disabled="true">Leaderboard</span>
+      <Link href="/challenges">Challenges</Link>
+      <span aria-disabled="true">Sign in</span>
+    </nav>
+  );
+}
+
+// Stitch phone screen › the header's primary action and its menu, a native disclosure (no script).
+function PhoneMenu() {
+  return (
+    <span className="flex items-center gap-2 lg:hidden">
+      <Link href="/onboarding" className="flex h-9 items-center rounded-lg bg-accent px-3 text-[13px] font-semibold text-[#00363e]">
+        Start
+      </Link>
+      <details className="relative">
+        <summary aria-label="Menu" className="flex size-9 cursor-pointer list-none items-center justify-center rounded-lg border border-[#3c494c99] bg-surface text-ink [&::-webkit-details-marker]:hidden">
+          <MenuIcon />
+        </summary>
+        <NavLinks className="absolute top-11 right-0 flex w-44 flex-col gap-3 rounded-lg border border-[#3c494c99] bg-surface p-4" />
+      </details>
+    </span>
   );
 }
 
@@ -35,14 +59,14 @@ export function LandingHeader() {
 // the bar spans the window, and it stays at the window's bottom (owner, 2026-10-14).
 export function LandingFooter() {
   return (
-    <footer className="sticky bottom-0 z-10 border-t border-[#3c494c66] bg-canvas">
-      <div className="type-label frame flex items-center justify-between px-8 py-5 text-ink-subtle">
-        <span className="flex items-center gap-3">
+    <footer className="z-10 border-t border-[#3c494c66] bg-canvas lg:sticky lg:bottom-0">
+      <div className="type-label frame flex flex-col items-start gap-3 px-4 py-5 text-ink-subtle lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <span className="flex flex-wrap items-center gap-3">
           <span>&gt;_ greenbuild © 2026</span>
           <span className="text-[#3c494c]">|</span>
           <span>Production Outage Simulation</span>
         </span>
-        <span className="flex items-center gap-5">
+        <span className="flex flex-wrap items-center gap-5">
           <span>Terms</span>
           <span>Privacy</span>
           <span className="flex items-center gap-1">

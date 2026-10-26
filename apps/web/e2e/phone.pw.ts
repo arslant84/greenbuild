@@ -20,3 +20,11 @@ test("the sign-in screen fits a phone", async ({ page }) => {
 
   await expectFitsPhone(page, [page.getByLabel("Work or personal email"), page.getByLabel("I am 16 or older"), page.getByRole("button", { name: "Send magic link" })]);
 });
+
+test("the landing fits a phone, and its menu opens the navigation", async ({ page }) => {
+  await page.goto("/");
+
+  await expectFitsPhone(page, [page.getByRole("link", { name: /Start today's challenge/ }), page.getByRole("link", { name: "Start", exact: true })]);
+  await page.getByLabel("Menu").click();
+  await expect(page.getByRole("link", { name: "Challenges" })).toBeVisible();
+});
