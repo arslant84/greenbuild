@@ -25,7 +25,7 @@ function useFocusShortcut(target: RefObject<HTMLInputElement | null>) {
 export function Toolbar({ params }: { params: CatalogParams }) {
   return (
     <div className="pb-5">
-      <div className="flex items-center justify-between gap-3 rounded-xl bg-surface p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+      <div className="flex flex-col gap-3 rounded-xl bg-surface p-3 shadow-[0_1px_2px_rgba(0,0,0,0.05)] lg:flex-row lg:items-center lg:justify-between">
         <SearchForm params={params} />
         <ViewControls />
       </div>
@@ -60,8 +60,8 @@ function SearchForm({ params }: { params: CatalogParams }) {
 // table view, so both stay as the frame draws them without other choices.
 function ViewControls() {
   return (
-    <div className="flex items-center gap-2">
-      <span className="relative flex h-[38px] w-[279px] items-center rounded-lg bg-canvas pr-8 pl-3">
+    <div className="flex items-center gap-2 max-lg:w-full">
+      <span className="relative flex h-[38px] w-full items-center rounded-lg bg-canvas pr-8 pl-3 lg:w-[279px]">
         <span className="font-mono text-[13px] leading-[18px] text-ink">Sort: Recently added</span>
         <SelectChevronIcon className="absolute right-4 text-ink-subtle" />
       </span>

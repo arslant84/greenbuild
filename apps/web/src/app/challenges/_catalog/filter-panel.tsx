@@ -9,12 +9,13 @@ interface FilterPanelProps {
   params: CatalogParams;
   summary: ChallengeList["catalog"] | null;
   total: number | null;
+  className: string;
 }
 
 // Figma › Aside - Left Filter Panel.
-export function FilterPanel({ params, summary, total }: FilterPanelProps) {
+export function FilterPanel({ params, summary, total, className }: FilterPanelProps) {
   return (
-    <aside className="flex w-[280px] shrink-0 flex-col gap-5 self-start rounded-xl bg-surface p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+    <aside className={`${className} flex-col gap-5 rounded-xl bg-surface p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]`}>
       <div className="flex items-center justify-between">
         <span className="flex items-center gap-1 text-accent-soft">
           <FilterListIcon />
