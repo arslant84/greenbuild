@@ -2,9 +2,11 @@ import { expect, test } from "@playwright/test";
 import { solveDailyChallenge } from "./daily-solve";
 import { signInForTest } from "./test-player";
 
-// architecture.md, task 51: a solved attempt's share link opens for any visitor, carries the card as its
-// link preview image, and stops working once revoked.
+// architecture.md, task 51: a solved attempt's share link opens for any visitor, on a phone too (task 56),
+// carries the card as its link preview image, and stops working once revoked.
 const WRITE_HEADERS = { "x-greenbuild-request": "1" };
+// Visitors from a shared link often open it on a phone (task 56).
+const PHONE = { width: 390, height: 844 };
 
 test("a shared result opens for a visitor with its preview image, and not after it is revoked", async ({ page, browser }) => {
   await signInForTest(page);
@@ -14,10 +16,11 @@ test("a shared result opens for a visitor with its preview image, and not after 
   expect(shared.status()).toBe(200);
   const { token } = (await shared.json()) as { token: string };
 
-  const visitor = await browser.newContext();
+  const visitor = await browser.newContext({ viewport: PHONE });
   const visitorPage = await visitor.newPage();
   await visitorPage.goto(`/s/${token}`);
   await expect(visitorPage.getByRole("region", { name: "Proof of incident resolution" })).toContainText("The site returns 502");
+  expect(await visitorPage.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(PHONE.width);
   const previewImage = await visitorPage.locator('meta[property="og:image"]').getAttribute("content");
   expect(previewImage?.endsWith(`/s/${token}/image.png`)).toBe(true);
   const image = await visitorPage.request.get(`/s/${token}/image.png`);

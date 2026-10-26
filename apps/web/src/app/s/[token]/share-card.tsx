@@ -11,9 +11,9 @@ export function ShareCard({ view, passed, used }: { view: ShareView; passed: num
   return (
     <section aria-label="Proof of incident resolution" className="relative w-full overflow-hidden rounded-xl border border-line bg-[#121215] p-5 shadow-2xl">
       <span className="absolute inset-x-0 top-0 h-[1.5px] bg-[linear-gradient(90deg,transparent,rgba(100,248,138,0.6),transparent)]" />
-      <div className="mb-3 flex items-center justify-between border-b border-line/60 pb-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-line/60 pb-3">
         <span className="flex items-center gap-2 font-mono text-[11px] leading-4">
-          <span className="font-bold text-ok">&gt;_ greenbuild</span>
+          <span className="font-bold whitespace-nowrap text-ok">&gt;_ greenbuild</span>
           <span className="text-[#3c494c]">/</span>
           <span className="font-medium tracking-[1px] text-ink-muted uppercase">Proof of incident resolution</span>
         </span>
@@ -41,7 +41,7 @@ export function ShareCard({ view, passed, used }: { view: ShareView; passed: num
 
 function Metrics({ view, passed, used }: { view: ShareView; passed: number; used: number }) {
   return (
-    <div className="mb-3 grid grid-cols-3 gap-2">
+    <div className="mb-3 grid grid-cols-1 gap-2 sm:grid-cols-3">
       <Metric label="Reward">
         <span className="font-mono text-[26px] leading-9 font-bold text-warn">{view.xp}</span>
       </Metric>
@@ -62,7 +62,7 @@ function Metrics({ view, passed, used }: { view: ShareView; passed: number; used
 
 function Player({ view }: { view: ShareView }) {
   return (
-    <div className="mb-5 flex items-center justify-between gap-3">
+    <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
       <span className="flex items-center gap-2">
         <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border border-line bg-control text-accent">
           <TerminalBadgeIcon />
