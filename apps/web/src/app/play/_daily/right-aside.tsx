@@ -6,7 +6,7 @@ const CARD = "rounded-xl bg-surface-raised shadow-[0_1px_2px_rgba(0,0,0,0.05)]";
 // with their features; until then the cards keep their layout and show empty values.
 export function RightAside() {
   return (
-    <aside className="flex w-[280px] shrink-0 flex-col gap-5 self-start bg-[#0e0e0f80] p-3">
+    <aside className="flex w-full shrink-0 flex-col gap-5 self-start bg-[#0e0e0f80] px-4 py-3 lg:w-[280px] lg:px-3">
       <YesterdaysResult />
       <Leaderboard />
       <div className="flex items-center justify-between rounded-lg bg-canvas p-2">
