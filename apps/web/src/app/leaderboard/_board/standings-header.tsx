@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { PlayerIcon, SearchIcon } from "../../../ui/icons-leaderboard";
+import { LogoMark } from "../../../ui/logo-mark";
 
 // Figma (Global Standings, 3:3639) › Header. Runbooks has no page, so it is text; the search box is not
 // built (no search yet) and shows as in the frame, disabled. The bar spans the window; its content spans it
@@ -10,6 +11,7 @@ export function StandingsHeader({ handle, streak }: { handle: string | null; str
       <div className="frame flex h-14 items-center justify-between px-6">
         <div className="flex items-center gap-3">
           <Link href="/play" className="flex items-center gap-1 font-mono text-[13px] leading-4.5 font-bold tracking-[-0.32px]">
+            <LogoMark />
             <span className="text-ok">&gt;_</span>
             <span className="text-accent">greenbuild</span>
           </Link>

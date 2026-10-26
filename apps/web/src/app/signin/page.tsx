@@ -3,6 +3,7 @@ import Link from "next/link";
 import { loadAuthConfig } from "../../config/auth";
 import { ProofColumn } from "./_signin/proof-column";
 import { SignInCard } from "./_signin/sign-in-card";
+import { LogoMark } from "../../ui/logo-mark";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
       <section className="relative col-span-7 flex min-h-screen flex-col justify-between bg-canvas px-16 py-10">
         <div className="flex w-full items-center justify-between">
           <Link href="/" className="inline-flex items-center gap-2 font-mono text-sm tracking-tight text-ink">
+            <LogoMark />
             <span className="font-bold text-accent">&gt;_</span>
             <span className="font-semibold tracking-wide">greenbuild</span>
             <span className="rounded border border-[#005763] bg-[#004e5a]/40 px-1.5 py-0.5 font-mono text-[10px] text-accent-soft">beta</span>

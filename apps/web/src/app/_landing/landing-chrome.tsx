@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CodeHostIcon, CommunityIcon, GuestAvatarIcon } from "../../ui/icons-landing";
+import { LogoMark } from "../../ui/logo-mark";
 
 // Figma (Landing) › Header. Leaderboard and sign-in have no screens yet, so they are not links. The bar
 // spans the window; its content spans it too (owner, 2026-10-14).
@@ -9,6 +10,7 @@ export function LandingHeader() {
       <div className="frame flex h-14 items-center justify-between px-8">
         <span className="flex items-center gap-3">
           <Link href="/" className="flex items-center gap-2">
+            <LogoMark />
             <span className="font-mono text-[13px] leading-[18px] font-semibold text-accent-soft">&gt;_</span>
             <span className="text-lg leading-6 font-semibold tracking-[-0.45px] text-ink">greenbuild</span>
           </Link>

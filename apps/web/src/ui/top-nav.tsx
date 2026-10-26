@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AvatarIcon, BrandMarkIcon, SettingsIcon, StreakIcon } from "./icons-catalog";
+import { AvatarIcon, SettingsIcon, StreakIcon } from "./icons-catalog";
+import { LogoMark } from "./logo-mark";
 
 // Sections without a screen yet are shown as in Figma but are not links.
 const SECTIONS = [
@@ -20,7 +21,7 @@ export function TopNav({ current }: { current: Section }) {
       <div className="frame flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-8">
           <Link href="/play" className="flex items-center gap-1 text-accent-soft">
-            <BrandMarkIcon />
+            <LogoMark />
             <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[0.65px] text-ink uppercase">greenbuild</span>
           </Link>
           <nav className="flex items-center gap-1">
