@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { startChallenge } from "./daily-solve";
 import { setHandle } from "./play-db";
 import { signInForTest } from "./test-player";
 
@@ -75,4 +76,13 @@ test("the catalog fits a phone, and its Filters button opens the filters", async
   await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), filters, page.getByLabel("Menu")]);
   await filters.click();
   await expect(page.getByRole("link", { name: "Reset" })).toBeVisible();
+});
+
+test("the debrief fits a phone", async ({ page }) => {
+  await signInForTest(page);
+  await startChallenge(page);
+  await page.getByRole("button", { name: /Give up attempt/ }).click();
+  await expect(page).toHaveURL(/\/result$/);
+
+  await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), page.getByRole("link", { name: /RETURN TO OPERATIONS CONSOLE/ })]);
 });

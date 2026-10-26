@@ -22,15 +22,15 @@ interface CredentialProps {
 export function Credential({ result, skills, streak, player }: CredentialProps) {
   return (
     <section className="flex flex-col gap-2 pb-8">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex items-center gap-1 text-ink-muted">
           <CredentialIcon />
           <span className="type-label font-medium tracking-[0.5px] uppercase">Verifiable credential &amp; social proof</span>
         </span>
         <span className="type-label rounded bg-control px-1 py-0.5 text-ink-subtle">sha256: —</span>
       </div>
-      <div className="flex flex-col gap-3 rounded-xl bg-surface p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center justify-between rounded-lg bg-[#201f2066] p-2 pb-3">
+      <div className="flex flex-col gap-3 rounded-xl bg-surface p-4 lg:p-5 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-[#201f2066] p-2 pb-3">
           <span className="flex items-center gap-2">
             <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] text-accent-soft">&gt;_ greenbuild</span>
             <span className="type-label text-ink-subtle">/</span>
@@ -43,7 +43,7 @@ export function Credential({ result, skills, streak, player }: CredentialProps) 
         </div>
         <Player result={result} streak={streak} player={player} />
         <ChecksRow result={result} skills={skills} />
-        <div className="flex justify-between pt-1 font-mono text-[10px] leading-[18px] text-ink-subtle">
+        <div className="flex flex-col gap-1 pt-1 font-mono text-[10px] leading-[18px] text-ink-subtle sm:flex-row sm:justify-between">
           <span>Verified by greenbuild sandbox engine</span>
           <span>Seed hidden · SHA-256: —</span>
         </div>
@@ -56,7 +56,7 @@ export function Credential({ result, skills, streak, player }: CredentialProps) 
 function Player({ result, streak, player }: Pick<CredentialProps, "result" | "streak" | "player">) {
   const names = player ? playerNames(player) : { name: "—", handle: null };
   return (
-    <div className="flex items-start justify-between">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
       <span className="flex gap-2">
         <span className="flex size-12 items-center justify-center rounded-xl bg-accent-soft text-[#00363e]">
           <TerminalBadgeIcon />
@@ -98,8 +98,8 @@ function Metric({ value, label, tone }: { value: string; label: string; tone: st
 
 function ChecksRow({ result, skills }: Pick<CredentialProps, "result" | "skills">) {
   return (
-    <div className="flex items-center justify-between pt-2">
-      <span className="flex gap-1.5">
+    <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
+      <span className="flex flex-wrap gap-1.5">
         {skills.map((skill) => (
           <span key={skill} className="rounded bg-control px-2 py-0.5 font-mono text-[10px] leading-[18px] text-ink-muted">
             {skill}
