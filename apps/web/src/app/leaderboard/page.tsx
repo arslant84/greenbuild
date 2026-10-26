@@ -14,7 +14,8 @@ export const dynamic = "force-dynamic";
 // The frame shows twelve rows.
 const ROWS = 12;
 
-// Figma "Hotfix — Global Engineering Standings & Leaderboards" (3:3639), task 45b.
+// Figma "Hotfix — Global Engineering Standings & Leaderboards" (3:3639), task 45b. Below 1024 px the Stitch
+// phone screen "Greenbuild — Global Engineering Standings (Phone)" (task 56).
 export default async function LeaderboardPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const params = readBoardParams(await searchParams);
   const me = await apiGet("/v1/me", meResponseSchema);
@@ -24,10 +25,10 @@ export default async function LeaderboardPage({ searchParams }: { searchParams: 
   const handle = me?.handle ?? null;
   const streak = me ? me.streak.current : null;
   return (
-    <div className="flex min-h-screen flex-col bg-[#131314]">
+    <div data-responsive className="flex min-h-screen flex-col bg-[#131314]">
       <StandingsHeader handle={handle} streak={streak} />
       {/* The content and its header and footer bars span the whole window (owner, 2026-10-14). */}
-      <main className="frame flex flex-1 flex-col gap-5 px-8 py-5">
+      <main className="frame flex flex-1 flex-col gap-5 px-4 py-5 lg:px-8">
         <BoardHeading tab={params.tab} now={now} />
         <BoardTabs current={params.tab} />
         {board ? (

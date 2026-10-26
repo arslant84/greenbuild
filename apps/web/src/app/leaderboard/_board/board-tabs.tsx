@@ -19,19 +19,19 @@ const ROLE_FILTERS = ["All Roles (All)", "Staff / Principal", "Platform & SRE", 
 export function BoardTabs({ current }: { current: BoardTab }) {
   return (
     <div className="flex flex-col bg-surface">
-      <nav className="flex">
+      <nav className="flex overflow-x-auto">
         {TABS.map(({ tab, label, badge, badgeColor }) => (
           <TabButton key={label} tab={tab} label={label} badge={badge} badgeColor={badgeColor ?? "text-ink-subtle"} active={tab === current} />
         ))}
       </nav>
-      <div className="flex items-center justify-between bg-canvas p-2">
-        <div className="flex items-center gap-1">
+      <div className="flex flex-col items-start gap-2 bg-canvas p-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex max-w-full items-center gap-1 overflow-x-auto">
           {ROLE_FILTERS.map((filter, index) => (
             <button
               key={filter}
               type="button"
               disabled
-              className={`rounded px-2 py-1 type-label ${index === 0 ? "bg-control font-medium text-ink" : "bg-surface text-ink-muted"}`}
+              className={`shrink-0 rounded px-2 py-1 type-label ${index === 0 ? "bg-control font-medium text-ink" : "bg-surface text-ink-muted"}`}
             >
               {filter}
             </button>
@@ -62,7 +62,7 @@ interface TabButtonProps {
 }
 
 function TabButton({ tab, label, badge, badgeColor, active }: TabButtonProps) {
-  const look = `relative flex items-center gap-1 px-3 py-2 type-body ${active ? "bg-surface-raised font-medium text-ink" : "text-ink-muted"}`;
+  const look = `relative flex shrink-0 items-center gap-1 px-3 py-2 type-body whitespace-nowrap ${active ? "bg-surface-raised font-medium text-ink" : "text-ink-muted"}`;
   const content = (
     <>
       {label}
