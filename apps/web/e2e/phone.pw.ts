@@ -28,3 +28,10 @@ test("the landing fits a phone, and its menu opens the navigation", async ({ pag
   await page.getByLabel("Menu").click();
   await expect(page.getByRole("link", { name: "Challenges" })).toBeVisible();
 });
+
+test("the terms and the privacy policy fit a phone", async ({ page }) => {
+  for (const path of ["/terms", "/privacy"]) {
+    await page.goto(path);
+    await expectFitsPhone(page, [page.getByRole("heading", { level: 1 })]);
+  }
+});

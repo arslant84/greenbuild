@@ -37,7 +37,7 @@ export default async function SharePage({ params }: SharePageProps) {
     notFound();
   }
   return (
-    <div className="flex min-h-screen flex-col bg-[#0a0a0c]">
+    <div data-responsive className="flex min-h-screen flex-col bg-[#0a0a0c]">
       <header className="border-b border-line/60">
         <div className="mx-auto flex h-14 max-w-[720px] items-center justify-between px-4">
           <span className="flex items-center gap-2">
@@ -49,7 +49,7 @@ export default async function SharePage({ params }: SharePageProps) {
           </Link>
         </div>
       </header>
-      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-4 py-16">
+      <main className="relative flex flex-1 flex-col items-center justify-center overflow-hidden px-4 py-8 sm:py-16">
         <span className="pointer-events-none absolute top-1/2 left-1/2 h-[440px] w-[600px] -translate-1/2 rounded-full bg-[linear-gradient(45deg,rgba(100,248,138,0.15),rgba(34,211,238,0.15),transparent)] blur-3xl" />
         <div className="relative flex w-full max-w-[720px] flex-col items-center gap-5">
           <ShareCard view={shareView(card)} passed={card.checks_passed} used={card.checks_used} />
