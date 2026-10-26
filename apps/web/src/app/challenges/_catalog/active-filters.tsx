@@ -25,7 +25,7 @@ function chipsFor(params: CatalogParams): Chip[] {
 // Figma › Active Filter Pill Tags Row.
 export function ActiveFilters({ params }: { params: CatalogParams }) {
   return (
-    <div className="flex min-h-5 items-center gap-1">
+    <div className="flex min-h-5 flex-wrap items-center gap-1">
       {chipsFor(params).map((chip) => (
         <span key={chip.key} className="flex items-center gap-1.5 rounded-lg bg-surface px-3 py-1">
           {chip.dot && <span className="size-1.5 rounded-full" style={{ background: chip.dot }} />}

@@ -4,10 +4,10 @@ import { XpBoltIcon } from "../../../ui/icons-catalog";
 // Figma › Header & Telemetry Subline. Cluster health and XP boosts have no data yet.
 export function CatalogHeader({ catalog }: { catalog: ChallengeList["catalog"] | null }) {
   return (
-    <div className="flex items-end justify-between pb-5">
+    <div className="flex flex-col items-start gap-2 pb-5 lg:flex-row lg:items-end lg:justify-between">
       <div className="flex flex-col gap-1">
         <div className="flex items-center gap-2">
-          <h1 className="text-[32px] leading-10 font-semibold tracking-[-0.8px] text-ink">Challenges</h1>
+          <h1 className="text-[26px] leading-8 font-semibold tracking-[-0.8px] text-ink lg:text-[32px] lg:leading-10">Challenges</h1>
           <span className="type-label rounded bg-control px-2 py-0.5 text-accent-soft">CATALOG</span>
         </div>
         <p className="type-label font-medium text-ink">

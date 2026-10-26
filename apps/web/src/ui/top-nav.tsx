@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AvatarIcon, SettingsIcon, StreakIcon } from "./icons-catalog";
 import { LogoMark } from "./logo-mark";
+import { PhoneMenu } from "./phone-menu";
 
 // Sections without a screen yet are shown as in Figma but are not links.
 const SECTIONS = [
@@ -24,13 +25,12 @@ export function TopNav({ current }: { current: Section }) {
             <LogoMark />
             <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[0.65px] text-ink uppercase">greenbuild</span>
           </Link>
-          <nav className="flex items-center gap-1">
-            {SECTIONS.map((section) => (
-              <NavItem key={section.label} label={section.label} href={section.href} active={section.label === current} />
-            ))}
-          </nav>
+          <Sections current={current} className="hidden items-center gap-1 lg:flex" />
         </div>
-        <div className="flex items-center gap-3">
+        <PhoneMenu>
+          <Sections current={current} className="flex flex-col items-start gap-1" />
+        </PhoneMenu>
+        <div className="hidden items-center gap-3 lg:flex">
           <span className="flex items-center gap-1 rounded bg-surface px-3 py-1">
             <span className="font-mono text-[11px] leading-[14px] font-semibold tracking-[0.44px] text-warn">— GLK</span>
             <span className="type-label text-ink-subtle">/</span>
@@ -53,6 +53,16 @@ export function TopNav({ current }: { current: Section }) {
         </div>
       </div>
     </header>
+  );
+}
+
+function Sections({ current, className }: { current: Section; className: string }) {
+  return (
+    <nav className={className}>
+      {SECTIONS.map((section) => (
+        <NavItem key={section.label} label={section.label} href={section.href} active={section.label === current} />
+      ))}
+    </nav>
   );
 }
 

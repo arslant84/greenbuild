@@ -66,3 +66,13 @@ test("the Daily screen fits a phone, and its menu opens the navigation", async (
   await page.getByLabel("Menu").click();
   await expect(page.getByRole("link", { name: "Settings" })).toBeVisible();
 });
+
+test("the catalog fits a phone, and its Filters button opens the filters", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/challenges");
+
+  const filters = page.getByText("Filters", { exact: true }).filter({ visible: true });
+  await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), filters, page.getByLabel("Menu")]);
+  await filters.click();
+  await expect(page.getByRole("link", { name: "Reset" })).toBeVisible();
+});
