@@ -47,9 +47,9 @@ export function HowItWorks() {
         <span className="font-mono text-[11px] leading-[14px] font-semibold tracking-[1.1px] text-accent-soft uppercase">How it works</span>
         <h2 className="text-2xl leading-[30px] font-bold tracking-[-0.6px] text-ink">From incident alert to green build in 15 minutes</h2>
       </div>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
         {STEPS.map((step) => (
-          <article key={step.title} className="flex h-[223px] flex-col justify-between rounded-xl bg-surface p-5">
+          <article key={step.title} className="flex flex-col justify-between gap-4 rounded-xl bg-surface p-5 lg:h-[223px] lg:gap-0">
             <div className="flex flex-col">
               <span className="mb-3 flex size-10 items-center justify-center rounded-lg bg-surface-raised">{step.icon}</span>
               <h3 className="pb-[3px] text-lg leading-6 font-semibold tracking-[-0.18px] text-ink">{step.title}</h3>

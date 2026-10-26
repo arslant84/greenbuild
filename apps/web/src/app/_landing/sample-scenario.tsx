@@ -12,7 +12,7 @@ export function SampleScenario() {
     <section className="flex flex-col gap-5 py-8">
       <ScenarioHeading />
       <div className="overflow-hidden rounded-xl bg-canvas shadow-[0_8px_10px_-6px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1)]">
-        <div className="flex items-center justify-between bg-surface-raised px-3 py-2.5">
+        <div className="flex flex-wrap items-center justify-between gap-2 bg-surface-raised px-3 py-2.5">
           <span className="type-label flex items-center gap-1.5 text-ink">
             <PatchedIcon className="text-ok" />
             /etc/media/media.env patched
@@ -20,11 +20,11 @@ export function SampleScenario() {
           <span className="type-label rounded bg-surface px-2 py-0.5 text-ink-muted">Target: media.env</span>
         </div>
         <div className="flex flex-col gap-5 p-5">
-          <div className="flex flex-col gap-1 pl-17.75 font-mono text-[13px] leading-4.5">
+          <div className="flex flex-col gap-1 font-mono text-[13px] leading-4.5 lg:pl-17.75">
             <DiffRow line={REMOVED.line} text={REMOVED.text} look="rounded bg-[#93000a33] text-danger" />
             <DiffRow line={ADDED.line} text={ADDED.text} look="rounded bg-[#64f88a1a] font-semibold text-ok" />
           </div>
-          <div className="flex items-center justify-between rounded-lg bg-surface p-3">
+          <div className="flex flex-col items-start gap-2 rounded-lg bg-surface p-3 lg:flex-row lg:items-center lg:justify-between">
             <span className="flex items-center gap-2 font-mono text-[13px] leading-4.5 text-ok">
               <ChecksPassedIcon />
               Check PASSED: the app is back.
@@ -48,7 +48,7 @@ function DiffRow({ line, text, look }: { line: number; text: string; look: strin
 
 function ScenarioHeading() {
   return (
-    <div className="flex items-end justify-between">
+    <div className="flex flex-col items-start gap-3 lg:flex-row lg:items-end lg:justify-between">
       <div className="flex flex-col gap-1.25">
         <span className="font-mono text-[11px] leading-3.5 font-semibold tracking-[1.1px] text-warn uppercase">Sample scenario preview</span>
         <h2 className="text-2xl leading-7.5 font-bold tracking-[-0.6px] text-ink">Too many customers</h2>

@@ -7,7 +7,7 @@ const AVATAR_BACKGROUNDS = ["bg-surface-raised", "bg-control", "bg-line", "bg-su
 export function MetricsStrip() {
   return (
     <section className="py-5">
-      <div className="flex items-center justify-between rounded-xl bg-surface px-5 py-3">
+      <div className="flex flex-col items-start gap-3 rounded-xl bg-surface px-5 py-3 lg:flex-row lg:items-center lg:justify-between">
         <span className="flex items-center gap-3">
           <span className="flex -space-x-2">
             {AVATAR_BACKGROUNDS.map((background, index) => (
@@ -20,7 +20,7 @@ export function MetricsStrip() {
             <span className="type-label text-ink-subtle">Verified check results</span>
           </span>
         </span>
-        <span className="type-label flex items-center gap-5 text-ink-muted">
+        <span className="type-label flex flex-wrap items-center gap-5 text-ink-muted">
           <span className="flex items-center gap-1.5">
             <SolveTimeIcon className="text-warn" />
             Avg solve time: —

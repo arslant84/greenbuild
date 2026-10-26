@@ -154,3 +154,12 @@ export function GuestAvatarIcon(props: IconProps) {
     </svg>
   );
 }
+
+// Three lines: the phone header's menu (task 56).
+export function MenuIcon(props: IconProps) {
+  return (
+    <svg width={18} height={12} viewBox="0 0 18 12" fill="currentColor" aria-hidden="true" {...props}>
+      <path d="M0 12V10H18V12H0ZM0 7V5H18V7H0ZM0 2V0H18V2H0Z" />
+    </svg>
+  );
+}
