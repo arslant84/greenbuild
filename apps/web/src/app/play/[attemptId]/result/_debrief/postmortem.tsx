@@ -30,7 +30,7 @@ export function Postmortem() {
 export function NextActions() {
   return (
     <section className="flex flex-col items-center gap-3 pt-2 pb-8">
-      <div className="flex h-12 w-full items-center justify-between rounded-xl bg-surface-raised px-5 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)]">
+      <div className="flex w-full flex-wrap items-center justify-between gap-2 rounded-xl bg-surface-raised px-5 py-3 lg:h-12 lg:py-0 shadow-[0_4px_6px_-1px_rgba(0,0,0,0.1)]">
         <span className="flex items-center gap-1 text-accent">
           <FastForwardIcon />
           <span className="font-mono text-[13px] leading-[18px] font-semibold text-ink">Next challenge unlocks in --h --m</span>

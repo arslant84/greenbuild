@@ -11,7 +11,7 @@ export function ShareActions({ attemptId, solved }: { attemptId: string; solved:
   const { copy, share, download, copied, failed } = useShareActions(attemptId);
   return (
     <div className="flex flex-col gap-1 pt-1">
-      <div className="flex gap-1">
+      <div className="flex flex-col gap-1 sm:flex-row">
         <button type="button" disabled={!solved} onClick={() => void share()} className={`${BUTTON} bg-accent text-[#00363e]`}>
           <ShareIcon />
           <span className="type-body font-semibold">Share result</span>

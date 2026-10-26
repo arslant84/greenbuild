@@ -27,7 +27,7 @@ export function Summary({ title, outcome, durationMs, xpEarned, streak }: Summar
   return (
     <>
       <section className="flex flex-col gap-1 pb-5">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="flex items-center gap-2 rounded bg-control px-2 py-1">
             <span className={`size-2 rounded-full ${TONE_BG[outcome.tone]}`} />
             <span className={`font-mono text-[11px] leading-[14px] font-medium tracking-[0.44px] ${TONE_TEXT[outcome.tone]}`}>DAILY · {outcome.tag}</span>
@@ -37,14 +37,14 @@ export function Summary({ title, outcome, durationMs, xpEarned, streak }: Summar
             <span className="type-label">SEED: hidden</span>
           </span>
         </div>
-        <h1 className="pt-1 text-[32px] leading-10 font-semibold tracking-[-0.8px] text-ink">{title}</h1>
+        <h1 className="pt-1 text-[26px] leading-8 font-semibold tracking-[-0.8px] text-ink lg:text-[32px] lg:leading-10">{title}</h1>
       </section>
-      <section className="mb-5 flex items-start justify-between rounded-xl bg-surface-raised p-5 shadow-[0_8px_10px_-6px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1)]">
-        <span className="flex flex-col gap-1 pt-7">
+      <section className="mb-5 flex flex-col gap-3 rounded-xl bg-surface-raised p-4 sm:flex-row sm:items-start sm:justify-between lg:p-5 shadow-[0_8px_10px_-6px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1)]">
+        <span className="flex flex-col gap-1 sm:pt-7">
           <span className="type-label tracking-[0.5px] text-ink-muted uppercase">Incident outcome</span>
-          <span className={`text-[64px] leading-[64px] font-bold tracking-[-1.6px] ${TONE_TEXT[outcome.tone]}`}>{outcome.label}</span>
+          <span className={`text-[44px] leading-[48px] font-bold tracking-[-1.6px] sm:text-[64px] sm:leading-[64px] ${TONE_TEXT[outcome.tone]}`}>{outcome.label}</span>
         </span>
-        <span className="flex flex-col items-end">
+        <span className="flex flex-col sm:items-end">
           <span className="flex items-baseline gap-2">
             <span className="font-mono text-[38px] leading-[48px] font-semibold text-ink">{formatDuration(durationMs)}</span>
             <span className="type-label text-ink-muted">DURATION</span>
@@ -52,7 +52,7 @@ export function Summary({ title, outcome, durationMs, xpEarned, streak }: Summar
           <span className="type-label pt-0.5 text-ink-subtle">vs — median</span>
         </span>
       </section>
-      <section className="mb-5 flex gap-2">
+      <section className="mb-5 grid grid-cols-2 gap-2 lg:flex">
         <Stat label="XP EARNED" value={xpAmount(xpEarned)} note="—" icon={<BoltIcon className="text-warn" />} tone="text-warn" />
         <Stat label="RATING CHANGE" value="—" note="—" icon={<TrendingUpIcon className="text-ok" />} tone="text-accent" />
         <Stat label="ACTIVE STREAK" value={xpAmount(streak)} note="—" icon={<FlameIcon width={11} height={13} className="text-warn" />} tone="text-ink" />
@@ -71,7 +71,7 @@ interface StatProps {
 
 function Stat({ label, value, note, icon, tone }: StatProps) {
   return (
-    <span className="flex h-[97px] flex-1 flex-col justify-between rounded-xl bg-surface-raised p-3">
+    <span className="flex h-[97px] flex-1 flex-col justify-between rounded-xl bg-surface-raised p-3 max-lg:last:col-span-2">
       <span className="flex items-center justify-between pb-1">
         <span className="type-label tracking-[0.5px] text-ink-muted uppercase">{label}</span>
         {icon}
