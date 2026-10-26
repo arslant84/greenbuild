@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { CodeHostIcon, CommunityIcon, GuestAvatarIcon, MenuIcon } from "../../ui/icons-landing";
+import { CodeHostIcon, CommunityIcon, GuestAvatarIcon } from "../../ui/icons-landing";
 import { LogoMark } from "../../ui/logo-mark";
+import { PhoneMenu } from "../../ui/phone-menu";
 
 // Figma (Landing) › Header. Leaderboard and sign-in have no screens yet, so they are not links. The bar
 // spans the window; its content spans it too (owner, 2026-10-14).
@@ -22,7 +23,14 @@ export function LandingHeader() {
             <GuestAvatarIcon />
           </span>
         </span>
-        <PhoneMenu />
+        <span className="flex items-center gap-2 lg:hidden">
+          <Link href="/onboarding" className="flex h-9 items-center rounded-lg bg-accent px-3 text-[13px] font-semibold text-[#00363e]">
+            Start
+          </Link>
+          <PhoneMenu>
+            <NavLinks className="flex flex-col gap-3" />
+          </PhoneMenu>
+        </span>
       </div>
     </header>
   );
@@ -38,22 +46,6 @@ function NavLinks({ className }: { className: string }) {
   );
 }
 
-// Stitch phone screen › the header's primary action and its menu, a native disclosure (no script).
-function PhoneMenu() {
-  return (
-    <span className="flex items-center gap-2 lg:hidden">
-      <Link href="/onboarding" className="flex h-9 items-center rounded-lg bg-accent px-3 text-[13px] font-semibold text-[#00363e]">
-        Start
-      </Link>
-      <details className="relative">
-        <summary aria-label="Menu" className="flex size-9 cursor-pointer list-none items-center justify-center rounded-lg border border-[#3c494c99] bg-surface text-ink [&::-webkit-details-marker]:hidden">
-          <MenuIcon />
-        </summary>
-        <NavLinks className="absolute top-11 right-0 flex w-44 flex-col gap-3 rounded-lg border border-[#3c494c99] bg-surface p-4" />
-      </details>
-    </span>
-  );
-}
 
 // Figma (Landing) › Footer. Terms, privacy, code and community pages do not exist yet. Like the header,
 // the bar spans the window, and it stays at the window's bottom (owner, 2026-10-14).

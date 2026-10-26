@@ -12,7 +12,7 @@ const ATTENDANCE_DAYS = Array.from({ length: 36 }, (_, day) => `day-${day}`);
 // and a Merkle snapshot are not true for greenbuild and say what is; company accounts do not exist yet.
 export function ProfileSidebar({ profile }: { profile: PublicProfile }) {
   return (
-    <aside className="col-span-4 flex flex-col gap-5">
+    <aside className="flex flex-col gap-5 lg:col-span-4">
       <StreakCard profile={profile} />
       <TrustCard />
       <HiringCard />

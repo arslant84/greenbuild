@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PersonIcon } from "../../../../ui/icons-profile";
 import { LABEL_BADGE, LABEL_CODE } from "./type";
 import { LogoMark } from "../../../../ui/logo-mark";
+import { PhoneMenu } from "../../../../ui/phone-menu";
 
 const CURRENT = "rounded bg-control px-2 py-1 type-body font-medium text-accent-soft";
 const OTHER = `rounded px-2 py-1 ${LABEL_CODE} text-ink-muted`;
@@ -11,7 +12,7 @@ const OTHER = `rounded px-2 py-1 ${LABEL_CODE} text-ink-muted`;
 // chip have no data and show disabled and "—".
 export function ProfileTopNav({ ownHref }: { ownHref: string | null }) {
   return (
-    <header className="flex h-14 items-center justify-between bg-[#131314e6] px-6 shadow-[0_1px_8px_rgba(0,0,0,0.4)] backdrop-blur-md">
+    <header className="flex h-14 items-center justify-between bg-[#131314e6] px-4 shadow-[0_1px_8px_rgba(0,0,0,0.4)] backdrop-blur-md lg:px-6">
       <div className="flex items-center gap-5">
         <Link href="/" className="flex items-center gap-2">
           <LogoMark />
@@ -21,16 +22,19 @@ export function ProfileTopNav({ ownHref }: { ownHref: string | null }) {
             <span className="type-label text-ok uppercase">beta</span>
           </span>
         </Link>
-        <NavLinks ownHref={ownHref} />
+        <NavLinks ownHref={ownHref} className="hidden items-center gap-1 lg:flex" />
       </div>
       <ViewerControls />
+      <PhoneMenu>
+        <NavLinks ownHref={ownHref} className="flex flex-col items-start gap-2" />
+      </PhoneMenu>
     </header>
   );
 }
 
-function NavLinks({ ownHref }: { ownHref: string | null }) {
+function NavLinks({ ownHref, className }: { ownHref: string | null; className: string }) {
   return (
-    <nav className="flex items-center gap-1">
+    <nav className={className}>
       {ownHref ? (
         <Link href={ownHref} aria-current="page" className={CURRENT}>
           Profile
@@ -53,7 +57,7 @@ function NavLinks({ ownHref }: { ownHref: string | null }) {
 
 function ViewerControls() {
   return (
-    <div className="flex items-center gap-3">
+    <div className="hidden items-center gap-3 lg:flex">
       <span className="flex items-center gap-1 rounded bg-canvas p-1">
         <button type="button" disabled className={`rounded px-2 py-0.5 ${LABEL_BADGE} text-ink-muted`}>
           RECRUITER
