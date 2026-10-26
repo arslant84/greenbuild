@@ -1,4 +1,7 @@
+import { randomUUID } from "node:crypto";
 import { expect, type Locator, type Page, test } from "@playwright/test";
+import { setHandle } from "./play-db";
+import { signInForTest } from "./test-player";
 
 // architecture.md, task 56: phone layouts. Each screen fits a phone without sideways scrolling, and its main
 // controls sit inside the screen's width.
@@ -34,4 +37,14 @@ test("the terms and the privacy policy fit a phone", async ({ page }) => {
     await page.goto(path);
     await expectFitsPhone(page, [page.getByRole("heading", { level: 1 })]);
   }
+});
+
+test("a public profile fits a phone, and its menu opens the navigation", async ({ page }) => {
+  const handle = `p-${randomUUID().slice(0, 8)}`;
+  await setHandle(await signInForTest(page), handle);
+  await page.goto(`/u/${handle}`);
+
+  await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), page.getByLabel("Menu")]);
+  await page.getByLabel("Menu").click();
+  await expect(page.getByRole("link", { name: "Leaderboards" })).toBeVisible();
 });

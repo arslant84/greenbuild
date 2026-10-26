@@ -32,7 +32,8 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 }
 
 // Figma "Profile Multi-State Evaluator" (3:4532), state V5 "SEO Public", laid out from its Stitch copy
-// (owner, 2026-10-14); task 46b. Rendered for every visitor alike, without a session.
+// (owner, 2026-10-14); task 46b. Rendered for every visitor alike, without a session. Below 1024 px the Stitch
+// phone screen "Greenbuild — Verifiable Credential Profile (Phone)" (task 56).
 export default async function ProfilePage({ params }: Params) {
   const profile = await loadProfile((await params).handle);
   if (!profile) {
@@ -41,14 +42,14 @@ export default async function ProfilePage({ params }: Params) {
   // Only the nav's "Profile" link depends on the visitor: their own profile when signed in.
   const me = await apiGet("/v1/me", meResponseSchema);
   return (
-    <div className="min-h-screen bg-[#131314]">
+    <div data-responsive className="min-h-screen bg-[#131314]">
       {/* The content and its bars span the whole window (owner, 2026-10-14). */}
       <div className="frame flex min-h-screen flex-col">
         <ProfileTopNav ownHref={me?.handle ? `/u/${me.handle}` : null} />
         <CredentialHeader profile={profile} />
         <TrustStrip />
-        <div className="grid flex-1 grid-cols-12 gap-8 px-6 py-8">
-          <main className="col-span-8 flex min-w-0 flex-col gap-8">
+        <div className="grid flex-1 grid-cols-1 gap-6 px-4 py-6 lg:grid-cols-12 lg:gap-8 lg:px-6 lg:py-8">
+          <main className="flex min-w-0 flex-col gap-6 lg:col-span-8 lg:gap-8">
             <SkillsCard profile={profile} />
             <ActivityCard profile={profile} />
             <BadgesCard />

@@ -7,8 +7,8 @@ import { LABEL_BADGE, LABEL_CODE } from "./type";
 export function ProfileFooter() {
   return (
     <>
-      <footer className="flex items-center justify-between gap-2 border-t border-control bg-canvas/50 px-6 py-3 type-label text-ink-subtle">
-        <span className="flex items-center gap-3">
+      <footer className="flex flex-col items-start gap-2 border-t border-control bg-canvas/50 px-4 py-3 type-label text-ink-subtle lg:flex-row lg:items-center lg:justify-between lg:px-6">
+        <span className="flex flex-wrap items-center gap-3">
           <span>Profile last evaluated —</span>
           <span>·</span>
           <span>Report profile inconsistency</span>
@@ -20,7 +20,7 @@ export function ProfileFooter() {
           <span className="text-ink-muted">greenbuild beta</span>
         </span>
       </footer>
-      <footer className="sticky bottom-0 z-10 mt-8 flex items-center justify-between gap-3 bg-canvas px-6 py-8">
+      <footer className="z-10 mt-8 flex flex-col items-start gap-3 bg-canvas px-4 py-6 lg:sticky lg:bottom-0 lg:flex-row lg:items-center lg:justify-between lg:px-6 lg:py-8">
         <span className="flex items-center gap-3">
           <span className={`${LABEL_CODE} text-ink-muted`}>&gt;_ GREENBUILD</span>
           <span className="type-label text-ink-subtle">SHA: —</span>

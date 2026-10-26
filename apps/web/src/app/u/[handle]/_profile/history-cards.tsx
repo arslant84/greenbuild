@@ -50,7 +50,7 @@ export function StabilityCard({ profile }: { profile: PublicProfile }) {
             ))}
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <Metric label="System Volatility" value="τ = 0.50" note="Glicko-2 system constant" />
           <Metric label="Median Solve Velocity" value="—" note="P90: —" />
           <Metric label="Checked Solves" value={formatNumber(profile.solved)} note="Each passed its check" />

@@ -11,7 +11,7 @@ const COLUMNS = ["INCIDENT / ROOT CAUSE", "DOMAIN", "SOLVE TIME", "DIFFICULTY", 
 export function ActivityCard({ profile }: { profile: PublicProfile }) {
   return (
     <section className={`${CARD} gap-3`}>
-      <div className="flex items-center justify-between border-b border-control pb-2">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-control pb-2">
         <div>
           <h2 className={`${HEADLINE_SM} text-ink`}>Recent Verified Activity</h2>
           <p className="type-label text-ink-muted">Solved attempts, each checked in its own sandbox</p>
@@ -19,7 +19,8 @@ export function ActivityCard({ profile }: { profile: PublicProfile }) {
         <span className={`rounded border border-ok/20 bg-ok/10 px-2 py-0.5 ${LABEL_BADGE} text-ok`}>— AUDIT PASS</span>
       </div>
       <table className="w-full border-collapse text-left">
-        <thead>
+        {/* A phone shows the rows alone: five columns do not fit (task 56). */}
+        <thead className="hidden lg:table-header-group">
           <tr className="border-b border-control type-label text-ink-subtle">
             {COLUMNS.map((column) => (
               <th key={column} className={`px-3 py-2 font-normal ${column === "DATE" ? "text-right" : ""}`}>
