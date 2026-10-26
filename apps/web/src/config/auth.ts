@@ -47,8 +47,8 @@ export interface AuthConfig {
   e2eSignIn: boolean;
 }
 
-// loadAuthConfig answers null when AUTH_SECRET is unset, so local runs without sign-in keep the dev
-// session (task 30e removes it); in production sign-in is required.
+// loadAuthConfig answers null when AUTH_SECRET is unset outside production: there is no sign-in then, and
+// authInstance says so in the log. In production sign-in is required.
 export function loadAuthConfig(env: Record<string, string | undefined> = process.env): AuthConfig | null {
   const e2eSignIn = env.GREENBUILD_E2E_AUTH === "1";
   if (e2eSignIn && env.NODE_ENV === "production") {

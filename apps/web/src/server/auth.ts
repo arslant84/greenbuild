@@ -7,6 +7,7 @@ import { e2eSignIn } from "./e2e-sign-in";
 import { emailSignIn } from "./email-sign-in";
 import { ageCheck, type SignInCallback } from "./sign-in-age";
 import { linkLimit, redisCounter } from "./sign-in-limit";
+import { logger } from "./logger";
 import { SIGN_IN_PATH } from "./sign-in-paths";
 import { type AuthConfig, loadAuthConfig } from "../config/auth";
 
@@ -14,10 +15,17 @@ import { type AuthConfig, loadAuthConfig } from "../config/auth";
 // sessions, so no session table. Built on the first request, so `next build` needs no settings.
 let instance: NextAuthResult | null | undefined;
 
+// Without sign-in no player can sign in and every page that reads the API fails, so a local run without
+// the settings says so once, where the developer sees it.
+export const SIGN_IN_OFF = "sign-in is off: AUTH_SECRET is not set, so no player can sign in and the API answers 401; start the local stack with `pnpm play:up`, which sets it";
+
 export function authInstance(): NextAuthResult | null {
   if (instance === undefined) {
     const config = loadAuthConfig();
     instance = config ? NextAuth(authOptions(config)) : null;
+    if (!config) {
+      logger.error(SIGN_IN_OFF);
+    }
   }
   return instance;
 }
