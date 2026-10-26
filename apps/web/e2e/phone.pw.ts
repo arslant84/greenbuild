@@ -48,3 +48,12 @@ test("a public profile fits a phone, and its menu opens the navigation", async (
   await page.getByLabel("Menu").click();
   await expect(page.getByRole("link", { name: "Leaderboards" })).toBeVisible();
 });
+
+test("the leaderboard fits a phone, and its menu opens the navigation", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/leaderboard");
+
+  await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), page.getByLabel("Menu")]);
+  await page.getByLabel("Menu").click();
+  await expect(page.getByRole("link", { name: "Challenges" })).toBeVisible();
+});

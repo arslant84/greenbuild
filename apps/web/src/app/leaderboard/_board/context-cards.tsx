@@ -27,7 +27,7 @@ const CARDS = [
 
 export function ContextCards() {
   return (
-    <div className="flex gap-3 pt-1">
+    <div className="flex flex-col gap-3 pt-1 lg:flex-row">
       {CARDS.map((card) => (
         <div key={card.label} className="flex flex-1 flex-col gap-1 rounded-lg bg-surface p-3">
           <span className="flex items-center justify-between type-label">
@@ -46,7 +46,7 @@ export function ContextCards() {
 export function StandingsFooter() {
   return (
     <footer className="sticky bottom-0 z-10 bg-canvas">
-      <div className="frame flex h-7 items-center justify-between px-6">
+      <div className="frame flex h-7 items-center justify-between px-4 lg:px-6">
         <span className="flex items-center gap-2">
           <span className="size-2 rounded-full bg-ok" />
           <span className="type-label tracking-[0.5px] text-ok">ALL BOARDS IN UTC</span>

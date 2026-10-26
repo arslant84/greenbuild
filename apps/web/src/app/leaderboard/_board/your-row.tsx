@@ -14,7 +14,7 @@ interface YourRowProps {
 // the signed-in player; the bracket needs the total ranked, which there is not yet ("—").
 export function YourRow({ tab, handle, me, listed, streak }: YourRowProps) {
   return (
-    <div className="relative flex h-12 items-center justify-between overflow-hidden rounded-lg bg-[#0e0e0ff2] px-3 shadow-[0_4px_12px_#00000040] backdrop-blur">
+    <div className="relative flex flex-col items-start gap-2 overflow-hidden rounded-lg bg-[#0e0e0ff2] px-3 py-2 shadow-[0_4px_12px_#00000040] backdrop-blur lg:h-12 lg:flex-row lg:items-center lg:justify-between lg:py-0">
       <span className="absolute inset-y-0 left-0 w-1 bg-accent" />
       <div className="flex items-center gap-3">
         <span className="flex items-center gap-2">
@@ -27,7 +27,7 @@ export function YourRow({ tab, handle, me, listed, streak }: YourRowProps) {
           <span className="type-label text-ink-subtle">· —</span>
         </span>
       </div>
-      <div className="flex items-center gap-5">
+      <div className="flex flex-wrap items-center gap-3 lg:gap-5">
         <span className="flex items-center gap-3">
           <span className="flex flex-col items-end">
             <span className="font-mono text-[13px] leading-4.5 font-bold text-ink">{me ? formatScore(tab, me.score) : "—"}</span>

@@ -10,7 +10,7 @@ type Entry = LeaderboardResponse["entries"][number];
 export function BoardTable({ tab, entries, emptyText }: { tab: BoardTab; entries: Entry[]; emptyText: string }) {
   return (
     <div className="flex flex-col bg-surface shadow-[0_4px_12px_#00000040]">
-      <div className="flex h-10 items-center bg-[#35343699] type-label tracking-[0.5px] text-ink-subtle">
+      <div className="hidden h-10 items-center bg-[#35343699] type-label tracking-[0.5px] text-ink-subtle lg:flex">
         <span className="w-20 pl-3">RANK</span>
         <span className="flex-1 px-2">ENGINEER / ORG</span>
         <span className="w-36 px-2">NODE REGION</span>
@@ -37,11 +37,11 @@ export function BoardTable({ tab, entries, emptyText }: { tab: BoardTab; entries
 function BoardRow({ tab, entry }: { tab: BoardTab; entry: Entry }) {
   const rank = rankStyle(entry.rank);
   return (
-    <div id={`rank-${entry.rank}`} className="flex h-12.25 items-center border-t border-[#2a2a2b66] first:border-t-0">
-      <span className={`w-20 pl-3 font-mono text-[13px] leading-4.5 ${rank.bold ? "font-bold" : ""}`} style={{ color: rank.color }}>
+    <div id={`rank-${entry.rank}`} className="flex flex-wrap items-center gap-y-1 border-t border-[#2a2a2b66] py-2 first:border-t-0 lg:h-12.25 lg:flex-nowrap lg:py-0">
+      <span className={`w-14 pl-3 lg:w-20 font-mono text-[13px] leading-4.5 ${rank.bold ? "font-bold" : ""}`} style={{ color: rank.color }}>
         {rankLabel(entry.rank)}
       </span>
-      <span className="flex flex-1 items-center gap-2 px-2">
+      <span className="flex min-w-0 basis-[calc(100%-3.5rem)] items-center gap-2 px-2 lg:flex-1 lg:basis-auto">
         <span className="flex size-7 items-center justify-center rounded-full bg-line font-mono text-[11px] leading-4.5 font-bold" style={{ color: avatarColor(entry.rank) }}>
           {initials(entry.handle)}
         </span>
@@ -56,15 +56,15 @@ function BoardRow({ tab, entry }: { tab: BoardTab; entry: Entry }) {
           <span className="font-mono text-[10px] leading-4.5 text-ink-subtle">{entry.display_name ?? "—"}</span>
         </span>
       </span>
-      <span className="w-36 px-2 font-mono text-[12px] leading-4.5 text-ink-muted">—</span>
-      <span className="flex w-40 flex-col items-end px-2">
+      <span className="hidden w-36 px-2 font-mono text-[12px] leading-4.5 text-ink-muted lg:block">—</span>
+      <span className="ml-14 flex items-baseline gap-2 px-2 lg:ml-0 lg:w-40 lg:flex-col lg:items-end lg:gap-0">
         <span className="font-mono text-[13px] leading-4.5 font-bold text-ink">{formatScore(tab, entry.score)}</span>
         <span className="font-mono text-[9px] leading-4.5 text-ink-subtle">— solves · — verif</span>
       </span>
-      <span className="flex w-28 justify-center px-2">
+      <span className="flex justify-center px-2 lg:w-28">
         <span className="rounded bg-control px-1.5 py-0.5 type-label font-medium text-warn">—</span>
       </span>
-      <span className="w-24 pr-3 text-right type-label font-medium text-ink-subtle">—</span>
+      <span className="ml-auto pr-3 text-right type-label font-medium text-ink-subtle lg:ml-0 lg:w-24">—</span>
     </div>
   );
 }
