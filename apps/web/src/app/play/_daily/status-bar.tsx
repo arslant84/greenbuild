@@ -15,8 +15,8 @@ interface StatusBarProps {
 // (tasks 42b, 44); the daily reset shows an empty value until it has a task.
 export function StatusBar({ player }: StatusBarProps) {
   return (
-    <header className="flex h-11 items-center justify-between rounded-xl bg-surface px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
-      <div className="flex items-center gap-3">
+    <header className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.05)] lg:h-11">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="flex h-[26px] items-center gap-1 rounded-lg bg-control px-2 py-1">
           <FlameIcon className="text-warn" />
           <span className="type-body font-semibold text-ink">Day {player ? player.streak.current : 0}</span>

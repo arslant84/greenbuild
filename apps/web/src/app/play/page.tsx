@@ -10,18 +10,19 @@ import { ServiceError } from "./service-error";
 
 export const dynamic = "force-dynamic";
 
-// Figma "Hotfix — Daily Challenge" (1280 × 1024).
+// Figma "Hotfix — Daily Challenge" (1280 × 1024). Below 1024 px the Stitch phone screen "Greenbuild — Daily
+// Challenge (Phone)": the sidebar becomes a top bar and the right column moves below (task 56).
 export default async function DailyPage() {
   // Today's challenge as the worker published it (task 41c); none yet shows the service error.
   const [daily, player, active] = await Promise.all([apiGet("/v1/daily", dailyResponseSchema), apiGet("/v1/me", meResponseSchema), runningAttempt()]);
   const running = active && (await withCard(active, daily));
   return (
-    <div className="min-h-screen bg-canvas">
+    <div data-responsive className="min-h-screen bg-canvas lg:min-w-[1280px]">
       {/* The content spans the whole window (owner, 2026-10-14); the asides keep their width. */}
-      <div className="frame flex">
+      <div className="frame flex flex-col lg:flex-row">
         <Sidebar streak={player ? player.streak.current : 0} />
-        <div className="flex min-w-0 flex-1 justify-between pb-8">
-          <main className="flex min-w-0 flex-1 flex-col gap-5 px-3 pt-5">
+        <div className="flex min-w-0 flex-1 flex-col pb-8 lg:flex-row lg:justify-between">
+          <main className="flex min-w-0 flex-1 flex-col gap-5 px-4 pt-5 lg:px-3">
             <StatusBar player={player} />
             {running && <ActiveAttemptCard attempt={running.attempt} card={running.card} />}
             {daily ? <ChallengeCard card={daily.challenge} blocked={active !== undefined} /> : <ServiceError />}

@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ComponentType, SVGProps } from "react";
 import { BadgeIcon, CatalogIcon, FlameIcon, LeaderboardIcon, PersonIcon, TerminalIcon, TuneIcon } from "../../../ui/icons";
 import { LogoMark } from "../../../ui/logo-mark";
+import { PhoneMenu } from "../../../ui/phone-menu";
 
 interface NavItem {
   label: string;
@@ -21,7 +22,9 @@ const NAV: NavItem[] = [
 // streak is the player's current streak from GET /v1/me (task 44), 0 without one.
 export function Sidebar({ streak }: { streak: number }) {
   return (
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col justify-between border-r border-[#3c494c4d] bg-canvas p-3">
+    <>
+      <PhoneBar streak={streak} />
+      <aside className="sticky top-0 hidden h-screen w-60 shrink-0 flex-col justify-between border-r border-[#3c494c4d] bg-canvas p-3 lg:flex">
       <div className="flex flex-col gap-5">
         <div className="flex h-[22px] items-center justify-between px-1 pt-1">
           <span className="flex items-center gap-2">
@@ -37,7 +40,37 @@ export function Sidebar({ streak }: { streak: number }) {
         </nav>
       </div>
       <SidebarFooter streak={streak} />
-    </aside>
+      </aside>
+    </>
+  );
+}
+
+// Stitch phone screen › top bar: the brand, the streak and the menu with the sidebar's navigation.
+function PhoneBar({ streak }: { streak: number }) {
+  return (
+    <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-[#3c494c4d] bg-canvas px-4 lg:hidden">
+      <span className="flex items-center gap-2">
+        <LogoMark />
+        <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] text-accent-soft">&gt;_ greenbuild</span>
+      </span>
+      <span className="flex items-center gap-2">
+        <span className="flex items-center gap-1 rounded-lg bg-control px-2 py-1 text-warn">
+          <FlameIcon width={11} height={13} />
+          <span className="type-label font-semibold">{streak}d</span>
+        </span>
+        <PhoneMenu>
+          <nav className="flex flex-col gap-1">
+            {NAV.map((item) => (
+              <NavLink key={item.label} item={item} />
+            ))}
+            <Link href="/settings" className="type-body flex h-[34px] items-center gap-2 rounded-lg px-3 py-2 text-ink-muted">
+              <TuneIcon />
+              Settings
+            </Link>
+          </nav>
+        </PhoneMenu>
+      </span>
+    </header>
   );
 }
 

@@ -48,7 +48,7 @@ test("the Daily screen spans a 1920 px window", async ({ page }) => {
   await page.goto("/play");
 
   // The brand block: the logo mark and the wordmark after it.
-  const brand = await page.getByText(">_ greenbuild").locator("..").boundingBox();
+  const brand = await page.getByText(">_ greenbuild").filter({ visible: true }).locator("..").boundingBox();
   const rightColumn = await page.locator("aside").last().boundingBox();
   expect(brand?.x).toBeLessThan(EDGE_PX);
   expect((rightColumn?.x ?? 0) + (rightColumn?.width ?? 0)).toBeGreaterThan(1920 - EDGE_PX);

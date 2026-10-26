@@ -8,7 +8,7 @@ const DIFFICULTY_STEPS = 10;
 // Figma › Section - PRIMARY CHALLENGE CARD (HERO ELEMENT); blocked while another attempt runs (task 21b).
 export function ChallengeCard({ card, blocked }: { card: Card; blocked: boolean }) {
   return (
-    <section className="relative flex flex-col gap-3 rounded-xl bg-surface-raised p-5 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.1),0_4px_6px_-1px_rgba(0,0,0,0.1)]">
+    <section className="relative flex flex-col gap-3 rounded-xl bg-surface-raised p-4 lg:p-5 shadow-[0_2px_4px_-2px_rgba(0,0,0,0.1),0_4px_6px_-1px_rgba(0,0,0,0.1)]">
       <span className="absolute -top-px left-1 h-0.5 w-[calc(100%-8px)] bg-[linear-gradient(90deg,rgba(34,211,238,0)_0%,rgba(34,211,238,0.8)_50%,rgba(34,211,238,0)_100%)]" />
       <div className="flex h-4 items-center justify-between">
         <span className="flex items-center gap-1">
@@ -18,7 +18,7 @@ export function ChallengeCard({ card, blocked }: { card: Card; blocked: boolean 
         <span className="type-label rounded bg-control px-2 py-0.5 text-[#2fd9f4]">SEV-1 SIMULATION</span>
       </div>
       <div className="flex flex-col gap-0.75">
-        <h1 className="text-[32px] leading-10 font-bold tracking-[-0.8px] text-ink">{card.title}</h1>
+        <h1 className="text-[26px] leading-8 font-bold tracking-[-0.8px] text-ink lg:text-[32px] lg:leading-10">{card.title}</h1>
         <p className="text-[15px] leading-6 text-ink-muted">{card.statement}</p>
       </div>
       <MetadataRow card={card} />
@@ -30,7 +30,7 @@ export function ChallengeCard({ card, blocked }: { card: Card; blocked: boolean 
 
 function MetadataRow({ card }: { card: Card }) {
   return (
-    <div className="flex items-center gap-3 py-1">
+    <div className="flex flex-wrap items-center gap-3 py-1">
       <span className="flex items-center gap-1 rounded-md bg-canvas px-2 py-1">
         <span className="type-label text-ink-muted">Difficulty:</span>
         <span className="flex items-center gap-1">

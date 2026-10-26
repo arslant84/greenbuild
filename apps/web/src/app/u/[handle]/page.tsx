@@ -42,7 +42,7 @@ export default async function ProfilePage({ params }: Params) {
   // Only the nav's "Profile" link depends on the visitor: their own profile when signed in.
   const me = await apiGet("/v1/me", meResponseSchema);
   return (
-    <div data-responsive className="min-h-screen bg-[#131314]">
+    <div data-responsive className="min-h-screen bg-[#131314] lg:min-w-[1280px]">
       {/* The content and its bars span the whole window (owner, 2026-10-14). */}
       <div className="frame flex min-h-screen flex-col">
         <ProfileTopNav ownHref={me?.handle ? `/u/${me.handle}` : null} />
