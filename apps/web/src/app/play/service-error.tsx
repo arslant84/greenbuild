@@ -1,10 +1,11 @@
 import { RefreshIcon, WarningIcon } from "../../ui/icons";
 
 // Figma "Global Error, Edge States & Resilience Console" › E2: 500 Server Error.
-// retryHref reloads the screen that failed; message says what could not be loaded.
+// retryHref reloads the screen that failed; message says what could not be loaded. The card narrows to a
+// phone's width (task 56).
 export function ServiceError({ retryHref = "/play", message = "The challenge could not be loaded." }: { retryHref?: string; message?: string }) {
   return (
-    <section className="mx-auto flex w-[392px] flex-col rounded-xl border border-control bg-surface p-5 shadow-[0_8px_10px_-6px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1)]">
+    <section className="mx-auto flex w-full max-w-[392px] flex-col rounded-xl border border-control bg-surface p-5 shadow-[0_8px_10px_-6px_rgba(0,0,0,0.1),0_20px_25px_-5px_rgba(0,0,0,0.1)]">
       <div className="flex items-center justify-between">
         <span className="type-label text-danger">STATE // 500_SEV1_INTERNAL</span>
         <span className="rounded bg-[#93000a4d] px-1.5 py-0.5 font-mono text-[11px] leading-[14px] font-medium tracking-[0.44px] text-danger">

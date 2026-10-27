@@ -100,5 +100,10 @@ test("the onboarding fits a phone", async ({ page }) => {
   await signInForTest(page);
   await page.goto("/onboarding");
 
-  await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), page.getByRole("link", { name: "Skip intro" }), page.getByRole("link", { name: /Let's go/ })]);
+  await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), page.getByRole("link", { name: "Skip intro" }), page.getByRole("link", { name: /Let's go/ })]);});
+
+test("the 404 page fits a phone", async ({ page }) => {
+  await page.goto("/no-such-page");
+
+  await expectFitsPhone(page, [page.getByRole("heading", { name: "Page not found" }), page.getByRole("link", { name: /Go to today's challenge/ })]);
 });

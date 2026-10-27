@@ -25,7 +25,7 @@ export default async function AttemptPage({ params }: AttemptPageProps) {
   const card = await apiGet(`/v1/challenges/${attempt.challenge_slug}`, challengeCardSchema);
   if (!card) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-canvas">
+      <div data-responsive className="flex min-h-screen items-center justify-center bg-canvas px-4">
         <ServiceError />
       </div>
     );
