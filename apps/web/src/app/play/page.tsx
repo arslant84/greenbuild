@@ -20,7 +20,7 @@ export default async function DailyPage() {
     <div data-responsive className="min-h-screen bg-canvas lg:min-w-[1280px]">
       {/* The content spans the whole window (owner, 2026-10-14); the asides keep their width. */}
       <div className="frame flex flex-col lg:flex-row">
-        <Sidebar streak={player ? player.streak.current : 0} />
+        <Sidebar player={player} />
         <div className="flex min-w-0 flex-1 flex-col pb-8 lg:flex-row lg:justify-between">
           <main className="flex min-w-0 flex-1 flex-col gap-5 px-4 pt-5 lg:px-3">
             <StatusBar player={player} />
