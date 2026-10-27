@@ -3,25 +3,20 @@ import Link from "next/link";
 import { PersonIcon } from "../../../ui/icons-profile";
 import { SettingsIcon } from "../../../ui/icons-settings";
 import { LABEL_BADGE, LABEL_CODE } from "../../../ui/type";
-import { LogoMark } from "../../../ui/logo-mark";
+import { Brand } from "../../../ui/brand";
 import { PhoneMenu } from "../../../ui/phone-menu";
 
 const NAV = "py-1 type-body text-ink-muted hover:text-ink";
 
 // Frame 7:10273 › header. The handle, level and streak are the player's; there is no single rating ("GLK")
-// or inbox yet ("—"), and Marketplace and Inbox have no screens, so they are text. The bar and its content
-// span the window (owner, 2026-10-14).
+// yet ("—"). Marketplace and Inbox are hidden until Stage 3 builds them (owner, 2026-10-27). The bar and
+// its content span the window (owner, 2026-10-14).
 export function SettingsHeader({ me }: { me: MeResponse | null }) {
   return (
     <header className="sticky top-0 z-50 bg-[#131314e6] shadow-[0_1px_8px_rgba(0,0,0,0.4)] backdrop-blur-xl">
       <div className="frame flex h-14 items-center justify-between gap-5 px-4 lg:px-6">
         <div className="flex shrink-0 items-center gap-8">
-          <Link href="/play" className={`flex items-center gap-2 ${LABEL_CODE} font-bold tracking-tight text-accent-soft`}>
-            <LogoMark />
-            <span className="text-ok">&gt;_</span>
-            <span>greenbuild</span>
-            <span className="ml-1 size-2 rounded-full bg-ok" />
-          </Link>
+          <Brand />
           <HeaderLinks className="hidden items-center gap-5 lg:flex" />
         </div>
         <PlayerBadge me={me} />
@@ -45,11 +40,6 @@ function HeaderLinks({ className }: { className: string }) {
       <Link href="/leaderboard" className={NAV}>
         Leaderboard
       </Link>
-      <span className={NAV}>Marketplace</span>
-      <span className={`flex items-center gap-1 ${NAV}`}>
-        Inbox
-        <span className="rounded-full bg-[#93000a] px-1.5 py-0.5 type-label leading-none text-[#690005]">— pending</span>
-      </span>
       <span aria-current="page" className="py-1 type-body font-medium text-accent-soft">
         Settings
       </span>

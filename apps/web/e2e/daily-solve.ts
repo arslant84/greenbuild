@@ -12,10 +12,10 @@ const PROBE = "echo probe-$((20+1))\n";
 const PROBE_TIMEOUT_MS = 2_000;
 const TERMINAL_READY_TIMEOUT_MS = 30_000;
 
-// startChallenge opens today's challenge from the landing and waits for its sandbox.
+// startChallenge opens today's challenge from the onboarding step and waits for its sandbox. A signed-in
+// player opening the landing goes straight to the Daily screen (deviation 35), so it starts one step later.
 export async function startChallenge(page: Page): Promise<void> {
-  await page.goto("/");
-  await page.getByRole("link", { name: /Start today's challenge/ }).click();
+  await page.goto("/onboarding");
   await page.getByRole("link", { name: /Let's go/ }).click();
   await expect(page).toHaveURL(/\/play$/);
   await page.getByRole("button", { name: /Start Challenge/ }).click();
