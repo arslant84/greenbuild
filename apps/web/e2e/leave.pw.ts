@@ -42,3 +42,12 @@ test("the debrief's Credential tab jumps to the credential card", async ({ page 
   await expect(page).toHaveURL(/\/result#credential$/);
   await expect(page.locator("#credential")).toBeInViewport();
 });
+
+test("the debrief's Play Catalog opens the catalog", async ({ page }) => {
+  await startChallenge(page);
+  await page.getByRole("button", { name: /Give up attempt/ }).click();
+  await expect(page).toHaveURL(/\/result$/);
+
+  await page.getByRole("link", { name: /Play Catalog/ }).click();
+  await expect(page).toHaveURL(/\/challenges$/);
+});

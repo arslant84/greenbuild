@@ -20,6 +20,8 @@ test("a player solves nginx-502 from the Daily screen to the debrief", async ({ 
   await check(page);
   await expect(page.getByText(/INCIDENT RESOLVED IN/)).toBeVisible({ timeout: CHECK_TIMEOUT_MS });
   await expect(page.getByText("2/10 checks used")).toBeVisible();
+  // Sharing lives on the debrief (task 51); the solved panel's share button opens it.
+  await expect(page.getByRole("link", { name: "Share on X / LinkedIn" })).toHaveAttribute("href", /\/play\/[0-9a-f-]{36}\/result$/);
 
   await page.getByRole("link", { name: /\/play\/.*\/result/ }).click();
   await expect(page.getByText("SOLVED", { exact: true }).first()).toBeVisible();

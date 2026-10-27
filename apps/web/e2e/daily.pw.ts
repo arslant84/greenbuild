@@ -35,3 +35,9 @@ test("the sidebar shows the player and opens their public profile", async ({ pag
   await page.getByRole("complementary").getByRole("link", { name: new RegExp(`@${handle}`) }).click();
   await expect(page).toHaveURL(new RegExp(`/u/${handle}$`));
 });
+
+test("Global ladder opens the leaderboard", async ({ page }) => {
+  await page.goto("/play");
+  await page.getByRole("link", { name: /Global ladder/ }).click();
+  await expect(page).toHaveURL(/\/leaderboard$/);
+});

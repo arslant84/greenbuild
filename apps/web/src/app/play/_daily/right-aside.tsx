@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ArrowForwardIcon, ExpandMoreIcon } from "../../../ui/icons";
 
 const CARD = "rounded-xl bg-surface-raised shadow-[0_1px_2px_rgba(0,0,0,0.05)]";
@@ -67,10 +68,10 @@ function Leaderboard() {
       <div className="rounded px-1 py-1.5">
         <span className="type-label text-ink-muted">No rankings yet</span>
       </div>
-      <div className="flex items-center justify-between pt-1 text-ink-muted" aria-disabled="true">
+      <Link href="/leaderboard" className="flex items-center justify-between pt-1 text-ink-muted hover:text-ink">
         <span className="type-label">Global ladder</span>
         <ArrowForwardIcon width={9} height={9} />
-      </div>
+      </Link>
     </section>
   );
 }

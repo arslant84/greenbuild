@@ -35,10 +35,10 @@ export function NextActions() {
           <FastForwardIcon />
           <span className="font-mono text-[13px] leading-[18px] font-semibold text-ink">Next challenge unlocks in --h --m</span>
         </span>
-        <span className="flex items-center gap-1 text-accent-soft opacity-60" aria-disabled="true">
+        <Link href="/challenges" className="flex items-center gap-1 text-accent-soft">
           <span className="type-label">Play Catalog</span>
           <ArrowForwardIcon width={11} height={11} />
-        </span>
+        </Link>
       </div>
       <Link href="/play" className="flex items-center gap-1 text-ink-subtle">
         <ArrowBackSmallIcon />

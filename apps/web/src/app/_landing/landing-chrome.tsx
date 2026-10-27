@@ -3,8 +3,8 @@ import { CodeHostIcon, CommunityIcon, GuestAvatarIcon } from "../../ui/icons-lan
 import { LogoMark } from "../../ui/logo-mark";
 import { PhoneMenu } from "../../ui/phone-menu";
 
-// Figma (Landing) › Header. Leaderboard and sign-in have no screens yet, so they are not links. The bar
-// spans the window; its content spans it too (owner, 2026-10-14).
+// Figma (Landing) › Header. The avatar opens the player's profile, which sends a visitor to sign in first.
+// The bar spans the window; its content spans it too (owner, 2026-10-14).
 export function LandingHeader() {
   return (
     <header className="sticky top-0 z-10 border-b border-[#3c494c66] bg-[#0e0e0fe5] backdrop-blur">
@@ -19,9 +19,9 @@ export function LandingHeader() {
         </span>
         <span className="hidden items-center gap-5 lg:flex">
           <NavLinks className="flex items-center gap-5" />
-          <span className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
+          <Link href="/profile" aria-label="Your profile" className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
             <GuestAvatarIcon />
-          </span>
+          </Link>
         </span>
         <span className="flex items-center gap-2 lg:hidden">
           <Link href="/onboarding" className="flex h-9 items-center rounded-lg bg-accent px-3 text-[13px] font-semibold text-[#00363e]">
@@ -39,9 +39,9 @@ export function LandingHeader() {
 function NavLinks({ className }: { className: string }) {
   return (
     <nav className={`${className} text-[13px] leading-[18px] text-ink-muted`}>
-      <span aria-disabled="true">Leaderboard</span>
+      <Link href="/leaderboard">Leaderboard</Link>
       <Link href="/challenges">Challenges</Link>
-      <span aria-disabled="true">Sign in</span>
+      <Link href="/signin">Sign in</Link>
     </nav>
   );
 }
