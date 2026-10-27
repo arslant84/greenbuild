@@ -27,16 +27,18 @@ export function DebriefFrame({ incident, outcome, children }: DebriefFrameProps)
           </span>
           <nav className="hidden items-center gap-2 lg:flex">
             <span className="type-body rounded bg-control px-2 py-1 font-medium text-ink">Debrief</span>
-            <span className="rounded px-2 py-1 font-mono text-[13px] leading-[18px] text-ink-muted" aria-disabled="true">Credential</span>
+            <a href="#credential" className="rounded px-2 py-1 font-mono text-[13px] leading-[18px] text-ink-muted">
+              Credential
+            </a>
           </nav>
           <span className="flex items-center gap-3">
             <span className="flex items-center gap-1.5">
               <span className={`size-1.5 rounded-full ${TONE_BG[outcome.tone]}`} />
               <span className={`type-label ${TONE_TEXT[outcome.tone]}`}>{outcome.headerStatus}</span>
             </span>
-            <span className="hidden size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e] lg:flex">
+            <Link href="/profile" aria-label="Your profile" className="hidden size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e] lg:flex">
               <PersonIcon />
-            </span>
+            </Link>
           </span>
         </div>
       </header>

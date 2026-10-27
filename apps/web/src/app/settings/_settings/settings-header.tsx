@@ -72,9 +72,9 @@ function PlayerBadge({ me }: { me: MeResponse | null }) {
       <Link href="/settings" title="Settings" className="flex items-center justify-center rounded-lg p-1.5 text-ink-muted hover:bg-surface-raised hover:text-ink">
         <SettingsIcon className="text-[20px]" />
       </Link>
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft">
+      <Link href="/profile" aria-label="Your profile" className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent-soft">
         <PersonIcon className="text-[18px] text-[#00363e]" />
-      </span>
+      </Link>
     </div>
   );
 }

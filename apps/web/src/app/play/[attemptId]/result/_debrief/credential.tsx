@@ -21,7 +21,7 @@ interface CredentialProps {
 // does not exist yet (MMR, signed proofs); its share link is public (task 51).
 export function Credential({ result, skills, streak, player }: CredentialProps) {
   return (
-    <section className="flex flex-col gap-2 pb-8">
+    <section id="credential" className="flex scroll-mt-20 flex-col gap-2 pb-8">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="flex items-center gap-1 text-ink-muted">
           <CredentialIcon />

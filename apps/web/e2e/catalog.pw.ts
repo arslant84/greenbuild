@@ -51,3 +51,9 @@ test("shows the running attempt in the catalog and resumes it", async ({ page })
   await started.getByRole("link", { name: /Resume/ }).click();
   await expect(page).toHaveURL(new RegExp(`${attemptPath}$`));
 });
+
+test("the header's avatar opens the player's profile, the settings without a handle", async ({ page }) => {
+  await page.goto("/challenges");
+  await page.getByRole("link", { name: "Your profile" }).click();
+  await expect(page).toHaveURL(/\/settings$/);
+});
