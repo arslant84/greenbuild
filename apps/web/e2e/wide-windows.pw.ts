@@ -56,6 +56,8 @@ test("the Daily screen spans a 1920 px window", async ({ page }) => {
 
 test("the landing's footer stays at the bottom of the window", async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 800 });
+  // The landing is for visitors; a signed-in player goes on to the Daily screen (deviation 35).
+  await page.context().clearCookies();
   await page.goto("/");
 
   const footer = await page.locator("footer").boundingBox();

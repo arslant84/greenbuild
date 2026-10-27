@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CodeHostIcon, CommunityIcon, GuestAvatarIcon } from "../../ui/icons-landing";
-import { LogoMark } from "../../ui/logo-mark";
+import { Brand } from "../../ui/brand";
 import { PhoneMenu } from "../../ui/phone-menu";
 
 // Figma (Landing) › Header. The avatar opens the player's profile, which sends a visitor to sign in first.
@@ -10,11 +10,7 @@ export function LandingHeader() {
     <header className="sticky top-0 z-10 border-b border-[#3c494c66] bg-[#0e0e0fe5] backdrop-blur">
       <div className="frame flex h-14 items-center justify-between px-4 lg:px-8">
         <span className="flex items-center gap-3">
-          <Link href="/" className="flex items-center gap-2">
-            <LogoMark />
-            <span className="font-mono text-[13px] leading-[18px] font-semibold text-accent-soft">&gt;_</span>
-            <span className="text-lg leading-6 font-semibold tracking-[-0.45px] text-ink">greenbuild</span>
-          </Link>
+          <Brand />
           <span className="type-label rounded border border-[#3c494c99] bg-surface px-1 py-0.5 text-ink-subtle">beta</span>
         </span>
         <span className="hidden items-center gap-5 lg:flex">

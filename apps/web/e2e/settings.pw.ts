@@ -84,7 +84,7 @@ test("an export request shows the frame's notice and the link arrives by email",
   await linkInEmail(page.request, { to: email, subject: "Your greenbuild data export", link: EXPORT_LINK, timeout: EXPORT_EMAIL_TIMEOUT_MS });
 });
 
-test("deleting the account needs the box and DELETE, then the settings are gone", async ({ page }) => {
+test("deleting the account needs the box and DELETE, then signs the player out", async ({ page }) => {
   await signInForTest(page);
   await page.goto("/settings");
 
@@ -95,9 +95,11 @@ test("deleting the account needs the box and DELETE, then the settings are gone"
   await page.getByPlaceholder("DELETE").fill("DELETE");
   await confirm.click();
 
+  // Signed out on the landing: the settings now ask to sign in, which a closed account cannot do.
   await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole("heading", { name: /Fix the broken system/ })).toBeVisible();
   await page.goto("/settings");
-  await expect(page.getByText("Your settings could not be loaded.")).toBeVisible();
+  await expect(page).toHaveURL(/\/signin\?callbackUrl=%2Fsettings$/);
 });
 
 test("the streak reminder and its hour are still set after a reload", async ({ page }) => {
