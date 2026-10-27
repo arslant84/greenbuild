@@ -90,9 +90,9 @@ function Scorecard({ lines, resultUrl }: { lines: string[]; resultUrl: string })
         <CopyIcon />
         <span className="font-mono text-[13px] leading-[18px] font-semibold">{copied ? "Copied" : "Copy Scorecard"}</span>
       </button>
-      <span className="flex h-9 items-center justify-center rounded-lg bg-control opacity-60 shadow-[0_1px_2px_rgba(0,0,0,0.05)]" aria-disabled="true">
+      <Link href={resultUrl} className="flex h-9 items-center justify-center rounded-lg bg-control shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
         <span className="font-mono text-[13px] leading-[18px] text-ink">Share on X / LinkedIn</span>
-      </span>
+      </Link>
       <span className="flex h-9 items-center justify-center gap-1 text-accent-soft opacity-60" aria-disabled="true">
         <span className="font-mono text-[13px] leading-[18px]">View Community Solutions</span>
         <ArrowForwardIcon width={11} height={11} />
