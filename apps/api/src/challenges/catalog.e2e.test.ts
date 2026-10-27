@@ -25,7 +25,7 @@ async function catalog(app: () => AttemptsApp, query: string): Promise<Challenge
 }
 
 // Small enough to cross many pages, large enough that walking the growing catalog stays fast.
-const SMALL_PAGE = 7;
+const SMALL_PAGE = 20;
 
 const slugsOf = (cards: CatalogEntry[]) => cards.map((card) => card.slug);
 
