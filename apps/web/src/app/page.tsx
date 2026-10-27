@@ -8,6 +8,9 @@ import { LeaderboardPreview } from "./_landing/leaderboard-preview";
 import { MetricsStrip } from "./_landing/metrics-strip";
 import { SampleScenario } from "./_landing/sample-scenario";
 
+// The page reads the session to send a signed-in player on, so it renders per request, not at build time.
+export const dynamic = "force-dynamic";
+
 // Figma "Hotfix — Daily DevOps Troubleshooting Game" (3:411): the public landing page. Below 1024 px the
 // Stitch phone screen "Greenbuild — Daily DevOps Troubleshooting Game (Phone)" (task 56). The brand links
 // here from every screen, so a signed-in player goes on to their Daily screen (deviation 35).
