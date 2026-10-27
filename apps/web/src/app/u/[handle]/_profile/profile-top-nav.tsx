@@ -70,9 +70,9 @@ function ViewerControls() {
         <span className="size-2 rounded-full bg-ink-subtle" />
         <span className={`${LABEL_BADGE} text-ink-muted`}>STABLE: —</span>
       </span>
-      <span className="flex size-8 items-center justify-center rounded-full bg-accent-soft">
+      <Link href="/profile" aria-label="Your profile" className="flex size-8 items-center justify-center rounded-full bg-accent-soft">
         <PersonIcon className="text-[18px] text-[#00363e]" />
-      </span>
+      </Link>
     </div>
   );
 }

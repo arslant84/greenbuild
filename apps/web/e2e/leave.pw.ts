@@ -32,3 +32,13 @@ test("Give up ends the attempt and opens its debrief", async ({ page }) => {
   await expect(page).toHaveURL(/\/play\/[0-9a-f-]{36}\/result$/);
   await expect(page.getByText("ABANDONED", { exact: true }).first()).toBeVisible();
 });
+
+test("the debrief's Credential tab jumps to the credential card", async ({ page }) => {
+  await startChallenge(page);
+  await page.getByRole("button", { name: /Give up attempt/ }).click();
+  await expect(page).toHaveURL(/\/result$/);
+
+  await page.getByRole("link", { name: "Credential", exact: true }).click();
+  await expect(page).toHaveURL(/\/result#credential$/);
+  await expect(page.locator("#credential")).toBeInViewport();
+});

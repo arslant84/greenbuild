@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { formatElapsed } from "../../../../ui/format";
 import { LogoutIcon, PersonIcon, TimerCompactIcon } from "../../../../ui/icons";
 import { LogoMark } from "../../../../ui/logo-mark";
@@ -35,9 +36,9 @@ export function SandboxHeader({ incident, elapsedSeconds, onExit }: SandboxHeade
             <LogoutIcon />
             <span className="font-mono text-[13px] leading-[18px]">Exit Attempt</span>
           </button>
-          <span className="flex size-7 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
+          <Link href="/profile" aria-label="Your profile" className="flex size-7 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
             <PersonIcon width={11} height={11} />
-          </span>
+          </Link>
         </span>
       </div>
     </header>

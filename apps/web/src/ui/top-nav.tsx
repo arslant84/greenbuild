@@ -46,9 +46,9 @@ export function TopNav({ current }: { current: Section }) {
             <Link href="/settings" aria-label="Settings" className="flex size-[27px] items-center justify-center rounded text-ink-muted hover:text-ink">
               <SettingsIcon />
             </Link>
-            <span className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
+            <Link href="/profile" aria-label="Your profile" className="flex size-8 items-center justify-center rounded-full bg-accent-soft text-[#00363e]">
               <AvatarIcon />
-            </span>
+            </Link>
           </span>
         </div>
       </div>
