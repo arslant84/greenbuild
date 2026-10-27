@@ -5,7 +5,7 @@ import Link from "next/link";
 import type { SVGProps } from "react";
 import { formatClock } from "../../../ui/format";
 import { ArrowBackIcon } from "../../../ui/icons";
-import { LogoMark } from "../../../ui/logo-mark";
+import { Brand } from "../../../ui/brand";
 import { useNow } from "../../../ui/use-now";
 
 const MS_PER_SECOND = 1_000;
@@ -17,10 +17,9 @@ export function PhoneNotice({ card, startedAt }: { card: ChallengeCard; startedA
   return (
     <div className="flex min-h-screen flex-col bg-canvas md:hidden">
       <header className="flex h-14 items-center justify-between border-b border-[#3c494c4d] px-4">
-        <span className="flex items-center gap-2 font-mono text-[13px] leading-[18px] font-semibold text-ink">
-          <LogoMark />
-          greenbuild
-          <span className="font-normal text-ink-subtle">/ sandbox</span>
+        <span className="flex items-center gap-2">
+          <Brand />
+          <span className="font-mono text-[13px] leading-[18px] text-ink-subtle">/ sandbox</span>
         </span>
         <span className="rounded-full border border-ok/40 px-2 py-0.5 type-label text-ok">RUNNING</span>
       </header>
