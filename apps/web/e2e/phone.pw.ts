@@ -7,6 +7,8 @@ import { signInForTest } from "./test-player";
 // architecture.md, task 56: phone layouts. Each screen fits a phone without sideways scrolling, and its main
 // controls sit inside the screen's width.
 const PHONE = { width: 390, height: 844 };
+const DESKTOP = { width: 1280, height: 1024 };
+const SANDBOX_START_TIMEOUT_MS = 90_000;
 
 test.use({ viewport: PHONE });
 
@@ -79,11 +81,14 @@ test("the catalog fits a phone, and its Filters button opens the filters", async
 });
 
 test("the debrief fits a phone", async ({ page }) => {
+  // A phone gets no sandbox, so the attempt is started and given up on a desktop-sized window.
+  await page.setViewportSize(DESKTOP);
   await signInForTest(page);
   await startChallenge(page);
   await page.getByRole("button", { name: /Give up attempt/ }).click();
   await expect(page).toHaveURL(/\/result$/);
 
+  await page.setViewportSize(PHONE);
   await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), page.getByRole("link", { name: /RETURN TO OPERATIONS CONSOLE/ })]);
 });
 
@@ -106,4 +111,17 @@ test("the 404 page fits a phone", async ({ page }) => {
   await page.goto("/no-such-page");
 
   await expectFitsPhone(page, [page.getByRole("heading", { name: "Page not found" }), page.getByRole("link", { name: /Go to today's challenge/ })]);
+});
+
+test("the sandbox shows a phone the computer-or-tablet notice, which leads back to Daily", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/play");
+  await page.getByRole("button", { name: /Start Challenge/ }).click();
+  const notice = page.getByRole("heading", { name: "Best on a computer or tablet" });
+  await expect(notice).toBeVisible({ timeout: SANDBOX_START_TIMEOUT_MS });
+
+  const backToDaily = page.getByRole("link", { name: /Back to Daily/ });
+  await expectFitsPhone(page, [notice, backToDaily]);
+  await backToDaily.click();
+  await expect(page).toHaveURL(/\/play$/);
 });

@@ -4,6 +4,7 @@ import type { AttemptResponse, ChallengeCard } from "@greenbuild/shared";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SandboxScreen } from "./_sandbox/sandbox-screen";
+import { PhoneNotice } from "./phone-notice";
 import { Provisioning } from "./provisioning";
 import { isFinished, useAttempt } from "./use-attempt";
 
@@ -34,7 +35,15 @@ export function AttemptScreen({ initial, card, attachUrl }: AttemptScreenProps) 
     return <Provisioning card={card} attemptId={attempt.id} createdAt={attempt.created_at} />;
   }
   if ((attempt.status === "ready" || solvedHere) && token) {
-    return <SandboxScreen attempt={attempt} token={token} card={card} attachUrl={attachUrl} refresh={refresh} />;
+    // A phone sees the notice; from 768 px the sandbox keeps its 1280 px minimum (task 56).
+    return (
+      <div data-responsive>
+        <PhoneNotice card={card} startedAt={attempt.started_at ?? attempt.created_at} />
+        <div className="hidden md:block md:min-w-[1280px]">
+          <SandboxScreen attempt={attempt} token={token} card={card} attachUrl={attachUrl} refresh={refresh} />
+        </div>
+      </div>
+    );
   }
   return null;
 }
