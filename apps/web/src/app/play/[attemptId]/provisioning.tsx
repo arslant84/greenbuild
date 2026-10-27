@@ -17,13 +17,14 @@ interface ProvisioningProps {
 }
 
 // Figma "Sandbox Provisioning & MicroVM Initializer" (7:11835). The engine reports only "starting"
-// and "ready", so the card shows the elapsed time instead of per-step progress.
+// and "ready", so the card shows the elapsed time instead of per-step progress. Below 640 px the Stitch phone
+// screen "Greenbuild — Sandbox Provisioning (Phone)": the card takes the screen's width and its rows wrap (task 56).
 export function Provisioning({ card, attemptId, createdAt }: ProvisioningProps) {
   const elapsed = Math.max(0, Math.round((useNow() - Date.parse(createdAt)) / MS_PER_SECOND));
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#131314] p-4">
-      <div className={`flex w-[560px] flex-col gap-4 rounded-xl border ${BORDER} bg-canvas p-6 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]`}>
-        <header className="flex items-center justify-between border-b border-[#3c494c33] pb-1">
+    <div data-responsive className="flex min-h-screen items-center justify-center bg-[#131314] p-4">
+      <div className={`flex w-full max-w-[560px] flex-col gap-4 rounded-xl border ${BORDER} bg-canvas p-4 sm:p-6 shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)]`}>
+        <header className="flex flex-wrap items-center justify-between gap-2 border-b border-[#3c494c33] pb-1">
           <Link href="/play" className="type-label flex items-center gap-1.5 text-ink-muted">
             <span className="text-[#bbc9cdb2]">←</span> Return to Daily Challenge
           </Link>
@@ -97,8 +98,8 @@ function Progress({ elapsed }: { elapsed: number }) {
       <div className="h-1.5 overflow-hidden rounded-full bg-[#27272a]">
         <div className="h-full w-1/3 animate-pulse rounded-full bg-accent" />
       </div>
-      <div className="flex items-center justify-between">
-        <span className="type-label flex gap-1.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="type-label flex flex-wrap gap-1.5">
           <span className="font-medium text-ink">{formatClock(elapsed)}</span>
           <span className="text-ink-muted">·</span>
           <span className="text-ink-muted">Usually ready in under 20 seconds</span>
@@ -115,9 +116,9 @@ function Progress({ elapsed }: { elapsed: number }) {
 function ChallengePreview({ card }: { card: ChallengeCard }) {
   return (
     <section className={`flex flex-col gap-2.5 rounded-lg border border-[#3c494c40] bg-surface p-3.5`}>
-      <div className="flex justify-between">
+      <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
         <div className="flex flex-col gap-px">
-          <span className="flex items-center gap-2">
+          <span className="flex flex-wrap items-center gap-2">
             <span className="text-base leading-[18px] font-semibold tracking-[-0.4px] text-ink">{card.title}</span>
             <span className="type-label pr-1 font-medium text-ink-muted">Difficulty:</span>
             <span className="text-[11px] leading-[18px]">
@@ -127,7 +128,7 @@ function ChallengePreview({ card }: { card: ChallengeCard }) {
           </span>
           <span className="type-body text-ink-muted">{card.statement}</span>
         </div>
-        <span className="flex flex-col items-end">
+        <span className="flex flex-col items-start sm:items-end">
           <span className={`flex items-center gap-1 rounded border ${BORDER} bg-surface-raised px-2 py-0.5 text-accent-soft`}>
             <TimerMiniIcon />
             <span className="font-mono text-xs leading-[18px] font-semibold tracking-[0.6px] text-ink">{formatClock(card.time_limit_sec)}</span>
@@ -136,7 +137,7 @@ function ChallengePreview({ card }: { card: ChallengeCard }) {
         </span>
       </div>
       <div className="flex flex-col gap-2 border-t border-[#3c494c33] pt-1">
-        <span className="flex items-center gap-1.5">
+        <span className="flex flex-wrap items-center gap-1.5">
           <span className="font-mono text-[10px] leading-[18px] text-ink-muted">Skills:</span>
           {card.skills.map((skill) => (
             <span key={skill} className={`rounded border ${BORDER} bg-surface-raised px-2 py-0.5 font-mono text-[10px] leading-[18px] text-ink`}>
