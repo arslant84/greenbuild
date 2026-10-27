@@ -1,7 +1,7 @@
 "use client";
 
 import { deletionResponseSchema } from "@greenbuild/shared";
-import { useRouter } from "next/navigation";
+import { signOut } from "next-auth/react";
 import { useState } from "react";
 
 export type DangerModal = "none" | "export" | "delete";
@@ -18,9 +18,9 @@ export interface Danger {
 const WRITE = { "x-greenbuild-request": "1" };
 
 // useDanger runs the Danger Zone's two actions: an export request (POST /api/me/export, then the frame's
-// "Data Export Initiated" modal) and the account deletion (DELETE /api/me, then back to the landing page).
+// "Data Export Initiated" modal) and the account deletion (DELETE /api/me, then signed out on the landing page:
+// a closed account cannot sign in again, and the landing sends a signed-in player on to /play).
 export function useDanger(): Danger {
-  const router = useRouter();
   const [modal, setModal] = useState<DangerModal>("none");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +44,7 @@ export function useDanger(): Danger {
     const deleted = deletionResponseSchema.safeParse(await response?.json().catch(() => null));
     setBusy(false);
     if (response?.ok && deleted.success) {
-      router.push("/");
+      await signOut({ redirectTo: "/" });
       return;
     }
     setError("Your account was not deleted. Try again.");

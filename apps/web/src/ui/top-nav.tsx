@@ -1,14 +1,12 @@
 import Link from "next/link";
 import { AvatarIcon, SettingsIcon, StreakIcon } from "./icons-catalog";
-import { LogoMark } from "./logo-mark";
+import { Brand } from "./brand";
 import { PhoneMenu } from "./phone-menu";
 
-// Sections without a screen yet are shown as in Figma but are not links.
+// Figma's Marketplace and Inbox are hidden until Stage 3 builds them (owner, 2026-10-27).
 const SECTIONS = [
   { label: "Challenges", href: "/challenges" },
   { label: "Leaderboard", href: "/leaderboard" },
-  { label: "Marketplace", href: null },
-  { label: "Inbox", href: null },
   { label: "Settings", href: "/settings" },
 ] as const;
 
@@ -21,10 +19,7 @@ export function TopNav({ current }: { current: Section }) {
     <header className="bg-[#131314e5] backdrop-blur">
       <div className="frame flex h-14 items-center justify-between px-4">
         <div className="flex items-center gap-8">
-          <Link href="/play" className="flex items-center gap-1 text-accent-soft">
-            <LogoMark />
-            <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[0.65px] text-ink uppercase">greenbuild</span>
-          </Link>
+          <Brand />
           <Sections current={current} className="hidden items-center gap-1 lg:flex" />
         </div>
         <PhoneMenu>
@@ -66,15 +61,11 @@ function Sections({ current, className }: { current: Section; className: string 
   );
 }
 
-function NavItem({ label, href, active }: { label: string; href: string | null; active: boolean }) {
+function NavItem({ label, href, active }: { label: string; href: string; active: boolean }) {
   const look = `rounded px-3 py-1.5 text-[13px] leading-[18px] ${active ? "bg-control font-medium text-accent-soft" : "text-ink-muted"}`;
-  return href ? (
+  return (
     <Link href={href} className={look} aria-current={active ? "page" : undefined}>
       {label}
     </Link>
-  ) : (
-    <span className={`${look} cursor-default`} aria-disabled="true">
-      {label}
-    </span>
   );
 }
