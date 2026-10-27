@@ -125,3 +125,13 @@ test("the sandbox shows a phone the computer-or-tablet notice, which leads back 
   await backToDaily.click();
   await expect(page).toHaveURL(/\/play$/);
 });
+
+test("the sandbox's start screen fits a phone", async ({ page }) => {
+  await signInForTest(page);
+  // Without status reads the attempt stays "starting", so the start screen holds still.
+  await page.route("**/api/attempts/*", (route) => (route.request().method() === "GET" ? route.abort() : route.continue()));
+  await page.goto("/play");
+  await page.getByRole("button", { name: /Start Challenge/ }).click();
+
+  await expectFitsPhone(page, [page.getByText("Starting sandbox", { exact: true }), page.getByRole("link", { name: /Return to Daily Challenge/ })]);
+});
