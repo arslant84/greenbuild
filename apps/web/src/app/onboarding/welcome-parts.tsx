@@ -30,7 +30,7 @@ export function ValueProps() {
 // container with 512 MB, half a CPU and no network.
 export function TerminalPreview() {
   return (
-    <div className="flex w-[328px] flex-col self-center rounded-lg bg-canvas p-3 shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
+    <div className="flex w-full flex-col self-center rounded-lg bg-canvas p-3 lg:w-[328px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.05)]">
       <div className="flex items-center justify-between pb-2">
         <span className="flex gap-1.5">
           <span className="size-2.5 rounded-full bg-[#ffb4abb2]" />

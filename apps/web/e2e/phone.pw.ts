@@ -95,3 +95,10 @@ test("the settings fit a phone, and the menu opens the navigation", async ({ pag
   await page.getByLabel("Menu").click();
   await expect(page.getByRole("link", { name: "Leaderboard" })).toBeVisible();
 });
+
+test("the onboarding fits a phone", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/onboarding");
+
+  await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), page.getByRole("link", { name: "Skip intro" }), page.getByRole("link", { name: /Let's go/ })]);
+});
