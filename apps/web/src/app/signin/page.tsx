@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { loadAuthConfig } from "../../config/auth";
 import { ProofColumn } from "./_signin/proof-column";
 import { SignInCard } from "./_signin/sign-in-card";
-import { LogoMark } from "../../ui/logo-mark";
+import { Brand } from "../../ui/brand";
 
 export const dynamic = "force-dynamic";
 
@@ -29,12 +28,10 @@ export default async function SignInPage({ searchParams }: SignInPageProps) {
     <main data-responsive className="grid min-h-screen grid-cols-1 bg-canvas text-ink lg:min-w-[1280px] lg:grid-cols-12">
       <section className="relative flex flex-col justify-between gap-6 bg-canvas px-4 py-6 lg:col-span-7 lg:min-h-screen lg:gap-0 lg:px-16 lg:py-10">
         <div className="flex w-full items-center justify-between">
-          <Link href="/" className="inline-flex items-center gap-2 font-mono text-sm tracking-tight text-ink">
-            <LogoMark />
-            <span className="font-bold text-accent">&gt;_</span>
-            <span className="font-semibold tracking-wide">greenbuild</span>
+          <span className="flex items-center gap-2">
+            <Brand />
             <span className="rounded border border-[#005763] bg-[#004e5a]/40 px-1.5 py-0.5 font-mono text-[10px] text-accent-soft">beta</span>
-          </Link>
+          </span>
           <span className="flex items-center gap-2 font-mono text-xs text-ink-subtle">
             <span className="size-1.5 rounded-full bg-ok" />— // —
           </span>
