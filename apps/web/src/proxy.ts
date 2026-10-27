@@ -2,9 +2,9 @@ import { type NextRequest, NextResponse } from "next/server";
 import { authInstance } from "./server/auth";
 import { SIGN_IN_PATH } from "./server/sign-in-paths";
 
-// The play screens, the catalog, the leaderboard and the settings need a signed-in player (task 30e): a
-// visitor without a session goes to the sign-in screen, which brings them back after. Without sign-in
-// configured (a local run without the stack) nothing is redirected.
+// The play screens, the catalog, the leaderboard, the settings and the own-profile link need a signed-in
+// player (task 30e): a visitor without a session goes to the sign-in screen, which brings them back after.
+// Without sign-in configured (a local run without the stack) nothing is redirected.
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const auth = authInstance();
   if (!auth || (await auth.auth())?.user) {
@@ -15,4 +15,4 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   return NextResponse.redirect(signIn);
 }
 
-export const config = { matcher: ["/play", "/play/:path*", "/challenges", "/leaderboard", "/settings"] };
+export const config = { matcher: ["/play", "/play/:path*", "/challenges", "/leaderboard", "/settings", "/profile"] };
