@@ -24,7 +24,8 @@ import { TimezoneSection } from "./_settings/timezone-section";
 export const dynamic = "force-dynamic";
 
 // Figma "Player Settings & Privacy Console" (7:10273), laid out from its Stitch copy (owner, 2026-10-14);
-// task 47b. The frame's state simulator bar is a design tool and is not built.
+// task 47b. The frame's state simulator bar is a design tool and is not built. Below 1024 px the Stitch phone
+// screen "Greenbuild — Player Settings (Phone)": one column under the section links (task 56).
 export default async function SettingsPage() {
   const [me, discovery, consents, notifications] = await Promise.all([
     apiGet("/v1/me", meResponseSchema),
@@ -33,10 +34,10 @@ export default async function SettingsPage() {
     apiGet("/v1/me/notifications", notificationsSchema),
   ]);
   return (
-    <div className="flex min-h-screen flex-col bg-canvas">
+    <div data-responsive className="flex min-h-screen flex-col bg-canvas lg:min-w-[1280px]">
       <SettingsHeader me={me} />
       {/* The content spans the whole window (owner, 2026-10-14). */}
-      <div className="frame grid grid-cols-12 items-start gap-8 px-8 py-8">
+      <div className="frame flex flex-col gap-4 px-4 py-4 lg:grid lg:grid-cols-12 lg:items-start lg:gap-8 lg:px-8 lg:py-8">
         <SettingsNav />
         <main className="col-span-9 flex min-w-0 flex-col gap-8">{me && discovery && notifications ? <Sections me={me} discovery={discovery} consents={consents} notifications={notifications} /> : <ServiceError retryHref="/settings" message="Your settings could not be loaded." />}</main>
       </div>

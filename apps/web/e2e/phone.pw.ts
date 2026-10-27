@@ -86,3 +86,12 @@ test("the debrief fits a phone", async ({ page }) => {
 
   await expectFitsPhone(page, [page.getByRole("heading", { level: 1 }), page.getByRole("link", { name: /RETURN TO OPERATIONS CONSOLE/ })]);
 });
+
+test("the settings fit a phone, and the menu opens the navigation", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/settings");
+
+  await expectFitsPhone(page, [page.getByRole("heading", { name: "Profile Settings" }), page.getByRole("button", { name: "Save changes" }), page.getByLabel("Menu")]);
+  await page.getByLabel("Menu").click();
+  await expect(page.getByRole("link", { name: "Leaderboard" })).toBeVisible();
+});

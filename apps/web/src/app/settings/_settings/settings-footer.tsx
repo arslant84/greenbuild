@@ -4,9 +4,9 @@ import { LockIcon, SpeedIcon } from "../../../ui/icons-settings";
 // docs, status and security pages do not exist (text). It stays at the window's bottom (owner, 2026-10-14).
 export function SettingsFooter() {
   return (
-    <footer className="sticky bottom-0 z-10 mt-auto bg-canvas shadow-[0_-1px_8px_rgba(0,0,0,0.3)]">
-      <div className="frame flex items-center justify-between gap-3 px-6 py-5 type-label text-ink-muted">
-        <span className="flex items-center gap-5">
+    <footer className="mt-auto bg-canvas shadow-[0_-1px_8px_rgba(0,0,0,0.3)] lg:sticky lg:bottom-0 lg:z-10">
+      <div className="frame flex flex-col items-start gap-3 px-4 py-5 type-label text-ink-muted lg:flex-row lg:items-center lg:justify-between lg:px-6">
+        <span className="flex flex-wrap items-center gap-x-5 gap-y-1">
           <span className="flex items-center gap-1">
             <span className="size-1.5 rounded-full bg-ink-subtle" />
             <span className="text-ink">STATUS —</span>
@@ -18,7 +18,7 @@ export function SettingsFooter() {
             <LockIcon className="text-[14px]" /> SECOPS —
           </span>
         </span>
-        <span className="flex items-center gap-5">
+        <span className="flex flex-wrap items-center gap-x-5 gap-y-1">
           <span>DOCS</span>
           <span>STATUS</span>
           <span>SECURITY</span>
