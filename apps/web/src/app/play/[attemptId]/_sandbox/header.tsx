@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { formatElapsed } from "../../../../ui/format";
 import { LogoutIcon, PersonIcon, TimerCompactIcon } from "../../../../ui/icons";
-import { LogoMark } from "../../../../ui/logo-mark";
+import { Brand } from "../../../../ui/brand";
 
 interface SandboxHeaderProps {
   incident: string;
@@ -14,10 +14,7 @@ export function SandboxHeader({ incident, elapsedSeconds, onExit }: SandboxHeade
   return (
     <header className="relative z-10 flex h-11 shrink-0 items-center justify-between bg-surface px-4 shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
       <div className="flex items-center gap-3">
-        <span className="flex items-center gap-1 text-accent-soft">
-          <LogoMark size={18} />
-          <span className="font-mono text-[13px] leading-[18px] font-semibold tracking-[-0.32px] uppercase">greenbuild</span>
-        </span>
+        <Brand />
         <span className="h-4 w-px bg-[#3c494c]" />
         <span className="flex items-center gap-1">
           <span className="type-label tracking-[0.5px] text-ink-muted uppercase">Incident:</span>
