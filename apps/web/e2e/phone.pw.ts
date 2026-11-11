@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { expect, type Locator, type Page, test } from "@playwright/test";
 import { startChallenge } from "./daily-solve";
-import { setHandle } from "./play-db";
+import { setHandle, startingAttempt } from "./play-db";
 import { signInForTest } from "./test-player";
 
 // architecture.md, task 56: phone layouts. Each screen fits a phone without sideways scrolling, and its main
@@ -127,11 +127,9 @@ test("the sandbox shows a phone the computer-or-tablet notice, which leads back 
 });
 
 test("the sandbox's start screen fits a phone", async ({ page }) => {
-  await signInForTest(page);
-  // Without status reads the attempt stays "starting", so the start screen holds still.
-  await page.route("**/api/attempts/*", (route) => (route.request().method() === "GET" ? route.abort() : route.continue()));
-  await page.goto("/play");
-  await page.getByRole("button", { name: /Start Challenge/ }).click();
+  // A real start can be ready before the page renders, so the attempt is one whose sandbox never starts.
+  const attemptId = await startingAttempt(await signInForTest(page), "nginx-502-upstream");
+  await page.goto(`/play/${attemptId}`);
 
   await expectFitsPhone(page, [page.getByText("Starting sandbox", { exact: true }), page.getByRole("link", { name: /Return to Daily Challenge/ })]);
 });
