@@ -1,6 +1,7 @@
 import type { MeResponse } from "@greenbuild/shared";
 import { BoltIcon, FlameIcon, ScheduleIcon } from "../../../ui/icons";
 import { type LevelView, levelView, xpAmount } from "../xp-view";
+import { NextScenarioClock } from "./next-scenario-clock";
 
 // The ring's radius in its 28 px box; the arc's length is the share of the circle to draw.
 const RING_RADIUS = 12.5;
@@ -12,7 +13,7 @@ interface StatusBarProps {
 }
 
 // Figma › Header - TOP STATUS TELEMETRY BAR. The streak, XP today and the level come from GET /v1/me
-// (tasks 42b, 44); the daily reset shows an empty value until it has a task.
+// (tasks 42b, 44); the countdown runs to the next daily challenge at 00:00 UTC.
 export function StatusBar({ player }: StatusBarProps) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-surface px-3 py-2 shadow-[0_1px_2px_rgba(0,0,0,0.05)] lg:h-11">
@@ -29,7 +30,9 @@ export function StatusBar({ player }: StatusBarProps) {
       </div>
       <span className="flex items-center gap-1 rounded bg-[#35343666] px-2 py-1 text-ink-muted">
         <ScheduleIcon />
-        <span className="type-label">Next scenario in --:--:--</span>
+        <span className="type-label">
+          Next scenario in <NextScenarioClock />
+        </span>
       </span>
     </header>
   );
