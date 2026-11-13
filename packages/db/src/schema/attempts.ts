@@ -1,11 +1,11 @@
-import { ATTEMPT_MAX_CHECKS, ATTEMPT_STATUSES, SEED_MAX } from "@greenbuild/shared";
+import { ATTEMPT_CONTEXTS, ATTEMPT_MAX_CHECKS, ATTEMPT_STATUSES, SEED_MAX } from "@greenbuild/shared";
 import { sql } from "drizzle-orm";
 import { bigint, boolean, check, index, integer, pgEnum, pgTable, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { challengeVersions } from "./challenges.js";
 import { idColumn, timestampColumns } from "./columns.js";
 import { users } from "./users.js";
 
-export const attemptContext = pgEnum("attempt_context", ["daily", "catalog", "assessment", "duel"]);
+export const attemptContext = pgEnum("attempt_context", ATTEMPT_CONTEXTS);
 export const attemptStatus = pgEnum("attempt_status", ATTEMPT_STATUSES);
 export const sandboxStatus = pgEnum("sandbox_status", ["starting", "ready", "failed", "destroyed"]);
 

@@ -4,6 +4,7 @@ import { EngineClient } from "../engine/engine-client.js";
 import { AbandonController } from "./abandon.controller.js";
 import { AbandonService } from "./abandon.service.js";
 import { AttachTokens } from "./attach-token.js";
+import { AttemptHistory } from "./attempt-history.js";
 import { AttemptReader } from "./attempt-reader.js";
 import { AttemptStatusUpdates } from "./attempt-status.js";
 import { AttemptsController } from "./attempts.controller.js";
@@ -11,6 +12,7 @@ import { AttemptsService } from "./attempts.service.js";
 import { ChecksService } from "./checks.service.js";
 import { AttemptEvents } from "./finished-events.js";
 import { HintsController } from "./hints.controller.js";
+import { HistoryController } from "./history.controller.js";
 import { HintsService } from "./hints.service.js";
 import { SandboxRequests } from "./sandbox-requests.js";
 import { PublicShareController, ShareController } from "./share.controller.js";
@@ -19,10 +21,11 @@ import { StatusConsumer } from "./status-consumer.js";
 
 @Module({
   imports: [ChallengesModule],
-  controllers: [AttemptsController, AbandonController, HintsController, ShareController, PublicShareController],
+  controllers: [AttemptsController, AbandonController, HintsController, HistoryController, ShareController, PublicShareController],
   providers: [
     AttemptsService,
     AttemptReader,
+    AttemptHistory,
     SandboxRequests,
     ChecksService,
     AbandonService,
