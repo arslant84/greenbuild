@@ -36,6 +36,21 @@ test("the sidebar shows the player and opens their public profile", async ({ pag
   await expect(page).toHaveURL(new RegExp(`/u/${handle}$`));
 });
 
+// The daily follows the UTC calendar, so the next one arrives at 00:00 UTC; the browser's clock is fixed.
+test("the status bar counts down to the next daily challenge", async ({ page }) => {
+  await page.clock.install({ time: new Date("2026-11-13T21:30:00Z") });
+  await page.goto("/play", { waitUntil: "networkidle" });
+  // The installed clock runs on while the page loads, so it is moved to a fixed moment and stopped there;
+  // the countdown changes on its next one-second tick.
+  await page.clock.pauseAt(new Date("2026-11-13T22:00:00Z"));
+  const countdown = page.getByText(/^Next scenario in/);
+
+  await page.clock.runFor(1_000);
+  await expect(countdown).toHaveText("Next scenario in 01:59:59");
+  await page.clock.runFor(2_000);
+  await expect(countdown).toHaveText("Next scenario in 01:59:57");
+});
+
 test("Global ladder opens the leaderboard", async ({ page }) => {
   await page.goto("/play");
   await page.getByRole("link", { name: /Global ladder/ }).click();
