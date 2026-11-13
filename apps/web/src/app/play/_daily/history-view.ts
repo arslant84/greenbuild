@@ -49,21 +49,26 @@ function dayLabel(createdAt: string, now: Date): string {
   return new Date(createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
+// historyRow shows an attempt as a row of the player's history; day says when it started.
+export function historyRow(attempt: AttemptHistoryItem, day: string): HistoryRow {
+  return {
+    id: attempt.id,
+    day,
+    incident: incidentId(attempt.id),
+    title: attempt.challenge_title,
+    slug: attempt.challenge_slug,
+    outcome: OUTCOMES[attempt.status],
+    time: solveTime(attempt.duration_ms),
+    xp: xpEarned(attempt.xp_earned),
+  };
+}
+
 // recentRows: the attempts of the last five UTC days, today included, as the frame's rows.
 export function recentRows(attempts: AttemptHistoryItem[], now: Date): HistoryRow[] {
   const oldestDay = utcDay(new Date(now.getTime() - (RECENT_DAYS - 1) * DAY_MS));
   return attempts
     .filter((attempt) => utcDay(new Date(attempt.created_at)) >= oldestDay)
-    .map((attempt) => ({
-      id: attempt.id,
-      day: dayLabel(attempt.created_at, now),
-      incident: incidentId(attempt.id),
-      title: attempt.challenge_title,
-      slug: attempt.challenge_slug,
-      outcome: OUTCOMES[attempt.status],
-      time: solveTime(attempt.duration_ms),
-      xp: xpEarned(attempt.xp_earned),
-    }));
+    .map((attempt) => historyRow(attempt, dayLabel(attempt.created_at, now)));
 }
 
 // yesterdaysDaily is the player's newest attempt at yesterday's daily challenge, if they made one.

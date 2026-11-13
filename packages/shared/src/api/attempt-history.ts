@@ -6,7 +6,8 @@ import { FINISHED_ATTEMPT_STATUSES } from "../queue/index.js";
 export const ATTEMPT_CONTEXTS = ["daily", "catalog", "assessment", "duel"] as const;
 
 const HISTORY_DEFAULT = 20;
-const HISTORY_MAX = 50;
+// The most attempts one request answers; the history screen asks for all of them.
+export const HISTORY_MAX = 50;
 
 export const attemptHistoryQuerySchema = z.strictObject({
   limit: z.coerce.number().int().min(1).max(HISTORY_MAX).default(HISTORY_DEFAULT),
