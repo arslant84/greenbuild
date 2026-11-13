@@ -21,6 +21,7 @@ import { PaneSwitcher, TerminalChrome, TerminalFooter } from "./terminal-bars";
 import { type CheckState, useCheck } from "./use-check";
 import { useLeave } from "./use-leave";
 import { MAX_RECONNECTS, useReconnect } from "./use-reconnect";
+import { incidentId } from "../../../../ui/incident";
 
 const MS_PER_SECOND = 1_000;
 
@@ -43,7 +44,7 @@ export function SandboxScreen({ attempt, token, card, attachUrl, refresh }: Sand
   const elapsed = (useNow() - Date.parse(attempt.started_at ?? attempt.created_at)) / MS_PER_SECOND;
   const solvedIn = useSolvedTime(check, elapsed);
   const view = sandboxView(status, check, attempt.checks_used);
-  const incident = attempt.id.slice(0, 8).toUpperCase();
+  const incident = incidentId(attempt.id);
   useSubmitShortcut(() => void runCheck(), view.mode === "ready");
   useRefreshWhenTimeIsUp(card.time_limit_sec - elapsed, refresh);
   return (

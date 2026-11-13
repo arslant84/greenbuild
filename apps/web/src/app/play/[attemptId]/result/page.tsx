@@ -7,6 +7,7 @@ import { DebriefFrame } from "./_debrief/frame";
 import { outcomeOf } from "./_debrief/outcome";
 import { NextActions, Postmortem } from "./_debrief/postmortem";
 import { Summary } from "./_debrief/summary";
+import { incidentId } from "../../../../ui/incident";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,7 @@ export default async function ResultPage({ params }: ResultPageProps) {
   const streak = player ? player.streak.current : null;
   const outcome = outcomeOf(result.status);
   return (
-    <DebriefFrame incident={attemptId.slice(0, 8).toUpperCase()} outcome={outcome}>
+    <DebriefFrame incident={incidentId(attemptId)} outcome={outcome}>
       <Summary title={card?.title ?? result.challenge_slug} outcome={outcome} durationMs={result.duration_ms} xpEarned={result.xp_earned} streak={streak} />
       <Postmortem />
       <Credential result={result} skills={card?.skills ?? []} streak={streak} player={player} />
