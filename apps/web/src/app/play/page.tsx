@@ -1,4 +1,13 @@
-import { type AttemptResponse, attemptListResponseSchema, type ChallengeCard as Card, challengeCardSchema, type DailyResponse, dailyResponseSchema, meResponseSchema } from "@greenbuild/shared";
+import {
+  type AttemptResponse,
+  attemptListResponseSchema,
+  type ChallengeCard as Card,
+  challengeCardSchema,
+  type DailyResponse,
+  dailyResponseSchema,
+  leaderboardResponseSchema,
+  meResponseSchema,
+} from "@greenbuild/shared";
 import { apiGet } from "../../server/api";
 import { ActiveAttemptCard } from "./_daily/active-attempt-card";
 import { ChallengeCard } from "./_daily/challenge-card";
@@ -6,6 +15,7 @@ import { RecentAttempts } from "./_daily/recent-attempts";
 import { RightAside } from "./_daily/right-aside";
 import { Sidebar } from "./_daily/sidebar";
 import { StatusBar } from "./_daily/status-bar";
+import { TOP_FIVE_PATH, weekLabel } from "./_daily/top-five";
 import { ServiceError } from "./service-error";
 
 export const dynamic = "force-dynamic";
@@ -14,7 +24,12 @@ export const dynamic = "force-dynamic";
 // Challenge (Phone)": the sidebar becomes a top bar and the right column moves below (task 56).
 export default async function DailyPage() {
   // Today's challenge as the worker published it (task 41c); none yet shows the service error.
-  const [daily, player, active] = await Promise.all([apiGet("/v1/daily", dailyResponseSchema), apiGet("/v1/me", meResponseSchema), runningAttempt()]);
+  const [daily, player, active, topFive] = await Promise.all([
+    apiGet("/v1/daily", dailyResponseSchema),
+    apiGet("/v1/me", meResponseSchema),
+    runningAttempt(),
+    apiGet(TOP_FIVE_PATH, leaderboardResponseSchema),
+  ]);
   const running = active && (await withCard(active, daily));
   return (
     <div data-responsive className="min-h-screen bg-canvas lg:min-w-[1280px]">
@@ -28,7 +43,7 @@ export default async function DailyPage() {
             {daily ? <ChallengeCard card={daily.challenge} blocked={active !== undefined} /> : <ServiceError />}
             <RecentAttempts />
           </main>
-          <RightAside />
+          <RightAside topFive={topFive} week={weekLabel(new Date())} />
         </div>
       </div>
     </div>

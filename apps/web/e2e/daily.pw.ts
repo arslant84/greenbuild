@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { onWeeklyBoard } from "./play-boards";
 import { setHandle } from "./play-db";
 import { signInForTest } from "./test-player";
 
@@ -49,6 +50,22 @@ test("the status bar counts down to the next daily challenge", async ({ page }) 
   await expect(countdown).toHaveText("Next scenario in 01:59:59");
   await page.clock.runFor(2_000);
   await expect(countdown).toHaveText("Next scenario in 01:59:57");
+});
+
+test("Top 5 This Week lists the weekly board's leader, who opens their profile", async ({ page }) => {
+  const handle = `t-${randomUUID().slice(0, 8)}`;
+  const email = await signInForTest(page);
+  await setHandle(email, handle);
+
+  await onWeeklyBoard(email, async () => {
+    await page.goto("/play");
+    await expect(page.getByText(/^WK \d+$/)).toBeVisible();
+    const leader = page.getByRole("listitem").filter({ hasText: "#1" });
+    await expect(leader).toContainText(`@${handle}`);
+    await expect(leader).toContainText("XP");
+    await leader.getByRole("link", { name: `@${handle}` }).click();
+    await expect(page).toHaveURL(new RegExp(`/u/${handle}$`));
+  });
 });
 
 test("Global ladder opens the leaderboard", async ({ page }) => {

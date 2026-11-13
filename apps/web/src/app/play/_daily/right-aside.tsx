@@ -1,15 +1,24 @@
+import type { LeaderboardResponse } from "@greenbuild/shared";
 import Link from "next/link";
 import { ArrowForwardIcon, ExpandMoreIcon } from "../../../ui/icons";
+import { formatScore } from "../../leaderboard/_board/board-view";
+import { topFiveName } from "./top-five";
 
 const CARD = "rounded-xl bg-surface-raised shadow-[0_1px_2px_rgba(0,0,0,0.05)]";
 
-// Figma › Aside - RIGHT SIDEBAR (280px). Results history, leaderboards and system telemetry arrive
-// with their features; until then the cards keep their layout and show empty values.
-export function RightAside() {
+interface RightAsideProps {
+  // The weekly XP board's first five, or null when it could not be read; week is its label ("WK 46").
+  topFive: LeaderboardResponse | null;
+  week: string;
+}
+
+// Figma › Aside - RIGHT SIDEBAR (280px). Top 5 This Week reads the weekly board; results history and
+// system telemetry arrive with their features, so those cards keep their layout and show empty values.
+export function RightAside({ topFive, week }: RightAsideProps) {
   return (
     <aside className="flex w-full shrink-0 flex-col gap-5 self-start bg-[#0e0e0f80] px-4 py-3 lg:w-[280px] lg:px-3">
       <YesterdaysResult />
-      <Leaderboard />
+      <Leaderboard board={topFive} week={week} />
       <div className="flex items-center justify-between rounded-lg bg-canvas p-2">
         <span className="flex items-center gap-2">
           <span className="size-1.5 rounded-full bg-line" />
@@ -55,7 +64,8 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Leaderboard() {
+function Leaderboard({ board, week }: { board: LeaderboardResponse | null; week: string }) {
+  const entries = board?.entries ?? [];
   return (
     <section className={`${CARD} flex flex-col gap-3 p-3`}>
       <div className="flex h-[18px] items-center justify-between">
@@ -63,15 +73,47 @@ function Leaderboard() {
           <span className="size-2 rounded-full bg-ok" />
           <span className="type-body font-semibold text-ink">Top 5 This Week</span>
         </span>
-        <span className="type-label font-medium text-ink-muted">WK —</span>
+        <span className="type-label font-medium text-ink-muted">{week}</span>
       </div>
-      <div className="rounded px-1 py-1.5">
-        <span className="type-label text-ink-muted">No rankings yet</span>
-      </div>
+      {entries.length > 0 ? (
+        <ol className="flex flex-col gap-1">
+          {entries.map((entry) => (
+            <TopFiveRow key={entry.rank} entry={entry} />
+          ))}
+        </ol>
+      ) : (
+        <div className="rounded px-1 py-1.5">
+          <span className="type-label text-ink-muted">No rankings yet</span>
+        </div>
+      )}
       <Link href="/leaderboard" className="flex items-center justify-between pt-1 text-ink-muted hover:text-ink">
         <span className="type-label">Global ladder</span>
         <ArrowForwardIcon width={9} height={9} />
       </Link>
     </section>
+  );
+}
+
+// Stitch "Hotfix — Daily Challenge" › Leaderboard Table row: rank, handle, streak and the week's XP. The
+// weekly board keeps no streaks, so that slot shows "—"; the leader's rank and every XP are amber.
+function TopFiveRow({ entry }: { entry: LeaderboardResponse["entries"][number] }) {
+  const name = topFiveName(entry);
+  return (
+    <li className="flex items-center justify-between rounded px-1 py-1.5 hover:bg-control">
+      <span className="flex min-w-0 items-center gap-2">
+        <span className={`w-4 font-mono text-[11px] leading-[14px] font-bold ${entry.rank === 1 ? "text-warn" : "text-ink-muted"}`}>#{entry.rank}</span>
+        {entry.handle ? (
+          <Link href={`/u/${entry.handle}`} className="truncate font-mono text-[11px] leading-[14px] text-ink hover:text-accent-soft">
+            {name}
+          </Link>
+        ) : (
+          <span className="truncate font-mono text-[11px] leading-[14px] text-ink">{name}</span>
+        )}
+      </span>
+      <span className="flex shrink-0 items-center gap-2 font-mono text-[11px] leading-[14px]">
+        <span className="text-ink-muted">—</span>
+        <span className="font-medium text-warn">{formatScore("weekly", entry.score)}</span>
+      </span>
+    </li>
   );
 }
