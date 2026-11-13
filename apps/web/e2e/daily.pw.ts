@@ -1,7 +1,8 @@
 import { randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
+import { startChallenge } from "./daily-solve";
 import { onWeeklyBoard } from "./play-boards";
-import { setHandle } from "./play-db";
+import { setHandle, solvedYesterdaysDaily } from "./play-db";
 import { signInForTest } from "./test-player";
 
 // These screens need a signed-in player (task 30e).
@@ -72,4 +73,30 @@ test("Global ladder opens the leaderboard", async ({ page }) => {
   await page.goto("/play");
   await page.getByRole("link", { name: /Global ladder/ }).click();
   await expect(page).toHaveURL(/\/leaderboard$/);
+});
+
+// The history blocks read GET /v1/me/attempts: a finished attempt is listed, and it opens its debrief.
+test("Recent attempts lists a given-up attempt of today, which opens its debrief", async ({ page }) => {
+  await startChallenge(page);
+  await page.getByRole("button", { name: /Give up attempt/ }).click();
+  await expect(page).toHaveURL(/\/result$/);
+  const debrief = new URL(page.url()).pathname;
+
+  await page.goto("/play");
+  const row = page.getByRole("listitem").filter({ hasText: "ABANDONED" });
+  await expect(row).toContainText("Today #");
+  await expect(row).toContainText("The site returns 502");
+  await row.getByRole("link").click();
+  await expect(page).toHaveURL(new RegExp(`${debrief}$`));
+});
+
+test("Yesterday's Result shows the player's solve of yesterday's daily", async ({ page }) => {
+  const attemptId = await solvedYesterdaysDaily(await signInForTest(page), "nginx-502-upstream");
+  await page.goto("/play");
+
+  const card = page.locator("section").filter({ hasText: "Yesterday's Result" });
+  await expect(card).toContainText(`#${attemptId.slice(0, 8).toUpperCase()}`);
+  await expect(card).toContainText("04m 15s");
+  await expect(card).toContainText("+150 XP");
+  await expect(card).toContainText("1 hint used");
 });

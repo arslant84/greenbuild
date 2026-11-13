@@ -1,7 +1,9 @@
-import type { LeaderboardResponse } from "@greenbuild/shared";
+import type { AttemptHistoryItem, LeaderboardResponse } from "@greenbuild/shared";
 import Link from "next/link";
 import { ArrowForwardIcon, ExpandMoreIcon } from "../../../ui/icons";
+import { incidentId } from "../../../ui/incident";
 import { formatScore } from "../../leaderboard/_board/board-view";
+import { solveTime, xpEarned } from "./history-view";
 import { topFiveName } from "./top-five";
 
 const CARD = "rounded-xl bg-surface-raised shadow-[0_1px_2px_rgba(0,0,0,0.05)]";
@@ -10,14 +12,16 @@ interface RightAsideProps {
   // The weekly XP board's first five, or null when it could not be read; week is its label ("WK 46").
   topFive: LeaderboardResponse | null;
   week: string;
+  // The player's attempt at yesterday's daily challenge, or null when they made none.
+  yesterday: AttemptHistoryItem | null;
 }
 
-// Figma › Aside - RIGHT SIDEBAR (280px). Top 5 This Week reads the weekly board; results history and
-// system telemetry arrive with their features, so those cards keep their layout and show empty values.
-export function RightAside({ topFive, week }: RightAsideProps) {
+// Figma › Aside - RIGHT SIDEBAR (280px). Yesterday's Result reads the player's history and Top 5 This Week
+// the weekly board; system telemetry arrives with its feature, so that card shows empty values.
+export function RightAside({ topFive, week, yesterday }: RightAsideProps) {
   return (
     <aside className="flex w-full shrink-0 flex-col gap-5 self-start bg-[#0e0e0f80] px-4 py-3 lg:w-[280px] lg:px-3">
-      <YesterdaysResult />
+      <YesterdaysResult attempt={yesterday} />
       <Leaderboard board={topFive} week={week} />
       <div className="flex items-center justify-between rounded-lg bg-canvas p-2">
         <span className="flex items-center gap-2">
@@ -30,20 +34,24 @@ export function RightAside({ topFive, week }: RightAsideProps) {
   );
 }
 
-function YesterdaysResult() {
+// Stitch › Yesterday's Result: the incident, the solve time and the XP earned with the hints used. The
+// percentile and the root cause have no data yet (write-ups are not published), so they stay empty.
+function YesterdaysResult({ attempt }: { attempt: AttemptHistoryItem | null }) {
+  const time = attempt ? (attempt.status === "solved" ? solveTime(attempt.duration_ms) : attempt.status.toUpperCase()) : "—";
+  const hints = attempt ? `${attempt.hints_used} ${attempt.hints_used === 1 ? "hint" : "hints"} used` : null;
   return (
     <section className={CARD}>
       <div className="flex items-center justify-between p-3">
         <span className="flex items-center gap-2">
           <span className="type-body font-semibold text-ink">Yesterday&apos;s Result</span>
-          <span className="type-label rounded bg-line px-1.5 py-0.5 text-ink-muted">#—</span>
+          <span className="type-label rounded bg-line px-1.5 py-0.5 text-ink-muted">#{attempt ? incidentId(attempt.id) : "—"}</span>
         </span>
         <ExpandMoreIcon className="text-ink-muted" />
       </div>
       <div className="flex flex-col gap-2 px-3 pb-3">
         <div className="flex justify-center gap-1 rounded-lg bg-canvas p-2">
-          <Stat label="SOLVE TIME" value="—" />
-          <Stat label="EARNED" value="—" />
+          <Stat label="SOLVE TIME" value={time} />
+          <Stat label="EARNED" value={attempt ? xpEarned(attempt.xp_earned) : "—"} note={hints} />
         </div>
         <div className="flex flex-col gap-[3.25px] rounded-lg bg-canvas p-2">
           <span className="type-label text-ink-muted">ROOT CAUSE</span>
@@ -54,12 +62,12 @@ function YesterdaysResult() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Stat({ label, value, note = null }: { label: string; value: string; note?: string | null }) {
   return (
     <span className="flex w-[106px] flex-col">
       <span className="type-label text-ink-muted">{label}</span>
       <span className="font-mono text-[13px] leading-[18px] font-semibold text-ink">{value}</span>
-      <span className="font-mono text-[9px] leading-[18px] text-ink-muted">&nbsp;</span>
+      <span className="font-mono text-[9px] leading-[18px] text-ink-muted">{note ?? "\u00a0"}</span>
     </span>
   );
 }

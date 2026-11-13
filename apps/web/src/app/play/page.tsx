@@ -1,5 +1,6 @@
 import {
   type AttemptResponse,
+  attemptHistoryResponseSchema,
   attemptListResponseSchema,
   type ChallengeCard as Card,
   challengeCardSchema,
@@ -11,6 +12,7 @@ import {
 import { apiGet } from "../../server/api";
 import { ActiveAttemptCard } from "./_daily/active-attempt-card";
 import { ChallengeCard } from "./_daily/challenge-card";
+import { HISTORY_PATH, recentRows, yesterdaysDaily } from "./_daily/history-view";
 import { RecentAttempts } from "./_daily/recent-attempts";
 import { RightAside } from "./_daily/right-aside";
 import { Sidebar } from "./_daily/sidebar";
@@ -24,12 +26,15 @@ export const dynamic = "force-dynamic";
 // Challenge (Phone)": the sidebar becomes a top bar and the right column moves below (task 56).
 export default async function DailyPage() {
   // Today's challenge as the worker published it (task 41c); none yet shows the service error.
-  const [daily, player, active, topFive] = await Promise.all([
+  const [daily, player, active, topFive, history] = await Promise.all([
     apiGet("/v1/daily", dailyResponseSchema),
     apiGet("/v1/me", meResponseSchema),
     runningAttempt(),
     apiGet(TOP_FIVE_PATH, leaderboardResponseSchema),
+    apiGet(HISTORY_PATH, attemptHistoryResponseSchema),
   ]);
+  const now = new Date();
+  const finished = history?.attempts ?? [];
   const running = active && (await withCard(active, daily));
   return (
     <div data-responsive className="min-h-screen bg-canvas lg:min-w-[1280px]">
@@ -41,9 +46,9 @@ export default async function DailyPage() {
             <StatusBar player={player} />
             {running && <ActiveAttemptCard attempt={running.attempt} card={running.card} />}
             {daily ? <ChallengeCard card={daily.challenge} blocked={active !== undefined} /> : <ServiceError />}
-            <RecentAttempts />
+            <RecentAttempts rows={recentRows(finished, now)} />
           </main>
-          <RightAside topFive={topFive} week={weekLabel(new Date())} />
+          <RightAside topFive={topFive} week={weekLabel(now)} yesterday={yesterdaysDaily(finished, now)} />
         </div>
       </div>
     </div>
