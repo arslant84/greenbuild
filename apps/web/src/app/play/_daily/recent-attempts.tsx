@@ -10,7 +10,7 @@ const BADGE: Record<Outcome, string> = {
 };
 
 // Figma › Section - RECENT ATTEMPTS SECTION: the player's attempts of the last five days, each opening its
-// debrief. There is no history screen yet, so View all history does not navigate.
+// debrief; View all history opens the history screen (deviation 36).
 export function RecentAttempts({ rows }: { rows: HistoryRow[] }) {
   return (
     <section className="flex flex-col gap-2 pt-1">
@@ -19,10 +19,10 @@ export function RecentAttempts({ rows }: { rows: HistoryRow[] }) {
           <span className="type-body font-semibold tracking-[0.65px] text-ink-muted uppercase">Recent attempts</span>
           <span className="type-label text-[#bbc9cdcc]">(last 5 days)</span>
         </span>
-        <span className="flex items-center gap-1 text-accent-soft" aria-disabled="true">
+        <Link href="/play/history" className="flex items-center gap-1 text-accent-soft hover:text-ink">
           <span className="type-label">View all history</span>
           <ArrowForwardIcon width={9} height={9} />
-        </span>
+        </Link>
       </div>
       <div className="overflow-hidden rounded-xl bg-surface-raised shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
         {rows.length > 0 ? (
