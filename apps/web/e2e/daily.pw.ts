@@ -95,7 +95,7 @@ test("Yesterday's Result shows the player's solve of yesterday's daily", async (
   await page.goto("/play");
 
   const card = page.locator("section").filter({ hasText: "Yesterday's Result" });
-  await expect(card).toContainText(`#${attemptId.slice(0, 8).toUpperCase()}`);
+  await expect(card).toContainText(`#${attemptId.slice(-8).toUpperCase()}`);
   await expect(card).toContainText("04m 15s");
   await expect(card).toContainText("+150 XP");
   await expect(card).toContainText("1 hint used");

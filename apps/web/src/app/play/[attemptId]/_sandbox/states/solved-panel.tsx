@@ -5,6 +5,7 @@ import { ATTEMPT_MAX_CHECKS } from "@greenbuild/shared";
 import { useState } from "react";
 import { formatClock } from "../../../../../ui/format";
 import { ArrowBackIcon, ArrowForwardIcon, CopyIcon, ScorecardIcon, VerifiedIcon } from "../../../../../ui/icons";
+import { incidentId } from "../../../../../ui/incident";
 
 interface SolvedPanelProps {
   attemptId: string;
@@ -16,7 +17,7 @@ interface SolvedPanelProps {
 // streaks arrive with the game layer, so their boxes show empty values.
 export function SolvedPanel({ attemptId, solvedInSeconds, checksUsed }: SolvedPanelProps) {
   const resultUrl = `/play/${attemptId}/result`;
-  const scorecard = [`greenbuild #${attemptId.slice(0, 8)} ⚡ ${formatClock(solvedInSeconds)}`, `${checksUsed}/${ATTEMPT_MAX_CHECKS} checks used`];
+  const scorecard = [`greenbuild #${incidentId(attemptId)} ⚡ ${formatClock(solvedInSeconds)}`, `${checksUsed}/${ATTEMPT_MAX_CHECKS} checks used`];
   return (
     <aside className="flex w-[360px] shrink-0 flex-col bg-surface">
       <div className="bg-surface-raised p-3">

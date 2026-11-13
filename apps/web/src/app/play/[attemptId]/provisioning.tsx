@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { ChallengeCard } from "@greenbuild/shared";
 import { formatClock } from "../../../ui/format";
 import { InfoIcon, TerminalMiniIcon, TimerMiniIcon } from "../../../ui/icons";
+import { incidentId } from "../../../ui/incident";
 import { useNow } from "../../../ui/use-now";
 
 const DIFFICULTY_STEPS = 10;
@@ -31,7 +32,7 @@ export function Provisioning({ card, attemptId, createdAt }: ProvisioningProps) 
           <span className="flex items-center gap-2">
             <span className="type-label flex items-center gap-1 rounded bg-surface-raised px-2 py-0.5">
               <span className="font-semibold text-accent-soft">&gt;_</span>
-              <span className="text-[11px] text-ink-muted">greenbuild #{attemptId.slice(0, 4)}</span>
+              <span className="text-[11px] text-ink-muted">greenbuild #{incidentId(attemptId)}</span>
             </span>
             <span className="type-label flex items-center gap-1.5 rounded bg-surface-raised px-2 py-0.5 text-ink-muted">
               <span className="size-1.5 rounded-full bg-line" />— // —ms

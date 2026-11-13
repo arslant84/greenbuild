@@ -6,7 +6,7 @@ const NOW = new Date("2026-11-13T10:00:00Z");
 
 function attempt(overrides: Partial<AttemptHistoryItem>): AttemptHistoryItem {
   return {
-    id: "01a176fb-0000-4000-8000-000000000000",
+    id: "019a1d46-1b2c-7d3e-8f40-0123456789ab",
     challenge_slug: "nginx-502-upstream",
     challenge_title: "The site returns 502",
     context: "daily",
@@ -23,7 +23,7 @@ function attempt(overrides: Partial<AttemptHistoryItem>): AttemptHistoryItem {
 describe("recentRows", () => {
   it("shows an attempt as the frame's row: day, incident, outcome, time and XP", () => {
     expect(recentRows([attempt({})], NOW)).toEqual([
-      { id: "01a176fb-0000-4000-8000-000000000000", day: "Today", incident: "01A176FB", title: "The site returns 502", slug: "nginx-502-upstream", outcome: "PASSED", time: "04m 15s", xp: "+150 XP" },
+      { id: "019a1d46-1b2c-7d3e-8f40-0123456789ab", day: "Today", incident: "456789AB", title: "The site returns 502", slug: "nginx-502-upstream", outcome: "PASSED", time: "04m 15s", xp: "+150 XP" },
     ]);
   });
 

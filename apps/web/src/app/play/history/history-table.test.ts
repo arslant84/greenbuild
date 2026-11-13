@@ -4,7 +4,7 @@ import { FULL_HISTORY_PATH, historyMode, historyTableRows, historyTotals, starte
 
 function attempt(overrides: Partial<AttemptHistoryItem>): AttemptHistoryItem {
   return {
-    id: "01a176fb-0000-4000-8000-000000000000",
+    id: "019a1d46-1b2c-7d3e-8f40-0123456789ab",
     challenge_slug: "nginx-502-upstream",
     challenge_title: "The site returns 502",
     context: "daily",
@@ -22,9 +22,9 @@ describe("historyTableRows", () => {
   it("shows an attempt as the frame's row: date, incident, mode, outcome, time, hints and XP", () => {
     expect(historyTableRows([attempt({})], "all")).toEqual([
       {
-        id: "01a176fb-0000-4000-8000-000000000000",
+        id: "019a1d46-1b2c-7d3e-8f40-0123456789ab",
         day: "Nov 12, 09:14 UTC",
-        incident: "01A176FB",
+        incident: "456789AB",
         title: "The site returns 502",
         slug: "nginx-502-upstream",
         outcome: "PASSED",
