@@ -10,7 +10,7 @@ test("View all history lists yesterday's solved daily, which opens its debrief",
   await expect(page).toHaveURL(/\/play\/history$/);
 
   await expect(page.getByText("XP earned").locator("..")).toContainText("150 XP");
-  const row = page.getByRole("row").filter({ hasText: `#${attemptId.slice(0, 8).toUpperCase()}` });
+  const row = page.getByRole("row").filter({ hasText: `#${attemptId.slice(-8).toUpperCase()}` });
   for (const cell of ["PASSED", "DAILY", "The site returns 502", "04m 15s", "+150 XP"]) {
     await expect(row).toContainText(cell);
   }
