@@ -21,6 +21,21 @@ mock_provider "azurerm" {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/privateDnsZones/privatelink.test"
     }
   }
+  mock_resource "azurerm_postgresql_flexible_server" {
+    defaults = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.DBforPostgreSQL/flexibleServers/psql-test"
+    }
+  }
+  mock_resource "azurerm_managed_redis" {
+    defaults = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Cache/redisEnterprise/redis-test"
+    }
+  }
+  mock_resource "azurerm_user_assigned_identity" {
+    defaults = {
+      principal_id = "00000000-0000-0000-0000-000000000002"
+    }
+  }
 }
 
 variables {
@@ -76,15 +91,26 @@ run "nothing_is_reachable_from_the_internet" {
   }
 }
 
-run "the_apps_reach_blob_and_key_vault_through_private_endpoints" {
+run "the_apps_reach_every_service_through_a_private_endpoint" {
   command = apply
 
   assert {
-    condition = sort(keys(azurerm_private_endpoint.service)) == tolist(["blob", "vault"]) && alltrue([
-      for key, endpoint in azurerm_private_endpoint.service :
-      endpoint.subnet_id == var.endpoints_subnet_id && endpoint.private_service_connection[0].subresource_names == tolist([key])
+    condition = tomap({
+      for key, endpoint in azurerm_private_endpoint.service : key => endpoint.private_service_connection[0].subresource_names[0]
+      }) == tomap({
+      blob     = "blob"
+      vault    = "vault"
+      postgres = "postgresqlServer"
+      redis    = "redisEnterprise"
+    })
+    error_message = "Blob, Key Vault, PostgreSQL and Redis must each have a private endpoint"
+  }
+
+  assert {
+    condition = alltrue([
+      for endpoint in values(azurerm_private_endpoint.service) : endpoint.subnet_id == var.endpoints_subnet_id
     ])
-    error_message = "Blob and Key Vault must each have a private endpoint in the endpoints subnet"
+    error_message = "every private endpoint must sit in the endpoints subnet"
   }
 
   assert {
@@ -101,5 +127,51 @@ run "each_app_has_its_own_identity" {
   assert {
     condition     = sort(keys(azurerm_user_assigned_identity.app)) == tolist(["api", "engine", "web", "worker"])
     error_message = "web, api, worker and engine must each have a managed identity"
+  }
+}
+
+run "postgres_and_redis_take_no_password_or_public_traffic" {
+  command = apply
+
+  assert {
+    condition = (
+      !azurerm_postgresql_flexible_server.environment.public_network_access_enabled &&
+      azurerm_postgresql_flexible_server.environment.authentication[0].active_directory_auth_enabled &&
+      !azurerm_postgresql_flexible_server.environment.authentication[0].password_auth_enabled
+    )
+    error_message = "PostgreSQL must take Entra sign-in only and no public traffic"
+  }
+
+  assert {
+    condition = (
+      azurerm_managed_redis.environment.public_network_access == "Disabled" &&
+      !azurerm_managed_redis.environment.default_database[0].access_keys_authentication_enabled &&
+      azurerm_managed_redis.environment.default_database[0].client_protocol == "Encrypted"
+    )
+    error_message = "Redis must take Entra sign-in only, over TLS, and no public traffic"
+  }
+
+  assert {
+    condition     = azurerm_managed_redis.environment.default_database[0].eviction_policy == "NoEviction"
+    error_message = "Redis must never evict the queue's streams"
+  }
+}
+
+run "the_migrate_identity_administers_postgres_and_every_app_may_use_redis" {
+  command = apply
+
+  assert {
+    condition     = azurerm_postgresql_flexible_server_active_directory_administrator.migrate.principal_name == "id-greenbuild-staging-migrate"
+    error_message = "the migrate identity must be PostgreSQL's Entra admin"
+  }
+
+  assert {
+    condition     = azurerm_postgresql_flexible_server_database.app.name == "greenbuild"
+    error_message = "the apps' database must be named greenbuild"
+  }
+
+  assert {
+    condition     = sort(keys(azurerm_managed_redis_access_policy_assignment.app)) == tolist(["api", "engine", "web", "worker"])
+    error_message = "web, api, worker and engine must each be allowed to use Redis"
   }
 }
