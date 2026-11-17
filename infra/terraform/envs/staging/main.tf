@@ -38,3 +38,14 @@ module "data" {
   core_vnet_id        = module.network.core_vnet_id
   endpoints_subnet_id = module.network.subnet_ids.endpoints
 }
+
+# Task 28d: the image registry and the Container Apps environments of the apps and the engine.
+module "apps" {
+  source = "../../modules/apps"
+
+  environment         = "staging"
+  location            = "eastus"
+  resource_group_name = module.network.resource_group_name
+  apps_subnet_id      = module.network.subnet_ids.apps
+  engine_subnet_id    = module.network.subnet_ids.engine
+}
