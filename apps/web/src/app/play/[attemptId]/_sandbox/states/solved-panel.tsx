@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ATTEMPT_MAX_CHECKS } from "@greenbuild/shared";
 import { useState } from "react";
+import { type CopyResult, copyText } from "../../../../../ui/clipboard";
 import { formatClock } from "../../../../../ui/format";
 import { ArrowBackIcon, CopyIcon, ScorecardIcon, VerifiedIcon } from "../../../../../ui/icons";
 import { incidentId } from "../../../../../ui/incident";
@@ -73,8 +74,8 @@ function Metric({ label, value, tone }: { label: string; value: string; tone: st
 }
 
 function Scorecard({ lines, resultUrl }: { lines: string[]; resultUrl: string }) {
-  const [copied, setCopied] = useState(false);
-  const copy = () => void navigator.clipboard.writeText(lines.join("\n")).then(() => setCopied(true));
+  const [copyResult, setCopyResult] = useState<CopyResult>(null);
+  const copy = async () => setCopyResult((await copyText(lines.join("\n"))) ? "copied" : "blocked");
   return (
     <section className="flex flex-col gap-3 rounded-xl bg-surface-raised p-3 shadow-[0_10px_15px_-3px_rgba(0,0,0,0.1)]">
       <span className="flex items-center gap-1.5 text-accent-soft">
@@ -88,10 +89,15 @@ function Scorecard({ lines, resultUrl }: { lines: string[]; resultUrl: string })
           {resultUrl}
         </a>
       </div>
-      <button type="button" onClick={copy} className="flex h-10 items-center justify-center gap-1 rounded-lg bg-accent text-[#131314]">
+      <button type="button" onClick={() => void copy()} className="flex h-10 items-center justify-center gap-1 rounded-lg bg-accent text-[#131314]">
         <CopyIcon />
-        <span className="font-mono text-[13px] leading-[18px] font-semibold">{copied ? "Copied" : "Copy Scorecard"}</span>
+        <span className="font-mono text-[13px] leading-[18px] font-semibold">{copyResult === "copied" ? "Copied" : "Copy Scorecard"}</span>
       </button>
+      {copyResult === "blocked" && (
+        <p role="alert" className="type-label text-warn">
+          Your browser blocked copying. Select the scorecard above to copy it.
+        </p>
+      )}
       <Link href={resultUrl} className="flex h-9 items-center justify-center rounded-lg bg-control shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
         <span className="font-mono text-[13px] leading-[18px] text-ink">Share on X / LinkedIn</span>
       </Link>
