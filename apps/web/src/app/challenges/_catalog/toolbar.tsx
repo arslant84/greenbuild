@@ -1,7 +1,7 @@
 "use client";
 
 import { type RefObject, useEffect, useRef } from "react";
-import { GridViewIcon, SearchIcon, SelectChevronIcon, TableViewIcon } from "../../../ui/icons-catalog";
+import { SearchIcon, SelectChevronIcon } from "../../../ui/icons-catalog";
 import type { CatalogParams } from "./catalog-params";
 
 // useFocusShortcut focuses the search on "/" or Cmd/Ctrl+K, unless the player is typing elsewhere.
@@ -56,24 +56,14 @@ function SearchForm({ params }: { params: CatalogParams }) {
   );
 }
 
-// Figma › Filters, Sorter, and Layout Switcher. Only "Recently added" exists, and no frame shows the
-// table view, so both stay as the frame draws them without other choices.
+// Figma › Filters, Sorter, and Layout Switcher. Only "Recently added" exists, so the sorter shows it
+// without other choices; the table view is not in the plan, so the layout switcher is hidden (deviation 37).
 function ViewControls() {
   return (
     <div className="flex items-center gap-2 max-lg:w-full">
       <span className="relative flex h-[38px] w-full items-center rounded-lg bg-canvas pr-8 pl-3 lg:w-[279px]">
         <span className="font-mono text-[13px] leading-[18px] text-ink">Sort: Recently added</span>
         <SelectChevronIcon className="absolute right-4 text-ink-subtle" />
-      </span>
-      <span className="flex items-center rounded-lg bg-canvas p-1">
-        <span className="flex items-center gap-1 rounded bg-control px-2 py-1.5 text-accent-soft" aria-current="true">
-          <GridViewIcon />
-          <span className="type-label">Grid</span>
-        </span>
-        <span className="flex cursor-default items-center gap-1 rounded px-2 py-1.5 text-ink-muted" aria-disabled="true">
-          <TableViewIcon />
-          <span className="type-label">Table</span>
-        </span>
       </span>
     </div>
   );

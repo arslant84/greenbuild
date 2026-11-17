@@ -1,11 +1,10 @@
 import Link from "next/link";
-import { PlayerIcon, SearchIcon } from "../../../ui/icons-leaderboard";
+import { PlayerIcon } from "../../../ui/icons-leaderboard";
 import { Brand } from "../../../ui/brand";
 import { PhoneMenu } from "../../../ui/phone-menu";
 
-// Figma (Global Standings, 3:3639) › Header. Runbooks has no page, so it is text; the search box is not
-// built (no search yet) and shows as in the frame, disabled. The bar spans the window; its content spans it
-// too (owner, 2026-10-14).
+// Figma (Global Standings, 3:3639) › Header. Runbooks and the search box are not in the plan, so they are
+// hidden (deviation 37). The bar spans the window; its content spans it too (owner, 2026-10-14).
 export function StandingsHeader({ handle, streak }: { handle: string | null; streak: number | null }) {
   return (
     <header className="bg-[#131314e5] shadow-[0_1px_0_#2a2a2b] backdrop-blur">
@@ -33,7 +32,6 @@ function BoardNav({ className }: { className: string }) {
       <span aria-current="page" className="rounded-lg bg-accent px-2 py-1.5 type-body font-medium text-[#005763]">
         Leaderboards
       </span>
-      <span className="rounded-lg px-2 py-1.5 type-body text-ink-muted">Runbooks</span>
     </nav>
   );
 }
@@ -41,11 +39,6 @@ function BoardNav({ className }: { className: string }) {
 function PlayerChips({ handle, streak }: { handle: string | null; streak: number | null }) {
   return (
     <div className="hidden items-center gap-3 lg:flex">
-      <span className="flex w-41.75 items-center gap-2 rounded-lg bg-canvas px-2 py-1">
-        <SearchIcon className="text-ink-muted" />
-        <input disabled aria-label="Search" placeholder="CMD+K" className="w-24 bg-transparent type-body text-ink-subtle placeholder:text-ink-subtle" />
-        <span className="rounded bg-control px-1 py-0.5 type-label text-ink-subtle">⌘K</span>
-      </span>
       <span className="flex items-center gap-1.5 rounded bg-[#e3aa001a] p-1 type-label text-warn">
         {streak === null ? "—" : `${streak}d`}
         <span aria-hidden className="font-mono text-[11px] leading-3.5">🔥</span>

@@ -27,22 +27,6 @@ export function SelectChevronIcon(props: IconProps) {
   );
 }
 
-export function GridViewIcon(props: IconProps) {
-  return (
-    <svg width={13.5} height={13.5} viewBox="0 0 13.5 13.5" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M0 6L0 0L6 0L6 6L0 6L0 6M0 13.5L0 7.5L6 7.5L6 13.5L0 13.5L0 13.5M7.5 6L7.5 0L13.5 0L13.5 6L7.5 6L7.5 6M7.5 13.5L7.5 7.5L13.5 7.5L13.5 13.5L7.5 13.5L7.5 13.5M1.5 4.5L4.5 4.5L4.5 1.5L1.5 1.5L1.5 4.5L1.5 4.5M9 4.5L12 4.5L12 1.5L9 1.5L9 4.5L9 4.5M9 12L12 12L12 9L9 9L9 12L9 12M1.5 12L4.5 12L4.5 9L1.5 9L1.5 12L1.5 12M9 4.5L9 4.5L9 4.5L9 4.5L9 4.5L9 4.5M9 9L9 9L9 9L9 9L9 9L9 9M4.5 9L4.5 9L4.5 9L4.5 9L4.5 9L4.5 9M4.5 4.5L4.5 4.5L4.5 4.5L4.5 4.5L4.5 4.5L4.5 4.5" />
-    </svg>
-  );
-}
-
-export function TableViewIcon(props: IconProps) {
-  return (
-    <svg width={13.5} height={13.5} viewBox="0 0 13.5 13.5" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M12 12L12 9.75L12 9.75L1.5 9.75L1.5 9.75L1.5 12L1.5 12L1.5 12L12 12L12 12L12 12L12 12M12 8.25L12 5.25L12 5.25L1.5 5.25L1.5 5.25L1.5 8.25L1.5 8.25L12 8.25L12 8.25L12 8.25M12 3.75L12 1.5L12 1.5L12 1.5L1.5 1.5L1.5 1.5L1.5 1.5L1.5 3.75L1.5 3.75L12 3.75L12 3.75L12 3.75M1.5 13.5C1.0875 13.5 0.734375 13.3531 0.440625 13.0594C0.146875 12.7656 0 12.4125 0 12L0 1.5C0 1.0875 0.146875 0.734375 0.440625 0.440625C0.734375 0.146875 1.0875 0 1.5 0L12 0C12.4125 0 12.7656 0.146875 13.0594 0.440625C13.3531 0.734375 13.5 1.0875 13.5 1.5L13.5 12C13.5 12.4125 13.3531 12.7656 13.0594 13.0594C12.7656 13.3531 12.4125 13.5 12 13.5L1.5 13.5L1.5 13.5" />
-    </svg>
-  );
-}
-
 export function FilterListIcon(props: IconProps) {
   return (
     <svg width={13.5} height={9} viewBox="0 0 13.5 9" fill="currentColor" aria-hidden="true" {...props}>
