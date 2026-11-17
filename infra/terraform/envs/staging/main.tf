@@ -27,7 +27,8 @@ module "network" {
   }
 }
 
-# Task 28c: Blob Storage, Key Vault and the apps' identities, reached only through private endpoints.
+# Task 28c: PostgreSQL, Redis, Blob Storage, Key Vault and the apps' identities, reached only through
+# private endpoints.
 module "data" {
   source = "../../modules/data"
 

@@ -1,6 +1,6 @@
-# The environment's data services (architecture.md, «Окружения», task 28c): Blob Storage and Key Vault here;
-# PostgreSQL and Redis come in 28c-2. Nothing has a public endpoint: the apps reach each service through
-# a private endpoint in VNet core (endpoints.tf).
+# The environment's data services (architecture.md, «Окружения», task 28c): Key Vault here, Blob Storage,
+# PostgreSQL and Redis in their own files. Nothing has a public endpoint: the apps reach each service
+# through a private endpoint in VNet core (endpoints.tf).
 locals {
   name = "greenbuild-${var.environment}"
   # Storage accounts allow no hyphens (modules/README.md, «Names»).
