@@ -12,8 +12,9 @@ const TABS: { tab: BoardTab | null; label: string; badge: string | null; badgeCo
   { tab: null, label: "Friends", badge: "— ONLINE" },
 ];
 
-// Role filters, search and sort have no data behind them yet; they are shown as in the frame, disabled.
-const ROLE_FILTERS = ["All Roles (All)", "Staff / Principal", "Platform & SRE", "Kernel & Linux", "Open to Offers", "Verified (Stage 3+)"];
+// Filters for company search (Stage 3) are shown as in the frame, disabled. The frame's role filters and
+// player search are not in the plan, so they are hidden (deviation 37).
+const ROLE_FILTERS = ["Open to Offers", "Verified (Stage 3+)"];
 
 // Figma (Global Standings) › Navigation / Terminal Tabs and Filter Controls Strip.
 export function BoardTabs({ current }: { current: BoardTab }) {
@@ -26,22 +27,13 @@ export function BoardTabs({ current }: { current: BoardTab }) {
       </nav>
       <div className="flex flex-col items-start gap-2 bg-canvas p-2 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex max-w-full items-center gap-1 overflow-x-auto">
-          {ROLE_FILTERS.map((filter, index) => (
-            <button
-              key={filter}
-              type="button"
-              disabled
-              className={`shrink-0 rounded px-2 py-1 type-label ${index === 0 ? "bg-control font-medium text-ink" : "bg-surface text-ink-muted"}`}
-            >
+          {ROLE_FILTERS.map((filter) => (
+            <button key={filter} type="button" disabled className="shrink-0 rounded bg-surface px-2 py-1 type-label text-ink-muted">
               {filter}
             </button>
           ))}
         </div>
         <div className="flex items-center gap-1">
-          <span className="flex w-35.5 items-center gap-1 rounded bg-surface px-2 py-1">
-            <span className="type-label text-ink-subtle">$</span>
-            <input disabled aria-label="Search players" placeholder="grep @handle or org..." className="w-full bg-transparent type-body text-ink-subtle placeholder:text-ink-subtle" />
-          </span>
           <span className="flex items-center gap-1 rounded bg-surface px-2 py-1 type-label">
             <span className="text-ink-subtle">SORT:</span>
             <span className="font-medium text-ink">{current === "daily" ? "TIME (ASC)" : "SCORE (DESC)"}</span>

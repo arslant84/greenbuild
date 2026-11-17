@@ -19,3 +19,15 @@ test("opens the standings from the catalog and switches boards", async ({ page }
   await expect(page).toHaveURL(/\/leaderboard\?tab=skill$/);
   await expect(page.getByText("SKILL RATING", { exact: true })).toBeVisible();
 });
+
+// Deviation 37: the frame's controls that no task builds are hidden; Stage 3's filters stay, disabled.
+test("hides Runbooks, the searches and the role filters, and keeps the company filters disabled", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/leaderboard");
+
+  await expect(page.getByRole("button", { name: "Open to Offers" })).toBeDisabled();
+  for (const hidden of ["Runbooks", "Staff / Principal", "Platform & SRE", "Kernel & Linux"]) {
+    await expect(page.getByText(hidden, { exact: true })).toHaveCount(0);
+  }
+  await expect(page.getByRole("textbox")).toHaveCount(0);
+});

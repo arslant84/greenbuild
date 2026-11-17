@@ -57,3 +57,10 @@ test("the header's avatar opens the player's profile, the settings without a han
   await page.getByRole("link", { name: "Your profile" }).click();
   await expect(page).toHaveURL(/\/settings$/);
 });
+
+// Deviation 37: the catalog has one layout, so the frame's Grid / Table switcher is hidden.
+test("shows no layout switcher", async ({ page }) => {
+  await page.goto("/challenges");
+  await expect(page.getByRole("textbox", { name: "Search challenges" })).toBeVisible();
+  await expect(page.getByText("Table", { exact: true })).toHaveCount(0);
+});
