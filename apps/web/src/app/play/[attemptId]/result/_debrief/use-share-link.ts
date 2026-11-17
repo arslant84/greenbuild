@@ -2,6 +2,7 @@
 
 import { shareCreatedSchema } from "@greenbuild/shared";
 import { useCallback, useState } from "react";
+import { type CopyResult, copyText } from "../../../../../ui/clipboard";
 
 // useShareLink makes the solved attempt's public link on first use (task 51) and keeps it for the page;
 // asking again answers the same link, so a reload loses nothing.
@@ -19,19 +20,18 @@ function useShareLink(attemptId: string) {
     setUrl(made);
     return made;
   }, [attemptId, url]);
-  return { link, failed };
+  return { link, url, failed };
 }
 
 // useShareActions: copy the link, share it (the share sheet where the browser has one, else a copy), or
-// download the card's PNG.
+// download the card's PNG. A browser that blocks the clipboard gets "blocked", so the link can be shown.
 export function useShareActions(attemptId: string) {
-  const { link, failed } = useShareLink(attemptId);
-  const [copied, setCopied] = useState(false);
+  const { link, url: shareUrl, failed } = useShareLink(attemptId);
+  const [copyResult, setCopyResult] = useState<CopyResult>(null);
   const copy = async () => {
     const url = await link();
     if (url) {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
+      setCopyResult((await copyText(url)) ? "copied" : "blocked");
     }
   };
   const share = async () => {
@@ -49,5 +49,5 @@ export function useShareActions(attemptId: string) {
       Object.assign(document.createElement("a"), { href: `${url}/image.png`, download: "greenbuild-result.png" }).click();
     }
   };
-  return { copy, share, download, copied, failed };
+  return { copy, share, download, copyResult, shareUrl, failed };
 }

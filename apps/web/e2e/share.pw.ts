@@ -52,3 +52,17 @@ test("the debrief copies the public link and downloads the card", async ({ page,
   await expect(visitorPage.getByRole("region", { name: "Proof of incident resolution" })).toContainText("The site returns 502");
   await visitor.close();
 });
+
+// A browser that refuses the clipboard (a blocked permission) shows the link to copy by hand.
+test("the debrief shows the link when the browser blocks copying", async ({ page }) => {
+  await page.addInitScript(() => {
+    navigator.clipboard.writeText = () => Promise.reject(new DOMException("Write permission denied.", "NotAllowedError"));
+  });
+  await signInForTest(page);
+  await solveDailyChallenge(page);
+  await page.goto(`${new URL(page.url()).pathname}/result`);
+
+  await page.getByRole("button", { name: "Copy verification link" }).click();
+  const blocked = page.getByRole("alert").filter({ hasText: "Your browser blocked copying" });
+  await expect(blocked).toContainText(/\/s\/[A-Za-z0-9_-]{22}$/);
+});
