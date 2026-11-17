@@ -39,6 +39,8 @@ test("a player's public profile opens without signing in after a solve", async (
   await expect(anonymous).toHaveTitle(`@${handle} · greenbuild`);
   await expect(anonymous.getByRole("heading", { level: 1 })).toHaveText(`@${handle}`);
   await expect(anonymous.getByText(/^Level \d+$/)).toBeVisible();
+  // Deviation 37: no task builds reporting a profile.
+  await expect(anonymous.getByText("Report profile inconsistency")).toHaveCount(0);
   // nginx-502 rates nginx and linux; a skill row shows its name, its rating and its interval, whose low
   // end can be under 1,000 after a first game.
   await expect(anonymous.getByText("nginx", { exact: true }).first()).toBeVisible();

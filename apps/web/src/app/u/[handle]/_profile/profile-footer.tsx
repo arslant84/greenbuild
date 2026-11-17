@@ -1,7 +1,7 @@
 import { LABEL_BADGE, LABEL_CODE } from "./type";
 
 // Frame 3:4532 › profile footnote and page footer. The evaluation time, build and system status have no
-// data yet ("—"); reporting a profile has no feature yet (text). The frame's SOC2 audit, protocol RFC and
+// data yet ("—"); no task builds reporting a profile, so it is hidden (deviation 37). The frame's SOC2 audit, protocol RFC and
 // proof engine are not true for greenbuild and are left out of the labels. The page footer stays at the
 // window's bottom (owner, 2026-10-14).
 export function ProfileFooter() {
@@ -10,8 +10,6 @@ export function ProfileFooter() {
       <footer className="flex flex-col items-start gap-2 border-t border-control bg-canvas/50 px-4 py-3 type-label text-ink-subtle lg:flex-row lg:items-center lg:justify-between lg:px-6">
         <span className="flex flex-wrap items-center gap-3">
           <span>Profile last evaluated —</span>
-          <span>·</span>
-          <span>Report profile inconsistency</span>
           <span>·</span>
           <span>Audit trail —</span>
         </span>

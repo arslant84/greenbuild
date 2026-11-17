@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CodeHostIcon, CommunityIcon, GuestAvatarIcon } from "../../ui/icons-landing";
+import { CodeHostIcon, GuestAvatarIcon } from "../../ui/icons-landing";
 import { Brand } from "../../ui/brand";
 import { PhoneMenu } from "../../ui/phone-menu";
 
@@ -43,8 +43,11 @@ function NavLinks({ className }: { className: string }) {
 }
 
 
-// Figma (Landing) › Footer. Terms, privacy, code and community pages do not exist yet. Like the header,
-// the bar spans the window, and it stays at the window's bottom (owner, 2026-10-14).
+// The repository has been public since 2026-10-13 (architecture.md, deviation 29).
+const SOURCE_REPOSITORY_URL = "https://github.com/arslant84/greenbuild";
+
+// Figma (Landing) › Footer. No task builds a community space, so Community is hidden (deviation 37). Like
+// the header, the bar spans the window, and it stays at the window's bottom (owner, 2026-10-14).
 export function LandingFooter() {
   return (
     <footer className="z-10 border-t border-[#3c494c66] bg-canvas lg:sticky lg:bottom-0">
@@ -55,16 +58,16 @@ export function LandingFooter() {
           <span>Production Outage Simulation</span>
         </span>
         <span className="flex flex-wrap items-center gap-5">
-          <span>Terms</span>
-          <span>Privacy</span>
-          <span className="flex items-center gap-1">
+          <Link href="/terms" className="hover:text-ink">
+            Terms
+          </Link>
+          <Link href="/privacy" className="hover:text-ink">
+            Privacy
+          </Link>
+          <a href={SOURCE_REPOSITORY_URL} target="_blank" rel="noreferrer" className="flex items-center gap-1 hover:text-ink">
             <CodeHostIcon />
             GitHub
-          </span>
-          <span className="flex items-center gap-1">
-            <CommunityIcon />
-            Community
-          </span>
+          </a>
         </span>
       </div>
     </footer>

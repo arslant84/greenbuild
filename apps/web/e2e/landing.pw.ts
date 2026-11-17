@@ -40,3 +40,16 @@ test("the leaderboard preview leads a visitor to the leaderboard through sign-in
   await page.getByRole("link", { name: /View all ranked engineers/ }).click();
   await expect(page).toHaveURL(/\/signin\?callbackUrl=%2Fleaderboard$/);
 });
+
+test("the footer's Terms, Privacy and GitHub lead somewhere, and Community is hidden", async ({ page }) => {
+  await page.goto("/");
+  const footer = page.getByRole("contentinfo");
+  await expect(footer.getByRole("link", { name: "GitHub" })).toHaveAttribute("href", "https://github.com/arslant84/greenbuild");
+  await expect(footer.getByText("Community", { exact: true })).toHaveCount(0);
+
+  await footer.getByRole("link", { name: "Terms", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Terms of Service" })).toBeVisible();
+  await page.goto("/");
+  await footer.getByRole("link", { name: "Privacy", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Privacy Policy" })).toBeVisible();
+});

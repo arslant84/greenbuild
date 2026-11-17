@@ -139,14 +139,6 @@ export function CodeHostIcon(props: IconProps) {
   );
 }
 
-export function CommunityIcon(props: IconProps) {
-  return (
-    <svg width={12} height={10.67} viewBox="0 0 12 10.67" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M2 10.6667L2.66667 8L0 8L0.333333 6.66667L3 6.66667L3.66667 4L1 4L1.33333 2.66667L4 2.66667L4.66667 0L6 0L5.33333 2.66667L8 2.66667L8.66667 0L10 0L9.33333 2.66667L12 2.66667L11.6667 4L9 4L8.33333 6.66667L11 6.66667L10.6667 8L8 8L7.33333 10.6667L6 10.6667L6.66667 8L4 8L3.33333 10.6667L2 10.6667L2 10.6667M4.33333 6.66667L7 6.66667L7.66667 4L5 4L4.33333 6.66667L4.33333 6.66667" />
-    </svg>
-  );
-}
-
 export function GuestAvatarIcon(props: IconProps) {
   return (
     <svg width={12} height={12} viewBox="0 0 12 12" fill="currentColor" aria-hidden="true" {...props}>
