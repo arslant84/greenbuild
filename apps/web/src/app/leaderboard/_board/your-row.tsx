@@ -38,28 +38,20 @@ export function YourRow({ tab, handle, me, listed, streak }: YourRowProps) {
         </span>
         <span className="flex items-center gap-1">
           <span className="rounded bg-control px-2 py-1 type-label text-ink-muted">— bracket</span>
-          <JumpButton target={me && listed ? `#rank-${me.rank}` : null} />
+          {me && listed && <JumpLink rank={me.rank} />}
         </span>
       </div>
     </div>
   );
 }
 
-function JumpButton({ target }: { target: string | null }) {
-  const look = "flex items-center gap-0.5 rounded bg-accent px-2 py-1 type-label font-medium text-[#005763]";
-  const content = (
-    <>
+// The link goes to the player's row; with their row not among those shown there is nowhere to go, so it is
+// left out rather than shown dead (deviation 37).
+function JumpLink({ rank }: { rank: number }) {
+  return (
+    <a href={`#rank-${rank}`} className="flex items-center gap-0.5 rounded bg-accent px-2 py-1 type-label font-medium text-[#005763]">
       Jump to my position
       <JumpIcon />
-    </>
-  );
-  return target ? (
-    <a href={target} className={look}>
-      {content}
     </a>
-  ) : (
-    <span className={look} aria-disabled="true">
-      {content}
-    </span>
   );
 }

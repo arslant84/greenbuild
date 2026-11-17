@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { onWeeklyBoard } from "./play-boards";
 import { signInForTest } from "./test-player";
 
 // architecture.md, task 45b: the leaderboard screen (Figma 3:3639) reads the boards of task 45a.
@@ -30,4 +31,18 @@ test("hides Runbooks, the searches and the role filters, and keeps the company f
     await expect(page.getByText(hidden, { exact: true })).toHaveCount(0);
   }
   await expect(page.getByRole("textbox")).toHaveCount(0);
+});
+
+test("Jump to my position goes to the player's row, and is left out when the row is not shown", async ({ page }) => {
+  const email = await signInForTest(page);
+  await page.goto("/leaderboard");
+  await expect(page.getByText("YOUR ROW")).toBeVisible();
+  await expect(page.getByText("Jump to my position")).toHaveCount(0);
+
+  await onWeeklyBoard(email, async () => {
+    await page.goto("/leaderboard");
+    await page.getByRole("link", { name: /Jump to my position/ }).click();
+    await expect(page).toHaveURL(/\/leaderboard#rank-1$/);
+    await expect(page.locator("#rank-1")).toBeInViewport();
+  });
 });
