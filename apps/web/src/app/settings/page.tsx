@@ -15,6 +15,7 @@ import { DangerSection } from "./_settings/danger-section";
 import { HiringSection } from "./_settings/hiring-section";
 import { NotificationsSection } from "./_settings/notifications-section";
 import { PrivacySection } from "./_settings/privacy-section";
+import { countryOptions } from "./_settings/profile-form";
 import { ProfileSection } from "./_settings/profile-section";
 import { SettingsFooter } from "./_settings/settings-footer";
 import { SettingsHeader } from "./_settings/settings-header";
@@ -57,11 +58,11 @@ interface SectionsProps {
 function Sections({ me, discovery, consents, notifications }: SectionsProps) {
   return (
     <>
-      <ProfileSection me={me} />
+      <ProfileSection me={me} countries={countryOptions()} />
       <AccountSection me={me} />
       <TimezoneSection me={me} />
       <NotificationsSection initial={notifications} />
-      <PrivacySection consents={consents} />
+      <PrivacySection consents={consents} isPublic={me.game_profile_public} />
       <HiringSection initial={discovery} />
       <DangerSection me={me} />
     </>

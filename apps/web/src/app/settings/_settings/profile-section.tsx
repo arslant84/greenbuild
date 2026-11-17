@@ -4,17 +4,17 @@ import type { MeResponse } from "@greenbuild/shared";
 import { TerminalIcon } from "../../../ui/icons-profile";
 import { CheckCircleIcon, InfoIcon } from "../../../ui/icons-settings";
 import { HEADLINE_LG, LABEL_CODE } from "../../../ui/type";
-import { DISPLAY_NAME_HINT, HANDLE_HINT, profileFields } from "./profile-form";
+import { type CountryOption, DISPLAY_NAME_HINT, HANDLE_HINT, profileFields } from "./profile-form";
 import { type ProfileSave, useProfileSave } from "./use-profile-save";
 
 const LABEL = "mb-1 block type-label text-ink-muted uppercase";
 const INPUT = "w-full rounded-lg bg-canvas px-3 py-2 text-ink focus:bg-control focus:outline-none";
 
-// Frame 7:10273 › Profile Settings. Name and handle save through PATCH /api/me (Save is enabled once
-// something changed, as in the frame's "Dirty State"); the country has no API yet and shows disabled. The
-// avatar and bio are not in the plan, so they are hidden (deviation 37). The frame's identicon, credential
-// ledger and terminal-token claims are not true for greenbuild.
-export function ProfileSection({ me }: { me: MeResponse }) {
+// Frame 7:10273 › Profile Settings. Name, handle and country save through PATCH /api/me (Save is enabled
+// once something changed, as in the frame's "Dirty State"); the country picks the player's country
+// leaderboard. The avatar and bio are not in the plan, so they are hidden (deviation 37). The frame's
+// identicon, credential ledger and terminal-token claims are not true for greenbuild.
+export function ProfileSection({ me, countries }: { me: MeResponse; countries: CountryOption[] }) {
   const form = useProfileSave(profileFields(me));
   return (
     <section id="section-profile" className="flex scroll-mt-20 flex-col gap-5 rounded-xl bg-surface-raised p-5 shadow-sm">
@@ -33,7 +33,7 @@ export function ProfileSection({ me }: { me: MeResponse }) {
           handle stop working.
         </span>
       </div>
-      <CountryField country={me.country} />
+      <CountryField form={form} countries={countries} />
       <ActionBar form={form} />
     </section>
   );
@@ -59,13 +59,19 @@ function IdentityFields({ form }: { form: ProfileSave }) {
   );
 }
 
-function CountryField({ country }: { country: string | null }) {
+function CountryField({ form, countries }: { form: ProfileSave; countries: CountryOption[] }) {
   return (
     <label>
       <span className={LABEL}>Location / Jurisdiction</span>
-      <select disabled className={`${INPUT} type-body opacity-60`} value={country ?? ""}>
-        <option value={country ?? ""}>{country ?? "—"}</option>
+      <select className={`${INPUT} type-body`} value={form.edited.country} onChange={(event) => form.edit({ country: event.target.value })}>
+        <option value="">Not set</option>
+        {countries.map((country) => (
+          <option key={country.code} value={country.code}>
+            {country.name}
+          </option>
+        ))}
       </select>
+      <span className="mt-1 block type-label text-ink-subtle">Your country leaderboard is this one.</span>
     </label>
   );
 }
