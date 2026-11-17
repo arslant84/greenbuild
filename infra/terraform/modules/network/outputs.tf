@@ -12,3 +12,8 @@ output "subnet_ids" {
     nodes     = azurerm_subnet.nodes.id
   }
 }
+
+output "core_vnet_id" {
+  description = "VNet core, which the data module links its private DNS zones to (28c)."
+  value       = azurerm_virtual_network.core.id
+}

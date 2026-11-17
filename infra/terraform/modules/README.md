@@ -5,7 +5,7 @@ Reusable modules that `envs/*` call. Each comes with its task in `docs/architect
 | Module | Task | What it creates |
 |---|---|---|
 | `network` | 28b | The environment's resource group; VNet `core` (subnets `apps` and `engine` for Container Apps, `endpoints` for the data's private endpoints) and VNet `sandbox` (subnet `nodes`), peered without forwarding. The sandbox NSG allows inbound only from `engine`, on the agent's gRPC port, and denies everything else in and out. The core NSG on all three core subnets denies inbound from the sandbox VNet. No public IPs |
-| `data` | 28c | PostgreSQL Flexible Server (private access), Redis, Key Vault, a Storage account with the `sessions` container and its lifecycle rule (Cool after 30 days, deleted after 90), managed identities |
+| `data` | 28c | The apps' managed identities (web, api, worker, engine); Key Vault (RBAC); a Storage account without keys with the `sessions` and `privacy-exports` containers and a rule that deletes session logs after 90 days; private endpoints and private DNS for both, with public network access off. PostgreSQL Flexible Server and Azure Managed Redis follow in 28c-2 |
 | `apps` | 28d | ACR, the Container Apps environment, and the web, api, worker and engine apps, each with a managed identity and secrets from Key Vault |
 | `sandbox-node` | 28e | The sandbox node VM. Its cloud-init installs Docker, gVisor at the version CI pins, the agent as a systemd service, and mTLS certificates from Key Vault |
 
@@ -20,6 +20,10 @@ Every resource is `<type>-greenbuild-<environment>-<name>`, where `<type>` is th
 | `snet` subnet | `snet-greenbuild-staging-core-engine` (VNet, then role) |
 | `nsg` network security group | `nsg-greenbuild-staging-sandbox-nodes` |
 | `peer` VNet peering | `peer-greenbuild-staging-core-to-sandbox` |
+| `id` managed identity | `id-greenbuild-staging-api` |
+| `kv` Key Vault | `kv-greenbuild-staging` |
+| `pe` private endpoint (`psc` its connection) | `pe-greenbuild-staging-blob` |
+| `link` private DNS zone link | `link-greenbuild-staging-core-blob` (VNet, then service) |
 
 Resources whose names allow no hyphens (storage accounts, ACR) use the same parts without them, e.g. `stgreenbuildstaging`. The state's own resources (`rg-greenbuild-tfstate`, `greenbuildtfstate`) are created by hand and outside this scheme (`docs/runbooks/terraform-state.md`).
 

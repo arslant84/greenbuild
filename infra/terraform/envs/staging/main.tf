@@ -26,3 +26,14 @@ module "network" {
     sandbox_nodes  = "10.20.0.0/24"
   }
 }
+
+# Task 28c: Blob Storage, Key Vault and the apps' identities, reached only through private endpoints.
+module "data" {
+  source = "../../modules/data"
+
+  environment         = "staging"
+  location            = "eastus"
+  resource_group_name = module.network.resource_group_name
+  core_vnet_id        = module.network.core_vnet_id
+  endpoints_subnet_id = module.network.subnet_ids.endpoints
+}
