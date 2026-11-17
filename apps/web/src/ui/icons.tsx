@@ -147,14 +147,6 @@ export function TerminalTabIcon(props: IconProps) {
   );
 }
 
-export function FolderIcon(props: IconProps) {
-  return (
-    <svg width={14} height={13} viewBox="0 0 14 13" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M1.33333 9.33333V1.33333V2.66667V6C1.33333 6 1.33333 6.38889 1.33333 7.16667C1.33333 7.94444 1.33333 8.88889 1.33333 10V9.33333ZM1.33333 10.6667C0.966667 10.6667 0.652778 10.5361 0.391667 10.275C0.130556 10.0139 0 9.7 0 9.33333V1.33333C0 0.966667 0.130556 0.652778 0.391667 0.391667C0.652778 0.130556 0.966667 0 1.33333 0H5.33333L6.66667 1.33333H12C12.3667 1.33333 12.6806 1.46389 12.9417 1.725C13.2028 1.98611 13.3333 2.3 13.3333 2.66667V6H12V2.66667H6.11667L4.78333 1.33333H1.33333V9.33333H4.66667V10.6667H1.33333ZM8.4 12.4L6 10L8.4 7.6L9.33333 8.55L7.88333 10L9.33333 11.45L8.4 12.4ZM11.6 12.4L10.6667 11.45L12.1167 10L10.6667 8.55L11.6 7.6L14 10L11.6 12.4Z" />
-    </svg>
-  );
-}
-
 export function ViewAgendaIcon(props: IconProps) {
   return (
     <svg width={12} height={10} viewBox="0 0 12 10" fill="currentColor" aria-hidden="true" {...props}>
@@ -175,14 +167,6 @@ export function ShieldIcon(props: IconProps) {
   return (
     <svg width={9} height={11} viewBox="0 0 9 11" fill="currentColor" aria-hidden="true" {...props}>
       <path d="M4.39993 10.9998C3.12579 10.679 2.07393 9.94798 1.24436 8.80674C0.414785 7.66551 0 6.39824 0 5.00492V1.64998L4.39993 0L8.79987 1.64998V5.00492C8.79987 6.39824 8.38508 7.66551 7.55551 8.80674C6.72594 9.94798 5.67408 10.679 4.39993 10.9998ZM4.39993 9.84485C5.28909 9.56986 6.03158 9.02674 6.6274 8.2155C7.22322 7.40426 7.57155 6.49907 7.67238 5.49992H4.39993V1.16873L1.09998 2.40621V5.00492C1.09998 5.10576 1.09998 5.18826 1.09998 5.25242C1.09998 5.31659 1.10915 5.39909 1.12748 5.49992H4.39993V9.84485Z" />
-    </svg>
-  );
-}
-
-export function ArrowDropDownIcon(props: IconProps) {
-  return (
-    <svg width={6} height={3} viewBox="0 0 6 3" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M3.00001 3.00001L0 0H6.00002L3.00001 3.00001Z" />
     </svg>
   );
 }

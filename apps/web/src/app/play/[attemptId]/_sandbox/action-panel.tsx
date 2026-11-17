@@ -11,7 +11,8 @@ interface ActionPanelProps {
 }
 
 // Figma › Action Panel & Verification CTA, with V2's checking and V5's reconnecting buttons; the hint
-// button comes from Stitch V6 (task 35c).
+// button comes from Stitch V6 (task 35c). Giving up shows no solution, so the frame's "and inspect
+// solution runbook" is left out (deviation 37).
 export function ActionPanel({ mode, hint, onCheck, onGiveUp }: ActionPanelProps) {
   return (
     <div className="flex flex-col gap-3 pt-5">
@@ -19,7 +20,7 @@ export function ActionPanel({ mode, hint, onCheck, onGiveUp }: ActionPanelProps)
       <CheckButton mode={mode} onCheck={onCheck} />
       <button type="button" onClick={onGiveUp} className="flex cursor-pointer items-center justify-center gap-1 pt-1 text-ink-subtle">
         <FlagIcon />
-        <span className="type-label">Give up attempt and inspect solution runbook</span>
+        <span className="type-label">Give up attempt</span>
       </button>
     </div>
   );

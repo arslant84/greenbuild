@@ -6,7 +6,7 @@ import { useCallback, useState } from "react";
 const CONFLICT = 409;
 
 // useLeave ends the attempt through the web app's API proxy, then moves on: "Exit Attempt" back to
-// the Daily screen, "Give up" to the debrief with the solution runbook. An attempt that is already
+// the Daily screen, "Give up" to the debrief. An attempt that is already
 // over (409) moves on too; any other failure keeps the player here to try again.
 export function useLeave(attemptId: string) {
   const router = useRouter();

@@ -51,3 +51,16 @@ test("the debrief's Play Catalog opens the catalog", async ({ page }) => {
   await page.getByRole("link", { name: /Play Catalog/ }).click();
   await expect(page).toHaveURL(/\/challenges$/);
 });
+
+// Deviation 37: the sandbox's Files tab and runbook link, and the debrief's reference patch, are hidden;
+// giving up shows no solution, so the button does not promise one.
+test("shows no Files tab, runbook link or reference patch", async ({ page }) => {
+  await startChallenge(page);
+  await expect(page.getByText("Files", { exact: true })).toHaveCount(0);
+  await expect(page.getByText("Read full runbook")).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Give up attempt", exact: true }).click();
+  await expect(page).toHaveURL(/\/result$/);
+  await expect(page.getByText("Root cause analysis & postmortem")).toBeVisible();
+  await expect(page.getByText(/reference patch/)).toHaveCount(0);
+});

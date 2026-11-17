@@ -1,7 +1,7 @@
 import { ATTEMPT_MAX_CHECKS, type ChallengeCard } from "@greenbuild/shared";
 import type { ReactNode } from "react";
 import { formatClock } from "../../../../ui/format";
-import { ArrowDropDownIcon, TimerCompactIcon } from "../../../../ui/icons";
+import { TimerCompactIcon } from "../../../../ui/icons";
 
 const PERCENT = 100;
 
@@ -42,10 +42,6 @@ function Brief({ card }: { card: ChallengeCard }) {
       <div className="flex flex-col gap-1">
         <h1 className="text-lg leading-6 font-bold tracking-[-0.45px] text-ink">{card.title}</h1>
         <p className="type-body leading-[21px] text-ink-muted">{card.statement}</p>
-        <span className="flex items-center gap-0.5 text-accent-soft" aria-disabled="true">
-          <span className="type-label">Read full runbook</span>
-          <ArrowDropDownIcon />
-        </span>
       </div>
       <div className="flex items-center gap-1">
         {card.skills.map((skill) => (

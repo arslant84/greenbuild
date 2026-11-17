@@ -1,4 +1,4 @@
-import { FolderIcon, LatencyIcon, ShieldIcon, TerminalTabIcon, ViewAgendaIcon } from "../../../../ui/icons";
+import { LatencyIcon, ShieldIcon, TerminalTabIcon, ViewAgendaIcon } from "../../../../ui/icons";
 import type { ConnectionStatus, TerminalSize } from "../protocol";
 
 const STATUS_TEXT: Record<ConnectionStatus, string> = {
@@ -8,7 +8,8 @@ const STATUS_TEXT: Record<ConnectionStatus, string> = {
   exited: "shell exited",
 };
 
-// Figma › Top Pane Switcher Bar (920 × 40). The read-only Files view arrives later; its tab is inert.
+// Figma › Top Pane Switcher Bar (920 × 40). The frame's read-only Files view is not in the plan, so its
+// tab is hidden (deviation 37).
 export function PaneSwitcher({ status }: { status: ConnectionStatus }) {
   const active = status === "connected";
   return (
@@ -18,11 +19,6 @@ export function PaneSwitcher({ status }: { status: ConnectionStatus }) {
           <TerminalTabIcon />
           <span className="font-mono text-[13px] leading-[18px] font-medium">Terminal</span>
           <span className="absolute inset-x-0 bottom-0 h-0.5 bg-accent" />
-        </span>
-        <span className="flex h-full items-center gap-1 px-3 text-ink-muted" aria-disabled="true">
-          <FolderIcon />
-          <span className="font-mono text-[13px] leading-[18px]">Files</span>
-          <span className="type-label rounded bg-control px-1 text-ink-subtle">RO</span>
         </span>
       </div>
       <span className="flex items-center gap-3">
