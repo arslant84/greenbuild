@@ -95,11 +95,12 @@ APP_ID=$(az ad app create --display-name greenbuild-terraform-plan --query appId
 az ad sp create --id "$APP_ID"
 SP_ID=$(az ad sp show --id "$APP_ID" --query id -o tsv)
 
-# Tokens from this repository's pull_request runs only.
+# Tokens from this repository's pull_request runs only. The repository uses GitHub's immutable subject,
+# which names the owner and repository with their ids, so a renamed repository cannot inherit the trust.
 az ad app federated-credential create --id "$APP_ID" --parameters '{
   "name": "github-pull-requests",
   "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:arslant84/greenbuild:pull_request",
+  "subject": "repo:arslant84@127598084/greenbuild@1397675874:pull_request",
   "audiences": ["api://AzureADTokenExchange"]
 }'
 
@@ -111,6 +112,8 @@ az role assignment create --assignee-object-id "$SP_ID" --assignee-principal-typ
 ```
 
 PRs from forks get no OIDC token, so they never reach Azure.
+
+The subject must match the one GitHub sends exactly. `gh api repos/arslant84/greenbuild/actions/oidc/customization/sub` shows the prefix (`sub_claim_prefix`); a mismatch fails `terraform init` with `AADSTS700213: No matching federated identity record found`, naming the subject GitHub presented.
 
 ## 4. GitHub variables
 
@@ -136,7 +139,7 @@ None yet.
 
 `apply` runs only after merge, with the owner's approval (architecture.md, CI/CD). The task that adds the apply job also creates its identity, separate from the plan identity:
 
-- a federated credential with subject `repo:arslant84/greenbuild:environment:staging`;
+- a federated credential with subject `repo:arslant84@127598084/greenbuild@1397675874:environment:staging`;
 - Contributor on the staging subscription and Storage Blob Data Contributor on the state container;
 - a GitHub environment `staging` that requires the owner's review.
 
