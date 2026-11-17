@@ -31,13 +31,24 @@ test("the catalog's Settings link opens the settings", async ({ page }) => {
   await expect(page.getByText("Settings / Config")).toBeVisible();
 });
 
-test("the Account section shows the email and notifications stay off", async ({ page }) => {
+test("the Account section shows the email and contact requests stay off", async ({ page }) => {
   const email = await signInForTest(page);
   await page.goto("/settings");
 
   await expect(page.getByLabel("Primary email address")).toHaveValue(email);
-  await expect(page.getByLabel("Weekly engineering digest")).toBeDisabled();
-  await expect(page.getByLabel("Weekly engineering digest")).not.toBeChecked();
+  await expect(page.getByLabel("Company contact requests")).toBeDisabled();
+  await expect(page.getByLabel("Company contact requests")).not.toBeChecked();
+});
+
+// Deviation 37: the frame's controls that no task builds are hidden.
+test("hides the avatar, bio, email change, linked accounts, sessions and unplanned notifications", async ({ page }) => {
+  await signInForTest(page);
+  await page.goto("/settings");
+  await expect(page.getByLabel("Primary email address")).toBeVisible();
+
+  for (const hidden of ["Change avatar", "Engineering Bio", "Change email", "Connect Google", "Sign out all other sessions", "Weekly engineering digest", "Browser push notifications (WebPush)"]) {
+    await expect(page.getByText(hidden, { exact: true })).toHaveCount(0);
+  }
 });
 
 test("after a timezone change the next one shows when it unlocks", async ({ page }) => {
