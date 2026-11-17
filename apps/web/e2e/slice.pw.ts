@@ -22,6 +22,8 @@ test("a player solves nginx-502 from the Daily screen to the debrief", async ({ 
   await expect(page.getByText("2/10 checks used")).toBeVisible();
   // Sharing lives on the debrief (task 51); the solved panel's share button opens it.
   await expect(page.getByRole("link", { name: "Share on X / LinkedIn" })).toHaveAttribute("href", /\/play\/[0-9a-f-]{36}\/result$/);
+  // Deviation 37: community solutions are not in the plan, so the frame's link to them is hidden.
+  await expect(page.getByText("View Community Solutions")).toHaveCount(0);
 
   await page.getByRole("link", { name: /\/play\/.*\/result/ }).click();
   await expect(page.getByText("SOLVED", { exact: true }).first()).toBeVisible();

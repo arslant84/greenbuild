@@ -4,7 +4,7 @@ import Link from "next/link";
 import { ATTEMPT_MAX_CHECKS } from "@greenbuild/shared";
 import { useState } from "react";
 import { formatClock } from "../../../../../ui/format";
-import { ArrowBackIcon, ArrowForwardIcon, CopyIcon, ScorecardIcon, VerifiedIcon } from "../../../../../ui/icons";
+import { ArrowBackIcon, CopyIcon, ScorecardIcon, VerifiedIcon } from "../../../../../ui/icons";
 import { incidentId } from "../../../../../ui/incident";
 
 interface SolvedPanelProps {
@@ -14,7 +14,8 @@ interface SolvedPanelProps {
 }
 
 // Figma "Hotfix Sandbox — V3 Solved State" › right panel, inside V1's 360 px panel. XP, rating and
-// streaks arrive with the game layer, so their boxes show empty values.
+// streaks arrive with the game layer, so their boxes show empty values. Community solutions are not in
+// the plan, so the frame's link to them is hidden (deviation 37).
 export function SolvedPanel({ attemptId, solvedInSeconds, checksUsed }: SolvedPanelProps) {
   const resultUrl = `/play/${attemptId}/result`;
   const scorecard = [`greenbuild #${incidentId(attemptId)} ⚡ ${formatClock(solvedInSeconds)}`, `${checksUsed}/${ATTEMPT_MAX_CHECKS} checks used`];
@@ -94,10 +95,6 @@ function Scorecard({ lines, resultUrl }: { lines: string[]; resultUrl: string })
       <Link href={resultUrl} className="flex h-9 items-center justify-center rounded-lg bg-control shadow-[0_1px_2px_rgba(0,0,0,0.05)]">
         <span className="font-mono text-[13px] leading-[18px] text-ink">Share on X / LinkedIn</span>
       </Link>
-      <span className="flex h-9 items-center justify-center gap-1 text-accent-soft opacity-60" aria-disabled="true">
-        <span className="font-mono text-[13px] leading-[18px]">View Community Solutions</span>
-        <ArrowForwardIcon width={11} height={11} />
-      </span>
     </section>
   );
 }

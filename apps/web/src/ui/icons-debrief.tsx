@@ -27,22 +27,6 @@ export function AnalysisIcon(props: IconProps) {
   );
 }
 
-export function CodeIcon(props: IconProps) {
-  return (
-    <svg width={14} height={8} viewBox="0 0 14 8" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M4 8L0 4L4 0L4.95 0.95L1.88333 4.01667L4.93333 7.06667L4 8ZM9.33333 8L8.38333 7.05L11.45 3.98333L8.4 0.933333L9.33333 0L13.3333 4L9.33333 8Z" />
-    </svg>
-  );
-}
-
-export function ExpandSmallIcon(props: IconProps) {
-  return (
-    <svg width={8} height={5} viewBox="0 0 8 5" fill="currentColor" aria-hidden="true" {...props}>
-      <path d="M4 4.93333L0 0.933333L0.933333 0L4 3.06667L7.06667 0L8 0.933333L4 4.93333Z" />
-    </svg>
-  );
-}
-
 export function CredentialIcon(props: IconProps) {
   return (
     <svg width={11} height={14} viewBox="0 0 11 14" fill="currentColor" aria-hidden="true" {...props}>
