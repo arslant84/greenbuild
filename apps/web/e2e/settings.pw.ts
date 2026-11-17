@@ -41,7 +41,7 @@ test("the Account section shows the email and contact requests stay off", async 
 });
 
 // Deviation 37: the frame's controls that no task builds are hidden.
-test("hides the avatar, bio, email change, linked accounts, sessions, unplanned notifications and profile switches", async ({ page }) => {
+test("hides the avatar, bio, email change, linked accounts, sessions, unplanned notifications, profile switches and footer links", async ({ page }) => {
   await signInForTest(page);
   await page.goto("/settings");
   await expect(page.getByLabel("Primary email address")).toBeVisible();
@@ -49,6 +49,7 @@ test("hides the avatar, bio, email change, linked accounts, sessions, unplanned 
   const hiddenControls = [
     ...["Change avatar", "Engineering Bio", "Change email", "Connect Google", "Sign out all other sessions"],
     ...["Weekly engineering digest", "Browser push notifications (WebPush)", "Show country flag & ISO code on profile", "Show recent incident attempt history"],
+    ...["DOCS", "SECURITY"],
   ];
   for (const hidden of hiddenControls) {
     await expect(page.getByText(hidden, { exact: true })).toHaveCount(0);

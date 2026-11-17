@@ -1,7 +1,8 @@
 import { LockIcon, SpeedIcon } from "../../../ui/icons-settings";
 
-// Frame 7:10273 › footer. System status, latency and compliance have no data or audit behind them ("—"); the
-// docs, status and security pages do not exist (text). It stays at the window's bottom (owner, 2026-10-14).
+// Frame 7:10273 › footer. System status, latency and compliance have no data or audit behind them ("—"). No
+// task builds docs, status or security pages, so their links are hidden (deviation 37). It stays at the
+// window's bottom (owner, 2026-10-14).
 export function SettingsFooter() {
   return (
     <footer className="mt-auto bg-canvas shadow-[0_-1px_8px_rgba(0,0,0,0.3)] lg:sticky lg:bottom-0 lg:z-10">
@@ -18,12 +19,7 @@ export function SettingsFooter() {
             <LockIcon className="text-[14px]" /> SECOPS —
           </span>
         </span>
-        <span className="flex flex-wrap items-center gap-x-5 gap-y-1">
-          <span>DOCS</span>
-          <span>STATUS</span>
-          <span>SECURITY</span>
-          <span className="text-[#3c494c]">© 2026 GREENBUILD</span>
-        </span>
+        <span className="text-[#3c494c]">© 2026 GREENBUILD</span>
       </div>
     </footer>
   );
