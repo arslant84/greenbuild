@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DISPLAY_NAME_MAX, HANDLE_MAX, HANDLE_MIN } from "../constants/index.js";
+import { countryCodeSchema } from "./countries.js";
 
 // A handle is how others find a player: lowercase letters, digits and inner hyphens. Input is
 // lowercased first, so "Arslan" and "arslan" are the same handle.
@@ -33,6 +34,8 @@ export const meResponseSchema = z.object({
   email: z.string().nullable(),
   // ISO 3166-1 alpha-2, or null; the country leaderboard is this one (task 45b).
   country: z.string().nullable(),
+  // Whether visitors see the game profile at /u/{handle} and the leaderboards name the player (task 46a).
+  game_profile_public: z.boolean(),
   timezone: z.string(),
   // When the timezone may change again; null when it may change now.
   timezone_locked_until: z.iso.datetime().nullable(),
@@ -52,6 +55,8 @@ export const updateMeRequestSchema = z
     display_name: z.string().trim().min(1).max(DISPLAY_NAME_MAX),
     timezone: z.string().refine(isTimeZone, "an IANA time zone like Europe/Berlin"),
     locale: localeSchema,
+    country: countryCodeSchema.nullable(),
+    game_profile_public: z.boolean(),
   })
   .partial();
 

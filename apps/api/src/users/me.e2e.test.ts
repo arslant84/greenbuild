@@ -30,13 +30,29 @@ async function backdateTimezoneChange(userId: string, days: number): Promise<voi
   }
 }
 
+// What GET /v1/me answers for a player who has changed nothing yet.
+const NEW_PLAYER = {
+  handle: null,
+  display_name: null,
+  email: null,
+  country: null,
+  game_profile_public: true,
+  timezone: "UTC",
+  timezone_locked_until: null,
+  locale: "en",
+  xp: 0,
+  level: 0,
+  xp_today: 0,
+  streak: { current: 0, longest: 0, freezes: 0 },
+};
+
 describe("GET and PATCH /v1/me", () => {
   it("reads a new player's profile with its defaults", async () => {
     const userId = randomUUID();
     const response = await (await me(userId)).get();
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ id: userId, handle: null, display_name: null, email: null, country: null, timezone: "UTC", timezone_locked_until: null, locale: "en", xp: 0, level: 0, xp_today: 0, streak: { current: 0, longest: 0, freezes: 0 } });
+    expect(await response.json()).toEqual({ id: userId, ...NEW_PLAYER });
   });
 
   it("changes the handle, name and locale, storing the handle lowercase", async () => {
@@ -112,5 +128,32 @@ describe("GET /v1/me for the settings screen (task 47b)", () => {
     }
 
     expect(await (await player.get()).json()).toMatchObject({ email: "player@example.com" });
+  });
+});
+
+describe("PATCH /v1/me country and game profile visibility", () => {
+  it("sets the country and clears it", async () => {
+    const player = await me();
+
+    expect(await (await player.patch({ country: "KZ" })).json()).toMatchObject({ country: "KZ" });
+    expect(await (await player.patch({ country: null })).json()).toMatchObject({ country: null });
+  });
+
+  it("refuses a code that is not a country with 400", async () => {
+    const response = await (await me()).patch({ country: "EU" });
+
+    expect(response.status).toBe(400);
+  });
+
+  it("hides the game profile from visitors and shows it again", async () => {
+    const player = await me();
+    const handle = `v-${randomUUID().slice(0, 8)}`;
+    await player.patch({ handle });
+    const visit = () => fetch(`${app().baseUrl}/v1/users/${handle}`);
+
+    expect(await (await player.patch({ game_profile_public: false })).json()).toMatchObject({ game_profile_public: false });
+    expect((await visit()).status).toBe(404);
+    expect(await (await player.patch({ game_profile_public: true })).json()).toMatchObject({ game_profile_public: true });
+    expect((await visit()).status).toBe(200);
   });
 });
