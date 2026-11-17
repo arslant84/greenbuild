@@ -7,18 +7,14 @@ import { HEADLINE_LG } from "../../../ui/type";
 import { hourLabel, REMINDER_HOURS } from "./notifications";
 import { type NotificationsSave, useNotifications } from "./use-notifications";
 
-const NOTIFICATIONS = [
-  { title: "Weekly engineering digest", note: "Your week in review and your rating changes, every Monday at 08:00 UTC." },
-  { title: "Product changelog & incident tracks", note: "New challenges and platform releases." },
-  { title: "Company contact requests", note: "An email when a verified company asks for your consent to connect.", badge: "Verified" },
-  { title: "Browser push notifications (WebPush)", note: "Desktop notifications before your streak's day ends." },
-];
+// Contact requests come with Stage 3; until then the switch shows off and disabled.
+const NOTIFICATIONS = [{ title: "Company contact requests", note: "An email when a verified company asks for your consent to connect.", badge: "Verified" }];
 
 const REMINDER_TITLE = "Daily streak reminder";
 
-// Frame 7:10273 › Notification Preferences. The daily streak reminder works (task 52); the other
-// notifications do not exist yet, so their switches show off and disabled. The frame's percentiles,
-// "cryptographic consent", Sev-0 and PWA claims are not true for greenbuild.
+// Frame 7:10273 › Notification Preferences. The daily streak reminder works (task 52). The frame's weekly
+// digest, changelog and browser push are not in the plan, so they are hidden (deviation 37). The frame's
+// percentiles, "cryptographic consent", Sev-0 and PWA claims are not true for greenbuild.
 export function NotificationsSection({ initial }: { initial: Notifications }) {
   const save = useNotifications(initial);
   return (
